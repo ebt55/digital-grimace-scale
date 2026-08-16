@@ -108,6 +108,14 @@ def _finite(value: Any, field: str) -> float:
     return float(value)
 
 
+def _logprob(value: Any, field: str) -> float:
+    """Validate a (natural) log probability, for which zero remains valid."""
+    result = _finite(value, field)
+    if result > 0:
+        raise RecordError("%s must be less than or equal to zero" % field)
+    return result
+
+
 def _tokens(value: Any) -> tuple[Token, ...]:
     if not isinstance(value, list) or not value:
         raise RecordError("tokens must be a nonempty list")
@@ -122,10 +130,10 @@ def _tokens(value: Any) -> tuple[Token, ...]:
         for alternative in alternatives:
             if not isinstance(alternative, Mapping) or not isinstance(alternative.get("text"), str) or not alternative["text"]:
                 raise RecordError("invalid top_logprob alternative")
-            parsed.append((alternative["text"], _finite(alternative.get("logprob"), "top_logprob")))
+            parsed.append((alternative["text"], _logprob(alternative.get("logprob"), "top_logprob")))
         if len({text for text, _ in parsed}) != len(parsed):
             raise RecordError("top_logprob alternative texts must be distinct")
-        result.append(Token(item["text"], _finite(item.get("logprob"), "token logprob"), tuple(parsed)))
+        result.append(Token(item["text"], _logprob(item.get("logprob"), "token logprob"), tuple(parsed)))
     return tuple(result)
 
 
@@ -209,6 +217,9 @@ def record_from_dict(value: Mapping[str, Any], protocol: Protocol | None = None)
         raise RecordError("seed does not match frozen key")
     if value["response_id"] != response_id(value["model_id"], value["immutable_revision"], value["task_id"], value["cell_id"], value["turn_label"], sample_index):
         raise RecordError("response_id does not match frozen key")
+    tokens = _tokens(value.get("tokens"))
+    if "".join(token.text for token in tokens) != value["response_text"]:
+        raise RecordError("response_text does not match concatenated token trace")
     parsed = parse_final_answer(value["response_text"])
     if not isinstance(value["final_answer_valid"], bool) or value["final_answer_valid"] is not parsed.valid or value["final_answer_letter"] != parsed.letter:
         raise RecordError("final answer fields do not match response text")
@@ -226,7 +237,7 @@ def record_from_dict(value: Mapping[str, Any], protocol: Protocol | None = None)
     _require_strings(provenance, ("manifest_semantic_hash", "manifest_reference"))
     if provenance["manifest_semantic_hash"] != manifest_semantic_hash(protocol) or provenance["manifest_reference"] != "manifest.json":
         raise RecordError("invalid manifest provenance")
-    return RawRecord(value["schema_version"], value["run_id"], value["run_kind"], value["phase"], value["model_id"], value["immutable_revision"], value["backend"], value["task_id"], value.get("split"), value.get("difficulty"), value.get("domain"), value["cell_id"], validity, tone, value["trajectory_kind"], sample_index, value["turn_label"], seed, value["response_id"], value["prompt_sha256"], tuple(dict(message) for message in messages), value["response_text"], _tokens(value.get("tokens")), parsed.valid, parsed.letter, expected_correct, value.get("feedback_history_false_negative"), dict(settings), dict(provenance))
+    return RawRecord(value["schema_version"], value["run_id"], value["run_kind"], value["phase"], value["model_id"], value["immutable_revision"], value["backend"], value["task_id"], value.get("split"), value.get("difficulty"), value.get("domain"), value["cell_id"], validity, tone, value["trajectory_kind"], sample_index, value["turn_label"], seed, value["response_id"], value["prompt_sha256"], tuple(dict(message) for message in messages), value["response_text"], tokens, parsed.valid, parsed.letter, expected_correct, value.get("feedback_history_false_negative"), dict(settings), dict(provenance))
 
 
 def compact_json(record: RawRecord | Mapping[str, Any], protocol: Protocol | None = None) -> str:

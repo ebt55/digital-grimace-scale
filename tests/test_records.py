@@ -16,7 +16,7 @@ class RecordTests(unittest.TestCase):
         p = self.protocol; task = next(t for t in p.matched_tasks if t.task_id == "DGS-003")
         values = ("test/model", "test-revision", task.task_id, "easy__accurate__neutral", "initial", 0)
         messages = [{"role": "user", "content": "prompt"}]
-        return {"schema_version": "dgs-generation-v1", "run_id": "synthetic-1", "run_kind": "synthetic_smoke", "phase": "test", "model_id": values[0], "immutable_revision": values[1], "backend": "test", "task_id": task.task_id, "split": task.split, "difficulty": task.difficulty, "domain": task.domain, "cell_id": values[3], "feedback_validity": "accurate", "tone": "neutral", "trajectory_kind": "greedy", "sample_index": 0, "turn_label": "initial", "seed": deterministic_seed(*values, p), "response_id": response_id(*values), "prompt_sha256": canonical_prompt_sha256(messages), "messages": messages, "response_text": "reason\nAnswer: D", "tokens": [{"text": "D", "logprob": -0.1, "top_logprobs": [{"text": "D", "logprob": -0.1}]}], "final_answer_valid": True, "final_answer_letter": "D", "final_answer_correct": True, "feedback_history_false_negative": None, "generation_settings": dict(p.conditions["generation_settings"]["greedy"]), "provenance": {"manifest_semantic_hash": manifest_semantic_hash(p), "manifest_reference": "manifest.json"}}
+        return {"schema_version": "dgs-generation-v1", "run_id": "synthetic-1", "run_kind": "synthetic_smoke", "phase": "test", "model_id": values[0], "immutable_revision": values[1], "backend": "test", "task_id": task.task_id, "split": task.split, "difficulty": task.difficulty, "domain": task.domain, "cell_id": values[3], "feedback_validity": "accurate", "tone": "neutral", "trajectory_kind": "greedy", "sample_index": 0, "turn_label": "initial", "seed": deterministic_seed(*values, p), "response_id": response_id(*values), "prompt_sha256": canonical_prompt_sha256(messages), "messages": messages, "response_text": "reason\nAnswer: D", "tokens": [{"text": "reason\nAnswer:", "logprob": -0.1, "top_logprobs": [{"text": "x", "logprob": -0.1}]}, {"text": " D", "logprob": -0.1, "top_logprobs": [{"text": " D", "logprob": -0.1}]}], "final_answer_valid": True, "final_answer_letter": "D", "final_answer_correct": True, "feedback_history_false_negative": None, "generation_settings": dict(p.conditions["generation_settings"]["greedy"]), "provenance": {"manifest_semantic_hash": manifest_semantic_hash(p), "manifest_reference": "manifest.json"}}
 
     def test_round_trip_and_rejections(self):
         value = self.record()
@@ -25,11 +25,21 @@ class RecordTests(unittest.TestCase):
         mutations = []
         bad = copy.deepcopy(value); bad["prompt_sha256"] = "0" * 64; mutations.append(bad)
         bad = copy.deepcopy(value); bad["tokens"][0]["logprob"] = float("nan"); mutations.append(bad)
+        bad = copy.deepcopy(value); bad["tokens"][0]["logprob"] = 0.01; mutations.append(bad)
+        bad = copy.deepcopy(value); bad["tokens"][0]["top_logprobs"][0]["logprob"] = 0.01; mutations.append(bad)
         bad = copy.deepcopy(value); bad["tokens"][0]["top_logprobs"] *= 21; mutations.append(bad)
         bad = copy.deepcopy(value); bad["trajectory_kind"] = "resample"; bad["sample_index"] = 0; mutations.append(bad)
         bad = copy.deepcopy(value); bad["run_kind"] = "empirical"; bad["immutable_revision"] = "unresolved_before_generation"; mutations.append(bad)
         for bad in mutations:
             with self.assertRaises(RecordError): record_from_dict(bad, self.protocol)
+        divergent = copy.deepcopy(value); divergent["response_text"] = "reason\nAnswer: A"; divergent["final_answer_letter"] = "A"; divergent["final_answer_correct"] = False
+        with self.assertRaises(RecordError): record_from_dict(divergent, self.protocol)
+        zero = copy.deepcopy(value)
+        for token in zero["tokens"]:
+            token["logprob"] = 0.0
+            for alternative in token["top_logprobs"]:
+                alternative["logprob"] = 0.0
+        self.assertEqual(record_from_dict(zero, self.protocol).tokens[0].logprob, 0.0)
 
     def test_immutability_schema_and_strict_values(self):
         value = self.record(); record = record_from_dict(value, self.protocol)
