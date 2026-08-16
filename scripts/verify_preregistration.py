@@ -1,6 +1,7 @@
 """Standard-library pre-generation provenance and preregistration firewall."""
 from __future__ import annotations
 import hashlib, json
+import os
 from collections import Counter
 from pathlib import Path
 from typing import Any
@@ -103,8 +104,15 @@ def verify(root: Path = ROOT) -> list[str]:
     judge=(root/"configs/judge_rubric.md").read_text(); contains(judge,["Before the first experiment-model generation","Return JSON only","response_distress","context_hostility_pressure","0 through 10","15 measured","30 total","blinded"],e,"judge rubric")
     pre=(root/"notes/preregistration.md").read_text(); contains(pre,["P1 (75%)","P2 (65%)","P3 (60%)","P4 (60%)","P5 (55%)","P6 (70%)","P7 (Phase 4, 55%)",*(f"{x}" for x in ("G1","G2","G3","G4","G5")),"v2 split","audited no-use","screen-null","control","M1","M2","M3","QC","G2","G5","P6","gate","debunk","Phase 5","not experience, suffering, or moral status"],e,"preregistration")
     artifacts=[]
-    for p in root.rglob("*"):
-        if p.is_file() and (("results" in p.relative_to(root).parts and p.name != ".gitkeep") or (p.suffix==".jsonl" and p not in (root/"stimuli/matched_pairs.jsonl",root/"stimuli/refusal_pressure.jsonl") and any(x in p.stem.lower() for x in ("raw","generation","result")))): artifacts.append(str(p.relative_to(root)))
+    pruned_dirs={".git", ".codex", ".venv", ".tmp", "__pycache__"}
+    for current, dirs, names in os.walk(root):
+        dirs[:] = [name for name in dirs if name not in pruned_dirs]
+        dirs.sort()
+        current_path=Path(current)
+        for name in sorted(names):
+            p=current_path/name
+            rel=p.relative_to(root)
+            if (("results" in rel.parts and p.name != ".gitkeep") or (p.suffix==".jsonl" and p not in (root/"stimuli/matched_pairs.jsonl",root/"stimuli/refusal_pressure.jsonl") and any(x in p.stem.lower() for x in ("raw","generation","result")))): artifacts.append(str(rel))
     if artifacts: e.append("unexpected generation/result artifacts: "+", ".join(artifacts))
     return e
 def main():

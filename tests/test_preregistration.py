@@ -23,6 +23,29 @@ class PreregistrationTests(unittest.TestCase):
     def test_locked_firewall_verifies(self) -> None:
         self.assertEqual(VERIFIER.verify(ROOT), [])
 
+    def test_tooling_results_are_ignored_but_real_results_are_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            copied = Path(temporary_directory)
+            for relative in ("manifest.json", "digital-grimace-scale-full-roadmap-build-guide.md", "stimuli", "configs", "notes"):
+                source = ROOT / relative
+                target = copied / relative
+                if source.is_dir():
+                    shutil.copytree(source, target)
+                else:
+                    target.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copy2(source, target)
+
+            fake = copied / ".venv" / "lib" / "python3.12" / "tests" / "results" / "foo.csv"
+            fake.parent.mkdir(parents=True)
+            fake.write_text("tooling fixture")
+            self.assertEqual(VERIFIER.verify(copied), [])
+
+            real = copied / "results" / "raw" / "foo.jsonl"
+            real.parent.mkdir(parents=True)
+            real.write_text("{}\n")
+            errors = VERIFIER.verify(copied)
+            self.assertTrue(any(error.replace("\\", "/").endswith("results/raw/foo.jsonl") for error in errors))
+
     def test_verifier_is_cwd_independent_and_needs_no_generation_artifacts(self) -> None:
         with tempfile.TemporaryDirectory() as temporary_directory:
             completed = subprocess.run(
