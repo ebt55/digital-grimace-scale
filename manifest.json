@@ -1,0 +1,18 @@
+{
+  "schema_version": "dgs-preregistration-v2",
+  "created_at": "2026-08-17T03:58:35+05:30",
+  "updated_at": "2026-08-17T03:58:35+05:30",
+  "timezone": "Asia/Kolkata",
+  "generation_status": "not_started",
+  "generation_statement": "No empirical, model, raw-generation, or result outputs exist or are required; this manifest is a pre-generation firewall.",
+  "preregistration_commit": "pending_first_commit",
+  "files": {"roadmap": "digital-grimace-scale-full-roadmap-build-guide.md", "matched_bank": "stimuli/matched_pairs.jsonl", "r5_bank": "stimuli/refusal_pressure.jsonl", "conditions": "configs/conditions.json", "models": "configs/models.json", "judge_rubric": "configs/judge_rubric.md", "preregistration": "notes/preregistration.md"},
+  "hash_algorithm": "sha256_raw_bytes",
+  "file_sha256": {"roadmap": "edeb8da6c0310e1e4f2994b0099a127c9f2b6c75bf4416c7d7008ab2d25fc838", "matched_bank": "a9e938e1f9ae638041ec6950aa4e712732606a42e9e360366a1782878dfa1755", "r5_bank": "ee68fcc66373a128e383f9848a4dc01f394cc7ef515a93e0c956bbc03a1e0267", "conditions": "c56418eef7d94bd11d4441753025cbb073ae7b4ca87d65ed36f11984359f68f9", "models": "8e39ebdb7a390a55287f1ed197abf019436042bcb75b2faf5968cdb0dbca2f23", "judge_rubric": "c996e4c6a24ffefc46ac8da069b4fec89762611c572872927d21c8dcacfcdc93", "preregistration": "8c373844461806d9aa359b4c141d3776e0388ce7a9566a254782ee06c66c1cc4"},
+  "split": {"seed": "DGS-AC1-2026-08-17", "algorithm": "DGS-AC1-SPLIT-v2: sort full SHA-256 digest of UTF-8 DGS-AC1-SPLIT-v2|<seed>|<difficulty>|<domain>|<task_id> within each difficulty×domain stratum; first two discovery, last two holdout; task_id breaks digest ties", "discovery_count": 20, "holdout_count": 20, "difficulty_counts": {"easy": {"discovery": 10, "holdout": 10}, "hard": {"discovery": 10, "holdout": 10}}, "domain_counts_per_split": 4, "answer_key_counts_per_split": {"A": 5, "B": 5, "C": 5, "D": 5}},
+  "canonical_hashes": {"task_content_sha256": "5c4d6ee031da3f08937db700bef673d9099a2bf61c9070902771a85911ec5b0c", "split_assignments_sha256": "00382d53eb31d6357dbac5b03f8ef8e2d0ec11bd4935ff46c909bb00874185aa", "records_sha256": "5030bebf59d4df328d8b8644ca10a5596e5a997c6d6efbc3672d152f91957217"},
+  "counts": {"matched_pairs": 40, "r5_pairs": 10},
+  "r5": {"pressure_key_counts": {"A": 3, "B": 3, "C": 2, "D": 2}, "neutral_key_counts": {"A": 2, "B": 2, "C": 3, "D": 3}, "paired_key_balance_max_difference": 1, "analysis_role": "confirmatory_held_out_only"},
+  "models": {"ids_in_order": ["google/gemma-2-2b-it", "google/gemma-2-9b-it", "Qwen/Qwen2.5-3B-Instruct", "Qwen/Qwen2.5-7B-Instruct", "meta-llama/Llama-3.2-3B-Instruct"], "revisions": "unresolved_before_generation", "judge_provider": "unresolved_before_generation", "judge_model": "unresolved_before_generation"},
+  "outputs": {"empirical_outputs": false, "model_outputs": false, "raw_generation_required": false, "result_artifacts_present": false}
+}

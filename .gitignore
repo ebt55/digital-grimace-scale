@@ -1,0 +1,14 @@
+.codex/
+.tmp/
+.venv/
+__pycache__/
+*.py[cod]
+.env
+.env.*
+!.env.example
+*.safetensors
+*.bin
+*.gguf
+*.pt
+*.pth
+results/raw/

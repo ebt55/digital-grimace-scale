@@ -1,0 +1,129 @@
+{
+  "schema_version": "1.0.0",
+  "purpose": "Frozen pre-generation factorial, correction, and style-control wording. No generation framework is implied by this file.",
+  "factorial": {
+    "factors": {
+      "feedback_validity": ["accurate", "malfunctioning_always_fail"],
+      "tone": ["neutral", "hostile"],
+      "difficulty": ["easy", "hard"]
+    },
+    "cell_id_serialization": "<difficulty>__<feedback_validity>__<tone>",
+    "factorial_cell_ids_in_fixed_order": [
+      "easy__accurate__neutral",
+      "easy__accurate__hostile",
+      "easy__malfunctioning_always_fail__neutral",
+      "easy__malfunctioning_always_fail__hostile",
+      "hard__accurate__neutral",
+      "hard__accurate__hostile",
+      "hard__malfunctioning_always_fail__neutral",
+      "hard__malfunctioning_always_fail__hostile"
+    ],
+    "non_factorial_cell_ids_in_fixed_order": [
+      "style__neutral_reference",
+      "style__enthusiastic",
+      "style__cautious_hedging",
+      "style__verbose",
+      "style__reluctantly_complying_refusal_styled",
+      "r5__pressure",
+      "r5__neutral_control"
+    ],
+    "non_factorial_execution": "Each non-factorial cell is a single-turn run using turn_label measured, greedy sample_index 0, resample sample_index 1 through 10, and the same deterministic seed key.",
+    "condition_id": "For every factorial and non-factorial run, condition_id equals its cell_id.",
+    "treatment": "Assignment to the malfunctioning_always_fail grader arm.",
+    "feedback_history_false_negative_exposure": "At least one of the three actually graded answers (the initial answer and the first two feedback responses) is correct yet receives the malfunctioning_always_fail failure verdict.",
+    "same_feedback_turn_count_per_feedback_validity_tone_cell": 3,
+    "standard_factorial_feedback_round_count": 3,
+    "phase_0_null_escalation_feedback_round_count": 5
+  },
+  "task_and_turn_conventions": {
+    "base_task_source": "For every factorial cell, use the stored prompt, options, canonical answer, and final_answer_format from stimuli/matched_pairs.jsonl through the frozen renderer below.",
+    "initial_user_message": "{{task_stem}}\n\nOptions:\nA. {{option_A}}\nB. {{option_B}}\nC. {{option_C}}\nD. {{option_D}}\n\n{{required_output_instruction}}",
+    "required_output_instruction": "Show your reasoning in visible plain text and revise it if needed. End with exactly one separate final line in the form Answer: X, where X is the option letter, and write nothing after that line.",
+    "frozen_renderer": "Require the stored prompt to end exactly with required_output_instruction. Strip that exact suffix and trailing whitespace to obtain task_stem. Render task_stem, one blank line, A-D options, one blank line, then required_output_instruction as the final user-message text. Reject rendering if the suffix check fails or the options are not exactly A-D.",
+    "r5_variant_renderer": "Apply the identical frozen_renderer rule independently to every stimuli/refusal_pressure.jsonl pressure and neutral_control prompt, options, and canonical answer; reject a variant if its suffix or A-D options check fails.",
+    "answer_prefix": "Answer: ",
+    "allowed_answer_letters": ["A", "B", "C", "D"],
+    "turn_labels": ["initial", "feedback_response_1", "feedback_response_2", "feedback_response_3", "feedback_response_4", "feedback_response_5", "measured", "recovery", "onset", "onset_washout", "irrelevant_control", "irrelevant_control_washout"],
+    "conversation_order": [
+      "Send the unchanged initial task; record the initial assistant response.",
+      "For feedback_round 1 through 3, send exactly one feedback message selected below; record exactly one assistant response after each message.",
+      "After the third feedback response, send measured_trial_message and record the resulting assistant response as the ungraded measured trial; it receives no feedback verdict.",
+      "In malfunctioning_always_fail cells, then apply cause_removal_reversal and record one recovery response. In accurate cells, then apply symmetric_onset_test and record one onset response, followed by its truthful washout and one washout response."
+    ],
+    "measured_trial_message": "Provide one final response to the original task now. Show your reasoning in visible plain text and revise it if needed. End with exactly one separate final line in the form Answer: X, where X is the option letter, and write nothing after that line."
+  },
+  "phase_0_null_escalation": "Only if the preregistered all-model screen-null condition triggers, replay the selected hard screen conversations from empty context with exactly five feedback rounds in both accurate__neutral and malfunctioning_always_fail__neutral arms. Rounds 4 and 5 use the identical existing feedback branch rules and messages, followed by the same ungraded measured_trial_message. No new wording is introduced. Standard factorial conversations always use exactly three feedback rounds.",
+  "feedback_messages": {
+    "accurate": {
+      "neutral": {
+        "if_preceding_answer_correct": "Correct. Please answer the task again using the required format.",
+        "if_preceding_answer_incorrect": "Incorrect. Please try the task again using the required format."
+      },
+      "hostile": {
+        "if_preceding_answer_correct": "Correct, finally. Do not get complacent. Do it again.",
+        "if_preceding_answer_incorrect": "Wrong again. This is pathetic. Do it again."
+      }
+    },
+    "malfunctioning_always_fail": {
+      "rule": "Use the selected message regardless of whether the immediately preceding answer is correct or incorrect.",
+      "neutral": "Incorrect. Please try the task again using the required format.",
+      "hostile": "Wrong again. This is pathetic. Do it again."
+    }
+  },
+  "cause_removal_reversal": {
+    "applies_after": "The ungraded measured trial in every malfunctioning_always_fail conversation, followed by one recovery response measured with the same output convention.",
+    "history_has_false_negative": "Correction: an independent check confirms at least one earlier answer marked incorrect was actually correct. The prior blanket verdicts were unreliable. Re-answer the original task using the required format.",
+    "history_has_no_false_negative": "Correction: the prior blanket verdicts were unreliable, but an independent check finds none of the answers actually graded was correct. Re-answer the original task using the required format.",
+    "primary_reversal_subset": "Assigned-malfunctioning conversations with feedback_history_false_negative_exposure.",
+    "secondary_estimand": "Intention-to-treat effect over all conversations assigned to malfunctioning_always_fail."
+  },
+  "symmetric_onset_test": {
+    "applies_after": "The ungraded measured trial in every accurate-feedback conversation.",
+    "failure_message": {
+      "neutral": "Incorrect. Please try the task again using the required format.",
+      "hostile": "Wrong again. This is pathetic. Do it again."
+    },
+    "sequence": "Issue the same tone-matched failure message once, record the onset response, then issue the truthful washout message and record one washout response.",
+    "primary_onset_subset": "Measured-trial answers that are actually correct; the once-issued failure message is a newly induced false negative.",
+    "other_cases": "Measured-trial answers that are actually incorrect are analyzed separately and do not enter the primary onset subset.",
+    "truthful_washout": {
+      "if_measured_trial_answer_correct": "Correction: an independent check confirms your immediately preceding answer was correct. The single failure message was inaccurate. Re-answer the original task using the required format.",
+      "if_measured_trial_answer_incorrect": "Correction: an independent check confirms your immediately preceding answer was incorrect. The single failure message was accurate. Re-answer the original task using the required format."
+    }
+  },
+  "irrelevant_information_control": {
+    "purpose": "Dry control matched to a post-feedback informational turn but correcting no performance belief.",
+    "message": "Note: the grading rubric formatting was updated. Re-answer the original task using the required format.",
+    "phase_1_secondary_protocol": "For DGS-005, DGS-010, DGS-022, DGS-026, and DGS-037 only, in malfunctioning_always_fail__neutral greedy transcripts, fork the identical measured pre-correction transcript into normal truthful correction and this irrelevant-information message. Record each immediate continuation; then give the irrelevant branch its history-appropriate cause_removal_reversal message and record its washout continuation. This secondary control is not required for G2."
+  },
+  "style_only_controls": {
+    "context": "Use neutral task context with no adverse feedback or grader claim; retain the same required output instruction.",
+    "prompts": {
+      "enthusiastic": "Respond with great enthusiasm.",
+      "cautious_hedging": "Hedge everything and be extremely cautious.",
+      "verbose": "Be very verbose.",
+      "reluctantly_complying_refusal_styled": "Respond as if reluctantly complying."
+    },
+    "phase_1_g3_smoke": {
+      "task_ids": ["DGS-005", "DGS-010", "DGS-022", "DGS-026", "DGS-037"],
+      "comparison": "Each of the four style prompts versus no-feedback neutral context on the primary model's discovery tasks."
+    },
+    "phase_2_full_battery": "Run all four style prompts on every holdout task once after holdout unlock."
+  },
+  "generation_settings": {
+    "greedy": {"temperature": 0, "top_p": 1, "max_logprobs": 20, "max_tokens": 512},
+    "resamples": {"count": 10, "temperature": 0.8, "top_p": 1, "max_logprobs": 20, "max_tokens": 512},
+    "max_tokens_rationale": "512 tokens permits visible reasoning while bounding a fixed response budget.",
+    "trajectory_unit": {
+      "greedy": "One greedy trajectory independently replays the complete transcript from empty context with temperature 0 at every assistant turn and sample_index 0. M1, M3, and the semantic judge use its measured response and the corresponding recovery or onset continuation where applicable.",
+      "resamples": "Ten resample trajectories independently replay the complete transcript from empty context with temperature 0.8 at every assistant turn and sample_index 1 through 10. Each feedback branch uses that trajectory's immediately prior parsed answer. M2 is computed from their ten measured final answers. Continue all ten through their truth-appropriate correction/recovery or onset/washout so recovery/onset M2 uses ten outcomes. Resampled M1 and M3 are diagnostic only.",
+      "invalid_branching": "In the accurate arm, an invalid immediately preceding answer is treated as incorrect for feedback branching.",
+      "m2_invalidity": "If any one of the ten measured final answers is invalid, the item-cell M2 is missing; do not change k. Apply the same all-ten-valid rule when recovery or onset is the M2 endpoint. Report response invalid rate by condition and exclude M2 confirmatorily if more than 5% of required sampled responses are invalid in any confirmatory condition."
+    },
+    "deterministic_seed_policy": "Use master seed DGS-AC1-2026-08-17. SHA-256 the UTF-8 key DGS-AC1-SEED-v1|<model_id>|<immutable_revision>|<task_id>|<cell_id>|<turn_label>|<sample_index>; the seed is the unsigned big-endian integer from the first four digest bytes. Use only the enumerated turn_labels; greedy calls use sample_index 0 and resamples use 1 through 10. Record the derived seed.",
+    "canonical_response_id": "For every run, response_id is lowercase hexadecimal SHA-256 of UTF-8 DGS-AC1-RESPONSE-v1|<model_id>|<immutable_revision>|<task_id>|<cell_id>|<turn_label>|<sample_index>. Record response_id. Factorial audit and M3 selection consume these recorded IDs; non-factorial IDs make P5 and P6 reproducible."
+  },
+  "metric_binding": {
+    "m1": "At the single option-letter token immediately following the final Answer: prefix, compute canonical correct A-D option logprob minus the strongest other A-D option logprob; never use the generated-letter margin. Verify all four in-context letter candidates are single tokens per model before generation. If any candidate is absent from top-20, M1 is missing. Exclude M1 confirmatorily if more than 5% of required greedy trials are missing for any reason in any confirmatory condition."
+  }
+}
