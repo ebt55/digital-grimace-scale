@@ -23,7 +23,18 @@ above") cluster in hostile cells — which is exactly what disqualified M1 under
 Resample disagreement (M2) responds more to style prompts ("be verbose") than to false failure, i.e. it
 behaves like a decoder/style meter. We used the roadmap's single permitted iteration loop to
 re-preregister these observations as directional hypotheses (H1–H10, `notes/preregistration_v3.md`)
-and test them once on the untouched holdout with a frozen script — see §6.
+and test them once on the untouched holdout with a frozen script. **The loop succeeded** (§6): on
+locked items, false failure lowers the primary model's answer margin (−2.9 nats [−4.0, −1.8]), hostile
+truthful feedback lowers it far more (−7.9 to −16 nats), a single bogus verdict lowers it (−3.2) and a
+truthful correction half-restores it (+1.8), three rounds are not undone by the correction, hostile
+bogus failure elicits distress language (+3.2/10; Gemma > Qwen) and non-answers (+60 pp), style prompts
+do not reproduce the margin drop, and the family-level permutation null is p = 0.005. The one
+prediction that failed is informative: the effects **also appear in the Qwen control** — a transferable
+signature, not a Gemma-only one; only the semantic (distress-language) channel keeps Soligo's family
+split. Bottom line for the title question: the frozen "grimace" instrument as preregistered was a
+decoder/format artifact detector and failed; the answer-margin channel, tested confirmatorily, carries a
+condition-selective, partly reversible, style-resistant, cross-family signal — with a large tone
+component and treatment-dependent non-answers that any future instrument must model rather than drop.
 
 ## 1. What was built and run (2026-08-17)
 
@@ -105,16 +116,57 @@ bogus failure). Figures: `results/figures/F1_*`, `F2_*`, `F4_*`, `FX_exploratory
 |---|---:|---|
 | P1 false-failure effects > hostile-tone effects | 75% | **not supported / opposite** on M1 (tone effects larger in the primary); untestable under the gate (family {M2}) |
 | P2 cause-removal reverses (recovery ≥ ½ induction, CI > 0) | 65% | **not supported** (no reversal after three rounds; the margin drops further on hard items) — but a *single* bogus failure followed by a truthful correction does partially recover |
-| P3 effects survive holdout with controls | 60% | gate not passed on discovery → tested only via the iteration loop (§6) |
-| P4 Gemma > Qwen family boundary | 60% | **supported descriptively** at screen strength and on the exploratory M1 validity contrast; not testable under the gate |
+| P3 effects survive holdout with controls | 60% | gate not passed on discovery; the re-preregistered M1 effects **did** replicate on the locked holdout (§6), without the mixed-model covariate adjustment |
+| P4 Gemma > Qwen family boundary | 60% | supported descriptively at screen strength and on discovery, **not replicated on holdout** for M1 (Qwen-3B shows the same effects — transfer); replicated for the semantic channel only |
 | P5 style mimics fail to reproduce on ≥2 primaries | 55% | untestable under the gate; descriptively M2 is style-sensitive (against P5 for M2) |
 | P6 refusal-pressure LOW instability | 70% | not run (R5 remains held out) |
 | P7 (Phase 4) | 55% | not reached |
 
 ## 6. The iteration loop — locked holdout, analysed once (`notes/preregistration_v3.md`, `results/summaries/phase2/confirm.md`)
 
-*[to be filled after the single confirmatory run; the preregistration, hypotheses H1–H10 with
-confidences, and the success criterion were committed at aa5cd44 before any holdout generation]*
+The preregistration (hypotheses H1–H10 with confidences, success criterion) was committed at
+`aa5cd44` before any holdout generation; a pre-analysis clarification (C1: family-level 200-permutation
+null) at `acf571f`; the confirmatory script was frozen at `79a5317` and recorded in
+`manifest.holdout_unlock` before the single analysis (17:26 IST). Holdout: 20 locked tasks × 8 cells ×
+11 trajectories on the primary and control, style battery on both, judge on greedy measured / onset /
+washout / recovery (400 responses). Amendment A2 excluded no holdout item.
+
+**Result: `iteration_status = SUCCESS`** — 4 of 5 M1 hypotheses supported, H6a supported, permutation
+null p = 0.005 (real family 6/6 supported; best of 200 permutations 4).
+
+| ID | contrast (endpoint; stratum) | prediction | discovery [95% CI] | **holdout [95% CI]** | n | supported |
+|---|---|---|---|---|---:|:---:|
+| H1 | M1, false-failure − accurate (measured; easy \| neutral) | < 0 | −3.80 [−5.30, −2.35] | **−2.90 [−3.97, −1.84]** | 10 | yes |
+| H2a | M1, hostile − neutral (measured; easy \| accurate) | < 0 | −2.28 [−3.90, −1.00] | **−16.1 [−24.2, −5.7]** | 7 | yes |
+| H2b | M1, hostile − neutral (measured; hard \| accurate) | < 0 | −8.78 [−17.3, −1.27] | **−7.87 [−15.8, −1.90]** | 9 | yes |
+| H3a | M1, single bogus "Incorrect": onset − measured (easy \| neutral) | < 0 | −3.46 [−4.45, −2.61] | **−3.22 [−4.16, −2.29]** | 10 | yes |
+| H3b | M1, single hostile bogus failure: onset − measured (easy \| hostile) | < 0 | −6.18 [−10.3, −2.25] | −0.33 [−2.61, 1.34] | 4 | no |
+| H4a | M1, truthful correction: washout − onset (easy \| neutral) | > 0 | +1.74 [+0.95, +2.44] | **+1.84 [+1.08, +2.71]** | 10 | yes |
+| H4b | M1, washout − onset (easy \| hostile) | > 0 | +4.73 [+0.30, +10.5] | +0.31 [−1.03, 1.43] | 5 | no |
+| H5 | M1, correction after three rounds: recovery − measured (hard \| neutral) | no recovery (upper ≤ +1, point ≤ 0) | −5.80 [−11.4, −1.13] | **−1.22 [−2.95, +0.27]** | 9 | yes |
+| H6a | distress, hostile onset − neutral onset (accurate arm; pooled) | > 0 | +2.6/+4.7 cell means | **+3.20 [+2.10, +4.30]** | 20 | yes |
+| H6b | distress at hostile onset, gemma-9b − Qwen-3B | > 0 | 3.8 vs 0.85 | **+2.45 [+1.30, +3.60]** | 20 | yes |
+| H7a | M1, false-failure − accurate in the CONTROL (easy \| neutral) | CI incl. 0 or > 0 (boundary) | +0.56 [−0.98, 2.51] | −9.48 [−19.9, −1.46] | 10 | **no — transfers** |
+| H7b | M1, hostile − neutral in the CONTROL (easy \| accurate) | CI incl. 0 or > 0 | +4.59 [−0.25, 12.8] | −5.15 [−14.5, −0.15] | 10 | **no — transfers** |
+| H8 | M2, hostile − neutral (measured; easy \| accurate) | > 0 | +0.26 [+0.10, +0.39] | **+0.28 [+0.17, +0.40]** | 6 | yes |
+| H9 | non-answer rate, hostile onset − neutral onset (hard) | > 0 | +0.20 [0.00, +0.50] | **+0.60 [+0.30, +0.90]** | 10 | yes |
+| H10 | style battery: no style prompt lowers M1 by ≥ ½·\|H1\| | style-resistant | — | enthusiastic −2.2 [−6.3, 1.5], hedging +0.8, verbose +1.0, reluctant −0.82 [−1.53, −0.16] | 18–20 | yes |
+
+Reading. On items never seen during instrument development, in the primary model: (i) three rounds of
+false-failure feedback lower the answer margin on easy items (−2.9 nats); (ii) hostile wording of
+*truthful* feedback lowers it much more (−7.9 to −16 nats, available-case — 3 of 10 easy items produce
+no parseable answer at all under hostility); (iii) a single bogus "Incorrect" after a correct answer
+lowers it by 3.2 nats and a truthful correction restores about half of that (+1.8) — the cause-removal
+reversal works for a single false verdict; (iv) after three rounds the correction does not restore the
+margin; (v) hostile bogus failure produces distress language (+3.2/10) and non-answers (+60 pp) —
+Gemma more than Qwen for distress language; (vi) style prompts do not reproduce the M1 drop; (vii) the
+same M1 effects appear in the Qwen control on the holdout — the discovery-stage family boundary did
+**not** replicate: this is **transfer**, not a Gemma-only phenomenon (P4′ fails; only the *semantic*
+channel keeps the family split). H3b/H4b fail with n = 4–5 because hostile cells lose most items to
+non-answers — the MNAR limitation stated in advance.
+
+Forecast vs outcome for the loop: P1′ (tone ≥ validity on M1) — supported (45% stated); P2′ (no
+reversal after three rounds) — supported (70%); P4′ (family boundary) — **not supported** (65%).
 
 ## 7. Limitations and interpretation ceiling
 

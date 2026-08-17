@@ -584,3 +584,36 @@ reported in `confirm.md` and `confirm.json`.
 Agent C's three earlier judgement calls stand as accepted: the null verdict covers label-dependent
 contrasts only; the permuted axis is the axis that defines each contrast; and H5/H7's no-effect
 rules are excluded from the null with their directional question asked instead.
+
+## 2026-08-17 — orchestrator — Phase 1 verdict, iteration loop on the locked holdout, close-out
+
+**Phase 1 (discovery).** Frozen rules: BLOCKED (per-cell 5% QC bars exclude M1 and M2 for every model;
+M3 zero variance). Amended A1–A4: determinate FAIL (family {M2}; primary M2 validity −0.29 z, tone
++0.38 z, both n.s.; shuffled null passes; G5 "PASS" rests on a 0.27 baseline AUC and is not evidence).
+Exploratory contrasts (no QC exclusion, labelled) showed large M1 effects of false failure, hostile
+tone and single bogus failure in gemma-2-9b-it, partial recovery after a truthful correction, none after
+three rounds, treatment-dependent non-answers, distress language at hostile onset (Gemma ≫ Qwen), and
+M2 more sensitive to style prompts than to false failure.
+
+**Iteration loop.** `notes/preregistration_v3.md` (H1–H10, confidences, success criterion) committed at
+aa5cd44 before any holdout generation; clarification C1 (200-permutation family null) at acf571f
+before any holdout record was read; confirmatory script frozen at 79a5317 and recorded in
+`manifest.holdout_unlock`; holdout generated 17:02–17:21 (primary + control, factorial + style
+battery; 0 failures; zero empty responses), judged (400 responses, $0.52), analysed ONCE at 17:26 at
+f7f1c4a. Result: **SUCCESS** — H1, H2a, H2b, H3a, H4a, H5, H6a, H6b, H8, H9, H10 supported; H3b, H4b not
+(n = 4–5 after hostile-cell non-answers); H7 (family boundary) NOT supported — Qwen-3B shows the M1
+effects too (transfer). Full table: `results/summaries/phase2/confirm.md`; report: `notes/report.md`.
+
+**Operational incidents today (all logged above):** serve_modal env-var bug (caught before any
+mis-served data); U+2028 in JSONL readers; empty-string logprob tokens; warm-up empty streams recorded
+as placeholders (417 trajectories purged and regenerated); one deploy killed by a truncated PowerShell
+pipeline (no data, no cost); judge crash from editing the manifest mid-run (re-run from cache).
+
+**Spend.** Modal GPU ≈ $9 (Phase 0 ≈ $1, Phase 1 ≈ $4 incl. regeneration and one debug redeploy,
+holdout ≈ $2, smoke/idle ≈ $2); Anthropic judge ≈ $2.9 (manipulation check, Phase 1 640 responses
+$1.07, holdout 400 responses $0.52, validation calls). All GPU apps stopped; `modal container list`
+empty at close-out.
+
+**Still open (human tasks):** blinded M3 audit (moot: parser fires no events) and the 15-per-model judge
+audit (`scripts/run_judge.py audit-sample`); refusal-pressure R5 battery (P6) not run; Phases 3–5 not
+started.
