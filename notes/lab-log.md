@@ -673,3 +673,54 @@ with a mocked client, which exercised the raw-file filters (80/80/10), the M1 jo
 `results/summaries/phase2/metric_rows.csv` (73 of 80 holdout endpoints available-case), resumption of
 `steering_outputs.jsonl`, and both figures. Outputs went to a scratch directory; no Phase-3 summary was
 written into the repository.
+
+## 2026-08-18 - agent J1 - Phase 3 (j-space) infrastructure: Modal activation/steering app
+
+Built for the prereg v4 Phase 3 design: `src/jspace_modal.py` (Modal app `dgs-jspace-gemma-2-9b-it`),
+`src/jspace_client.py` (local chunking/npz/token conversion) and `tests/test_jspace_client.py`
+(23 offline tests, no `modal`/GPU import). Deployed, smoked against the live app, stopped.
+
+**Stack.** `google/gemma-2-9b-it` @ 11c9b309 (manifest pin), bf16, `attn_implementation="eager"`
+(the only implementation that applies gemma-2's attention softcap exactly), L40S with A100-40GB
+fallback, torch 2.9.1 (cu12.8 wheels), transformers **4.57.6**, accelerate 1.14.0, numpy 2.4.6.
+transformers 5.15.0 is current but was rejected deliberately: 4.x builds the hidden-state tuple
+inside `Gemma2Model.forward`, so `hidden_states[i]` has the documented meaning this phase's whole
+layer convention rests on, while 5.x moved that plumbing into a capture decorator whose per-layer
+semantics could only be confirmed by burning GPU time. Weights loaded from the existing
+`dgs-hf-cache` volume (no re-download): 16-25 s.
+
+**Three things that would have silently corrupted Phase 3, found and fixed before any real run.**
+(1) This revision's `generation_config.json` lists only `<eos>` (id 1); the instruction-tuned model
+ends its turn with `<end_of_turn>` (id 107). Both are now treated as EOS - otherwise every greedy
+generation runs to `max_new_tokens` and starts a fresh `<start_of_turn>`. (2) gemma-2 ships
+`cache_implementation="hybrid"`, which routes `generate` onto a static cache and `torch.compile`;
+transformers 4.57 unsets that on the model's own config, but a deep copy keeps it, costing ~5 min of
+recompilation *per steering hook* (first steered call 335 s, the next 5 s). Now unset explicitly:
+dynamic cache, no compile. (3) The chat template emits `<bos>` itself, so prompts are tokenized with
+`add_special_tokens=False`; a second BOS would shift every activation.
+
+**Layer indices are hidden-state indices everywhere.** 0 = embedding output, i in 1..41 = output of
+decoder block i-1, 42 = final normed state. `generate_steered(layer=i)` hooks decoder block i-1, so
+the added vector first appears exactly at `hidden_states[i]` - the stream the direction was measured
+in, with no off-by-one for the caller to remember.
+
+**Live measurements (L40S, prompts ~1127 tokens, 3-turn factorial shape).** Container start + load
+38 s. Extraction, all 43 layers, batch 8: 0.448 s/item wall (2.78 s remote for 16 items) -> a
+170-item split is ~2 min, a 320-item pair of splits ~3-4 min. Greedy generation, batch 8:
+**61.5 tok/s aggregate** (1816 tokens in 29.5 s); at batch 2 it was 17.8 tok/s, so batch size is the
+throughput lever. ~700 generations at <=512 tokens is ~1.0-1.6 h of GPU. Left-padding correctness
+check: the same item extracted alone (113 tokens) and behind a 1647-token prompt agrees to
+cosine 0.999957 (max abs diff 1.0 on a vector of norm 259, i.e. float16 quantisation). Peak absolute
+activation 740, so the float16 store never overflows (guarded and counted regardless). Mean L2 norms
+at the final prompt token: layer 0 = 103, 10 = 97, 21 = 256, 30 = 451, 42 = 121.
+
+**Calibration warning for the steering run.** The prereg's dose is `alpha * d/||d|| * ||mean
+activation||`, i.e. at alpha=2 the added vector has twice the norm of the entire residual stream. A
+*random* unit direction at alpha=2 already destroys generation completely: 8/8 items ran to the token
+cap emitting "About a    ...   ...", none parseable. Expect the degeneracy rule (">50% of items yield
+no parseable answer") to fire at the top of the ladder for the random controls, and probably for the
+tone direction too; the informative doses are likely 0.5 and 1.
+
+**Spend.** ~25 min of L40S across three live runs including 5-min idle tails (deploy and image build
+are free/CPU): roughly $0.8-1.0. App stopped, `modal container list` empty at close-out. Redeploy is
+instant (image cached); deploy costs nothing until a method is invoked.

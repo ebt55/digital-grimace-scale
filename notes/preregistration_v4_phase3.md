@@ -28,6 +28,19 @@ sufficient to run Phase 3 on those channels, and say so plainly in the write-up.
   direction (verbose − concise from the style battery). Readouts: M1 (available-case), non-answer rate,
   judge distress (claude-sonnet-4-6, locked rubric), and response length.
 
+### Clarification C2 (2026-08-18 02:45 IST, before any tone-direction steering was run)
+
+Two corrections after the infrastructure smoke and the item-set assertion, neither informed by any
+steering outcome of interest: (a) "8 cells × 20 tasks per split" is 80 measured transcripts per split
+(a task's difficulty fixes half the factorial), so localization uses 80 discovery + 80 holdout items.
+(b) Dose unit: the smoke showed that a random direction scaled to the mean activation norm at α = 2
+already produces gibberish to the token cap, so that unit cannot serve as a dose scale for tone or for
+controls. The dose unit is therefore the natural magnitude of the contrast itself: steer by α · d where
+d = mean(hostile) − mean(neutral) at L* (α ∈ {0.5, 1, 2, 4}; α = 1 moves a neutral state to the hostile
+mean), and every control direction (5 random, 1 unrelated) is scaled to the same norm α · ‖d‖. The
+ratio ‖d‖ / mean-activation-norm at L* is reported so readers can convert. The degenerate-dose rule
+(> 50% of items with no parseable answer) is unchanged.
+
 ## Predictions (with confidence)
 
 | ID | prediction | confidence |
