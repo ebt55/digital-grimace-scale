@@ -506,3 +506,81 @@ information separately.
 backwards out of fold — against a full-model AUC of 0.53, itself barely above chance. The
 preregistered gap rule is applied unchanged, but a gap manufactured by a sub-chance baseline is not
 evidence that the primary metrics carry condition information, and the write-up must say so.
+
+## 2026-08-17 — agent C — preregistration v3 confirmatory script (frozen before the holdout)
+
+`src/confirm.py` + `scripts/confirm_holdout.py` implement `notes/preregistration_v3.md`. The
+hypothesis table is transcribed into a frozen `HYPOTHESES` tuple (H1, H2a, H2b, H3a, H3b, H4a, H4b,
+H5, H6a, H6b, H7a, H7b, H8, H9) with each contrast's endpoint pair, stratum, predicted direction and
+discovery estimate fixed in code, so no stratum or direction can be chosen after seeing the data.
+Extraction streams through `src.extract`; A1–A4 apply as on discovery, with A2 computed on the
+holdout's own accurate+neutral resamples per model. M1 is available-case in raw nats with the
+per-cell non-answer rate tabled beside it. Every contrast is an item-paired mean difference with a
+2,000-resample item-clustered bootstrap percentile 95% CI; two-sided bootstrap p-values are
+BH-adjusted across H1–H9 as the secondary summary. Outputs: `confirm.md`, `confirm.json`,
+`hypotheses.csv`, `shuffled_null.csv`, plus the metric-row/QC/A2 tables.
+
+**Seven judgement calls the v3 text does not settle. Numbers 1, 2 and 4 change `iteration_status`,
+so they need the orchestrator's explicit sign-off before the confirmatory run.**
+
+1. *Shuffle granularity.* The permutation runs within each item — swapping the two cells that differ
+   only on the permuted axis — not freely across the `model × difficulty` stratum. A free stratum
+   permutation can give one item two "malfunctioning" cells and another none, which leaves a paired
+   contrast with no partner to look up. Within-item swapping preserves each stratum's label counts
+   exactly (every item still contributes one cell per label) and keeps the pairing defined.
+2. *Which label is permuted.* v3 says validity labels always, plus tone labels "for tone
+   hypotheses". Permuting both moves the accurate arm into the malfunctioning arm, where `onset` and
+   `onset_washout` do not exist; in testing that dropped 17 of 20 items and left a degenerate,
+   biased three-item sample that spuriously "supported" H6a. The permutation is therefore applied to
+   the axis that defines the contrast: validity for a validity contrast, tone for a tone contrast.
+3. *"No effect" rules inside the null.* H5 (CI upper ≤ +1.0 and point ≤ 0) and H7 (CI includes 0 or
+   is positive) are satisfied by construction on shuffled — hence effectless — data, so a literal
+   reading makes the null impossible to pass. In the null those two are replaced by the signed
+   direction behind them (H5 negative, H7 positive).
+4. *Scope of the null verdict.* H3, H4, H5 and H6b compare two endpoints of the SAME cell (a
+   different turn, or the same cell in the other model). Permuting condition labels leaves those
+   contrasts numerically intact, so their shuffled repeat says nothing about label-driven false
+   positives. They are computed and shown marked `label-invariant`, and the verdict rests on the
+   eight contrasts the permutation can actually break: H1, H2a, H2b, H6a, H7a, H7b, H8, H9.
+5. *BH family.* H1–H9 means every tested contrast except the H10 style battery, with H7 contributing
+   H7a and H7b separately (14 tests).
+6. *H10 threshold.* "50% of the H1 effect" uses the **holdout** H1 point estimate; with no H1
+   estimate no violation can be declared.
+7. *Bootstrap p-value.* Two-sided percentile: twice the smaller tail mass at zero, capped at 1.
+
+`--dry-run-discovery` points the same code at Phase-1 discovery and labels every output
+"DRY RUN ON DISCOVERY — NOT CONFIRMATORY"; it was used to exercise the path end to end and its
+output directory is deleted afterwards. Nothing under `results/raw/phase2` or
+`results/raw/style_battery` was read or written by me.
+
+### Prereg v3 clarification C1 (pre-analysis, 2026-08-17 ~17:10)
+
+Recorded before any holdout data was generated or seen. The v3 shuffled-label null said "the null
+passes if no shuffled contrast is supported". Testing on discovery showed that criterion is not
+usable: a single deterministic permutation applied to ~10 contrasts fails by chance too often. In
+the discovery dry run the single shuffle collapsed every label-dependent contrast as it should
+(H1, H2a, H2b, H6a, H7a, H7b, H8 all unsupported) yet the whole null still "failed" on H9 alone — a
+nine-item binary outcome where three informative items happened to keep their orientation.
+
+The null check is therefore a **family-level permutation test**:
+
+1. The null family is the directional, label-dependent set **L = {H1, H2a, H2b, H6a, H8, H9}**.
+   H3a, H3b, H4a, H4b, H5 and H6b compare two endpoints of the same cell and are
+   permutation-invariant; H7 is a no-effect rule on the control; H10 compares against the style
+   reference. All are excluded from the family.
+2. `real_count` = hypotheses in L supported on the real labels.
+3. For k = 1..200, labels are permuted with the deterministic key
+   `DGS-AC1-SHUFFLE-v3|<k>|<model_id>|<task_id>|<cell_id>` — validity labels for H1 and H8, tone
+   labels for H2a, H2b, H6a and H9 — and the supported count in L is recorded.
+4. `null_p` = (1 + #{k : count_k >= real_count}) / 201. The null check PASSES iff `null_p` < .05 and
+   `real_count` > 0; a family that supports nothing has nothing to beat and fails.
+5. The success criterion is otherwise unchanged: at least three of {H1, H2a, H2b, H3a, H3b}
+   supported, H6a supported, and the null check passing.
+
+The single-shuffle (k = 1) per-hypothesis table is still computed and printed for transparency, but
+it no longer decides anything. `real_count`, the permutation-count histogram and `null_p` are
+reported in `confirm.md` and `confirm.json`.
+
+Agent C's three earlier judgement calls stand as accepted: the null verdict covers label-dependent
+contrasts only; the permuted axis is the axis that defines each contrast; and H5/H7's no-effect
+rules are excluded from the null with their directional question asked instead.

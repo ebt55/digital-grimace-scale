@@ -101,11 +101,12 @@ def _jsonable(value):
 # --------------------------------------------------------------------------
 
 def _measured_factorial(rows, model_id, *, phase, split, turns=("measured",), excluded=()):
+    """``phase=None`` matches any phase, so holdout tables need no phase literal."""
     excluded = frozenset(excluded)
     return tuple(
         row for row in rows
         if row.model_id == model_id
-        and row.phase == phase
+        and (phase is None or row.phase == phase)
         and row.split == split
         and row.cell_kind == "factorial"
         and row.turn_label in turns
@@ -297,7 +298,7 @@ def _qc_counts(group, metric):
     return len(group), sum(1 for row in group if row.metric(metric)[0] is None)
 
 
-def metric_eligibility(rows, model_id, *, m3_audit_f1=None, phase="phase_1", split="discovery", amendments=AMENDED_RULES):
+def metric_eligibility(rows, model_id, *, m3_audit_f1=None, phase=None, split="discovery", amendments=AMENDED_RULES):
     """Apply the preregistered confirmatory exclusion rules to one model.
 
     M1 is excluded if more than 5% of required greedy trials are missing; M2 if
@@ -900,10 +901,14 @@ def _mean_of(values):
 
 
 def exploratory_cell_summary(rows, *, phase="phase_1", split="discovery"):
-    """Per model x cell x endpoint means and item counts, with no exclusions."""
+    """Per model x cell x endpoint means and item counts, with no exclusions.
+
+    ``phase=None`` matches any phase.
+    """
     selected = [
         row for row in rows
-        if row.phase == phase and row.split == split and row.turn_label in EXPLORATORY_ENDPOINTS
+        if (phase is None or row.phase == phase) and row.split == split
+        and row.turn_label in EXPLORATORY_ENDPOINTS
     ]
     grouped: dict[tuple, list] = {}
     for row in selected:

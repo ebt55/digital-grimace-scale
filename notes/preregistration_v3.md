@@ -82,7 +82,7 @@ contrasts would fail the loop by chance). It is replaced, before any holdout ana
 **family-level permutation test**: label-dependent set L = {H1, H2a, H2b, H6a, H8, H9}; H3a/H3b/H4a/H4b/
 H5/H6b are within-cell turn contrasts (invariant to label permutation) and are excluded, as are H7
 (no-effect rule) and H10 (style vs reference). For k = 1..200, permute the defining labels
-(validity for H1/H8, tone for H2a/H2b/H6a/H9) within model × difficulty by the deterministic key
+(validity for H1; tone for H2a/H2b/H6a/H8/H9 — H8's two sides differ only in tone) within model × difficulty by the deterministic key
 `DGS-AC1-SHUFFLE-v3|<k>|<model_id>|<task_id>|<cell_id>` and count supported hypotheses in L;
 `null_p = (1 + #{k : count_k ≥ real_count}) / 201`. The null check passes iff `null_p < 0.05`
 (fails if the real count is 0). The k = 1 per-hypothesis shuffled table is still reported.
