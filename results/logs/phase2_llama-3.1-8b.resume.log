@@ -1,0 +1,24 @@
+﻿phase phase2 | model meta-llama/Llama-3.1-8B-Instruct | revision 0e9e39f249a16976918f6564b8830bc894c89659 | run_kind empirical | run_id phase2-llama-3.1-8b-2026-08-17
+HOLDOUT UNLOCKED | frozen analysis commit aa5cd44c5420473a5a243722293fc25b13c94301 | unlocked_at 2026-08-17T16:48:50+05:30 | preregistration_v3_sha256 fa2617bde8bcd660be68406eb6a079360f055d6057181e20ccc7e77e9d3b62ed
+jobs 80 | samples 0,1,2,3,4,5,6,7,8,9,10 | trajectories 880 | workers 96 | out C:\Users\ebin\claude-ground\Digital Grimace Scale\.claude\worktrees\digital-grimace-scale-experiment-f825fc\results\raw\phase2\meta-llama__Llama-3.1-8B-Instruct.jsonl
+[ 171.7s] 100/541 trajectories (completed 88, failed 12, skipped 339, records 571)
+[ 299.7s] 200/541 trajectories (completed 149, failed 51, skipped 339, records 960)
+[ 384.1s] 300/541 trajectories (completed 249, failed 51, skipped 339, records 1609)
+[ 452.2s] 400/541 trajectories (completed 349, failed 51, skipped 339, records 2264)
+[ 545.3s] 500/541 trajectories (completed 449, failed 51, skipped 339, records 2916)
+[ 571.0s] 541/541 trajectories (completed 490, failed 51, skipped 339, records 3174)
+python.exe : failed trajectories recorded in C:\Users\ebin\claude-ground\Digital Grimace Scale\.claude\worktrees\digita
+l-grimace-scale-experiment-f825fc\results\raw\phase2\meta-llama__Llama-3.1-8B-Instruct.jsonl.failures.jsonl
+At line:1 char:1058
++ ...  start $(Get-Date -Format HH:mm:ss) ==="; & $py @args *> $log; Select ...
++                                               ~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (failed trajecto....failures.jsonl:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+run summary: planned 880, skipped 339, completed 490, failed 51
+  records written 3174, stale records dropped 0, wall time 571.0s
+  output C:\Users\ebin\claude-ground\Digital Grimace Scale\.claude\worktrees\digital-grimace-scale-experiment-f825fc\results\raw\phase2\meta-llama__Llama-3.1-8B-Instruct.jsonl
+  backend stats {"completion_tokens": 911616, "content_mismatch_examples": [], "content_mismatches": 0, "empty_responses": 0, "empty_stream_retries": 0, "nonfinite_logprobs": 0, "prompt_tokens": 3084727, "requests": 3300, "retries": 0, "trailing_special_tokens": 3011, "truncated": 290, "warm_up_attempts": 1}
+  throughput prompt_tokens 5402.6/s | completion_tokens 1596.6/s
+  failures C:\Users\ebin\claude-ground\Digital Grimace Scale\.claude\worktrees\digital-grimace-scale-experiment-f825fc\results\raw\phase2\meta-llama__Llama-3.1-8B-Instruct.jsonl.failures.jsonl
+backend stats: completion_tokens=911616, content_mismatches=0, empty_responses=0, empty_stream_retries=0, nonfinite_logprobs=0, prompt_tokens=3084727, requests=3300, retries=0, trailing_special_tokens=3011, truncated=290, warm_up_attempts=1

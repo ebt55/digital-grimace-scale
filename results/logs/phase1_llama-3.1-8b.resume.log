@@ -1,0 +1,9 @@
+﻿phase phase1 | model meta-llama/Llama-3.1-8B-Instruct | revision 0e9e39f249a16976918f6564b8830bc894c89659 | run_kind empirical | run_id phase1-llama-3.1-8b-2026-08-17
+jobs 80 | samples 0,1,2,3,4,5,6,7,8,9,10 | trajectories 880 | workers 96 | out C:\Users\ebin\claude-ground\Digital Grimace Scale\.claude\worktrees\digital-grimace-scale-experiment-f825fc\results\raw\phase1\meta-llama__Llama-3.1-8B-Instruct.jsonl
+[ 158.3s] 33/33 trajectories (completed 33, failed 0, skipped 847, records 213)
+run summary: planned 880, skipped 847, completed 33, failed 0
+  records written 213, stale records dropped 0, wall time 158.3s
+  output C:\Users\ebin\claude-ground\Digital Grimace Scale\.claude\worktrees\digital-grimace-scale-experiment-f825fc\results\raw\phase1\meta-llama__Llama-3.1-8B-Instruct.jsonl
+  backend stats {"completion_tokens": 69718, "content_mismatch_examples": [], "content_mismatches": 0, "empty_responses": 0, "empty_stream_retries": 0, "nonfinite_logprobs": 0, "prompt_tokens": 234942, "requests": 213, "retries": 0, "trailing_special_tokens": 159, "truncated": 55, "warm_up_attempts": 1}
+  throughput prompt_tokens 1483.9/s | completion_tokens 440.3/s
+backend stats: completion_tokens=69718, content_mismatches=0, empty_responses=0, empty_stream_retries=0, nonfinite_logprobs=0, prompt_tokens=234942, requests=213, retries=0, trailing_special_tokens=159, truncated=55, warm_up_attempts=1

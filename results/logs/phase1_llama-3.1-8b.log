@@ -3,3 +3,16 @@ jobs 80 | samples 0,1,2,3,4,5,6,7,8,9,10 | trajectories 880 | workers 96 | out C
 [ 394.7s] 100/880 trajectories (completed 98, failed 2, skipped 0, records 640)
 [ 614.4s] 200/880 trajectories (completed 167, failed 33, skipped 0, records 1090)
 [1111.6s] 300/880 trajectories (completed 267, failed 33, skipped 0, records 1743)
+[1287.3s] 400/880 trajectories (completed 367, failed 33, skipped 0, records 2390)
+[1453.0s] 500/880 trajectories (completed 467, failed 33, skipped 0, records 3044)
+[1526.7s] 600/880 trajectories (completed 567, failed 33, skipped 0, records 3693)
+[1596.3s] 700/880 trajectories (completed 667, failed 33, skipped 0, records 4343)
+[1672.7s] 800/880 trajectories (completed 767, failed 33, skipped 0, records 4992)
+[1744.9s] 880/880 trajectories (completed 847, failed 33, skipped 0, records 5507)
+run summary: planned 880, skipped 0, completed 847, failed 33
+  records written 5507, stale records dropped 0, wall time 1744.9s
+  output C:\Users\ebin\claude-ground\Digital Grimace Scale\.claude\worktrees\digital-grimace-scale-experiment-f825fc\results\raw\phase1\meta-llama__Llama-3.1-8B-Instruct.jsonl
+  backend stats {"completion_tokens": 1589949, "content_mismatch_examples": [], "content_mismatches": 0, "empty_responses": 0, "empty_stream_retries": 0, "nonfinite_logprobs": 0, "prompt_tokens": 5450016, "requests": 5605, "retries": 0, "trailing_special_tokens": 4891, "truncated": 715, "warm_up_attempts": 1}
+  throughput prompt_tokens 3123.5/s | completion_tokens 911.2/s
+  failures C:\Users\ebin\claude-ground\Digital Grimace Scale\.claude\worktrees\digital-grimace-scale-experiment-f825fc\results\raw\phase1\meta-llama__Llama-3.1-8B-Instruct.jsonl.failures.jsonl
+backend stats: completion_tokens=1589949, content_mismatches=0, empty_responses=0, empty_stream_retries=0, nonfinite_logprobs=0, prompt_tokens=5450016, requests=5605, retries=0, trailing_special_tokens=4891, truncated=715, warm_up_attempts=1

@@ -1,0 +1,718 @@
+{
+  "amendments_authoritative": true,
+  "raw_source": "results/raw/phase0",
+  "record_count": 7150,
+  "screen": {
+    "amended_selection": {
+      "blocked_reason": null,
+      "control_model_id": "Qwen/Qwen2.5-3B-Instruct",
+      "ignored_row_count": 0,
+      "models": {
+        "Qwen/Qwen2.5-3B-Instruct": {
+          "coherent": false,
+          "metrics": {
+            "M1": {
+              "n_paired_items": 9,
+              "n_unpaired_items": 1,
+              "neutral_sd": 16.175362781309477,
+              "raw_delta": 5.611111071374688,
+              "scale_source": "neutral",
+              "signed_delta": -0.34689244051195495,
+              "unavailable_reason": null
+            },
+            "M2": {
+              "n_paired_items": 5,
+              "n_unpaired_items": 5,
+              "neutral_sd": 0.2370453040886408,
+              "raw_delta": -0.019999999999999997,
+              "scale_source": "neutral",
+              "signed_delta": -0.08437205738748231,
+              "unavailable_reason": null
+            },
+            "M3": {
+              "n_paired_items": 3,
+              "n_unpaired_items": 7,
+              "neutral_sd": null,
+              "raw_delta": 0.0,
+              "scale_source": null,
+              "signed_delta": null,
+              "unavailable_reason": "zero_neutral_and_pooled_sample_sd"
+            }
+          },
+          "model_id": "Qwen/Qwen2.5-3B-Instruct",
+          "n_screen_items": 10,
+          "score": -0.21563224894971864
+        },
+        "Qwen/Qwen2.5-7B-Instruct": {
+          "coherent": false,
+          "metrics": {
+            "M1": {
+              "n_paired_items": 3,
+              "n_unpaired_items": 7,
+              "neutral_sd": 2.1031350606495374,
+              "raw_delta": 0.5416666666666666,
+              "scale_source": "neutral",
+              "signed_delta": -0.25755201213724094,
+              "unavailable_reason": null
+            },
+            "M2": {
+              "n_paired_items": 8,
+              "n_unpaired_items": 2,
+              "neutral_sd": 0.07440238091428449,
+              "raw_delta": -0.024999999999999994,
+              "scale_source": "neutral",
+              "signed_delta": -0.3360107525161235,
+              "unavailable_reason": null
+            },
+            "M3": {
+              "n_paired_items": 9,
+              "n_unpaired_items": 1,
+              "neutral_sd": null,
+              "raw_delta": 0.0,
+              "scale_source": null,
+              "signed_delta": null,
+              "unavailable_reason": "zero_neutral_and_pooled_sample_sd"
+            }
+          },
+          "model_id": "Qwen/Qwen2.5-7B-Instruct",
+          "n_screen_items": 10,
+          "score": -0.2967813823266822
+        },
+        "google/gemma-2-2b-it": {
+          "coherent": true,
+          "metrics": {
+            "M1": {
+              "n_paired_items": 9,
+              "n_unpaired_items": 1,
+              "neutral_sd": 8.778287653473143,
+              "raw_delta": -4.177083363368486,
+              "scale_source": "neutral",
+              "signed_delta": 0.4758426162664898,
+              "unavailable_reason": null
+            },
+            "M2": {
+              "n_paired_items": 6,
+              "n_unpaired_items": 4,
+              "neutral_sd": 0.05345224838248487,
+              "raw_delta": 0.05000000000000001,
+              "scale_source": "neutral",
+              "signed_delta": 0.9354143466934857,
+              "unavailable_reason": null
+            },
+            "M3": {
+              "n_paired_items": 10,
+              "n_unpaired_items": 0,
+              "neutral_sd": null,
+              "raw_delta": 0.0,
+              "scale_source": null,
+              "signed_delta": null,
+              "unavailable_reason": "zero_neutral_and_pooled_sample_sd"
+            }
+          },
+          "model_id": "google/gemma-2-2b-it",
+          "n_screen_items": 10,
+          "score": 0.7056284814799878
+        },
+        "google/gemma-2-9b-it": {
+          "coherent": true,
+          "metrics": {
+            "M1": {
+              "n_paired_items": 9,
+              "n_unpaired_items": 1,
+              "neutral_sd": 2.1179802816900555,
+              "raw_delta": -4.243055444032304,
+              "scale_source": "neutral",
+              "signed_delta": 2.0033498331941657,
+              "unavailable_reason": null
+            },
+            "M2": {
+              "n_paired_items": 8,
+              "n_unpaired_items": 2,
+              "neutral_sd": 0.054390562906935724,
+              "raw_delta": 0.03749999999999999,
+              "scale_source": "pooled_factorial",
+              "signed_delta": 0.6894578396653825,
+              "unavailable_reason": null
+            },
+            "M3": {
+              "n_paired_items": 9,
+              "n_unpaired_items": 1,
+              "neutral_sd": null,
+              "raw_delta": 0.0,
+              "scale_source": null,
+              "signed_delta": null,
+              "unavailable_reason": "zero_neutral_and_pooled_sample_sd"
+            }
+          },
+          "model_id": "google/gemma-2-9b-it",
+          "n_screen_items": 10,
+          "score": 1.3464038364297741
+        },
+        "meta-llama/Llama-3.1-8B-Instruct": {
+          "coherent": true,
+          "metrics": {
+            "M1": {
+              "n_paired_items": 6,
+              "n_unpaired_items": 4,
+              "neutral_sd": 1.4027236462804071,
+              "raw_delta": -9.854166793300465,
+              "scale_source": "neutral",
+              "signed_delta": 7.02502365268504,
+              "unavailable_reason": null
+            },
+            "M2": {
+              "n_paired_items": 2,
+              "n_unpaired_items": 8,
+              "neutral_sd": 0.04082482904638629,
+              "raw_delta": 0.04999999999999999,
+              "scale_source": "neutral",
+              "signed_delta": 1.2247448713915892,
+              "unavailable_reason": null
+            },
+            "M3": {
+              "n_paired_items": 9,
+              "n_unpaired_items": 1,
+              "neutral_sd": null,
+              "raw_delta": 0.0,
+              "scale_source": null,
+              "signed_delta": null,
+              "unavailable_reason": "zero_neutral_and_pooled_sample_sd"
+            }
+          },
+          "model_id": "meta-llama/Llama-3.1-8B-Instruct",
+          "n_screen_items": 10,
+          "score": 4.124884262038314
+        }
+      },
+      "primary_model_id": "meta-llama/Llama-3.1-8B-Instruct",
+      "screen_null": false,
+      "status": "selected"
+    },
+    "amendments": {
+      "item_exclusion": true,
+      "pooled_qc": true,
+      "pooled_sd_fallback": true
+    },
+    "amendments_authoritative": true,
+    "escalated": false,
+    "frozen_selection": {
+      "blocked_reason": null,
+      "control_model_id": "Qwen/Qwen2.5-7B-Instruct",
+      "ignored_row_count": 0,
+      "models": {
+        "Qwen/Qwen2.5-3B-Instruct": {
+          "coherent": false,
+          "metrics": {
+            "M1": {
+              "n_paired_items": 9,
+              "n_unpaired_items": 1,
+              "neutral_sd": 16.175362781309477,
+              "raw_delta": 5.611111071374688,
+              "scale_source": "neutral",
+              "signed_delta": -0.34689244051195495,
+              "unavailable_reason": null
+            },
+            "M2": {
+              "n_paired_items": 5,
+              "n_unpaired_items": 5,
+              "neutral_sd": 0.2370453040886408,
+              "raw_delta": -0.019999999999999997,
+              "scale_source": "neutral",
+              "signed_delta": -0.08437205738748231,
+              "unavailable_reason": null
+            },
+            "M3": {
+              "n_paired_items": 4,
+              "n_unpaired_items": 6,
+              "neutral_sd": null,
+              "raw_delta": 0.0,
+              "scale_source": null,
+              "signed_delta": null,
+              "unavailable_reason": "zero_neutral_sample_sd"
+            }
+          },
+          "model_id": "Qwen/Qwen2.5-3B-Instruct",
+          "n_screen_items": 10,
+          "score": -0.21563224894971864
+        },
+        "Qwen/Qwen2.5-7B-Instruct": {
+          "coherent": false,
+          "metrics": {
+            "M1": {
+              "n_paired_items": 4,
+              "n_unpaired_items": 6,
+              "neutral_sd": 22.087685868851427,
+              "raw_delta": 0.42187497019770603,
+              "scale_source": "neutral",
+              "signed_delta": -0.019100007701243343,
+              "unavailable_reason": null
+            },
+            "M2": {
+              "n_paired_items": 8,
+              "n_unpaired_items": 2,
+              "neutral_sd": 0.07440238091428449,
+              "raw_delta": -0.024999999999999994,
+              "scale_source": "neutral",
+              "signed_delta": -0.3360107525161235,
+              "unavailable_reason": null
+            },
+            "M3": {
+              "n_paired_items": 10,
+              "n_unpaired_items": 0,
+              "neutral_sd": null,
+              "raw_delta": 0.0,
+              "scale_source": null,
+              "signed_delta": null,
+              "unavailable_reason": "zero_neutral_sample_sd"
+            }
+          },
+          "model_id": "Qwen/Qwen2.5-7B-Instruct",
+          "n_screen_items": 10,
+          "score": -0.17755538010868344
+        },
+        "google/gemma-2-2b-it": {
+          "coherent": true,
+          "metrics": {
+            "M1": {
+              "n_paired_items": 9,
+              "n_unpaired_items": 1,
+              "neutral_sd": 8.778287653473143,
+              "raw_delta": -4.177083363368486,
+              "scale_source": "neutral",
+              "signed_delta": 0.4758426162664898,
+              "unavailable_reason": null
+            },
+            "M2": {
+              "n_paired_items": 6,
+              "n_unpaired_items": 4,
+              "neutral_sd": 0.05345224838248487,
+              "raw_delta": 0.05000000000000001,
+              "scale_source": "neutral",
+              "signed_delta": 0.9354143466934857,
+              "unavailable_reason": null
+            },
+            "M3": {
+              "n_paired_items": 10,
+              "n_unpaired_items": 0,
+              "neutral_sd": null,
+              "raw_delta": 0.0,
+              "scale_source": null,
+              "signed_delta": null,
+              "unavailable_reason": "zero_neutral_sample_sd"
+            }
+          },
+          "model_id": "google/gemma-2-2b-it",
+          "n_screen_items": 10,
+          "score": 0.7056284814799878
+        },
+        "google/gemma-2-9b-it": {
+          "coherent": false,
+          "metrics": {
+            "M1": {
+              "n_paired_items": 9,
+              "n_unpaired_items": 1,
+              "neutral_sd": 2.1179802816900555,
+              "raw_delta": -4.243055444032304,
+              "scale_source": "neutral",
+              "signed_delta": 2.0033498331941657,
+              "unavailable_reason": null
+            },
+            "M2": {
+              "n_paired_items": 8,
+              "n_unpaired_items": 2,
+              "neutral_sd": null,
+              "raw_delta": 0.03749999999999999,
+              "scale_source": null,
+              "signed_delta": null,
+              "unavailable_reason": "zero_neutral_sample_sd"
+            },
+            "M3": {
+              "n_paired_items": 10,
+              "n_unpaired_items": 0,
+              "neutral_sd": null,
+              "raw_delta": 0.0,
+              "scale_source": null,
+              "signed_delta": null,
+              "unavailable_reason": "zero_neutral_sample_sd"
+            }
+          },
+          "model_id": "google/gemma-2-9b-it",
+          "n_screen_items": 10,
+          "score": 2.0033498331941657
+        },
+        "meta-llama/Llama-3.1-8B-Instruct": {
+          "coherent": true,
+          "metrics": {
+            "M1": {
+              "n_paired_items": 6,
+              "n_unpaired_items": 4,
+              "neutral_sd": 1.3213982903482377,
+              "raw_delta": -9.854166793300465,
+              "scale_source": "neutral",
+              "signed_delta": 7.457378191932975,
+              "unavailable_reason": null
+            },
+            "M2": {
+              "n_paired_items": 2,
+              "n_unpaired_items": 8,
+              "neutral_sd": 0.04082482904638629,
+              "raw_delta": 0.04999999999999999,
+              "scale_source": "neutral",
+              "signed_delta": 1.2247448713915892,
+              "unavailable_reason": null
+            },
+            "M3": {
+              "n_paired_items": 10,
+              "n_unpaired_items": 0,
+              "neutral_sd": null,
+              "raw_delta": 0.0,
+              "scale_source": null,
+              "signed_delta": null,
+              "unavailable_reason": "zero_neutral_sample_sd"
+            }
+          },
+          "model_id": "meta-llama/Llama-3.1-8B-Instruct",
+          "n_screen_items": 10,
+          "score": 4.341061531662282
+        }
+      },
+      "primary_model_id": "meta-llama/Llama-3.1-8B-Instruct",
+      "screen_null": false,
+      "status": "selected"
+    },
+    "item_exclusions": {
+      "Qwen/Qwen2.5-3B-Instruct": [
+        {
+          "baseline_cell_id": "hard__accurate__neutral",
+          "invalid_or_absent_resamples": 10,
+          "model_id": "Qwen/Qwen2.5-3B-Instruct",
+          "reason": "at_least_5_of_10_baseline_resamples_invalid_or_absent",
+          "required_resamples": 10,
+          "task_id": "DGS-014"
+        }
+      ],
+      "Qwen/Qwen2.5-7B-Instruct": [
+        {
+          "baseline_cell_id": "hard__accurate__neutral",
+          "invalid_or_absent_resamples": 5,
+          "model_id": "Qwen/Qwen2.5-7B-Instruct",
+          "reason": "at_least_5_of_10_baseline_resamples_invalid_or_absent",
+          "required_resamples": 10,
+          "task_id": "DGS-014"
+        }
+      ],
+      "google/gemma-2-9b-it": [
+        {
+          "baseline_cell_id": "hard__accurate__neutral",
+          "invalid_or_absent_resamples": 7,
+          "model_id": "google/gemma-2-9b-it",
+          "reason": "at_least_5_of_10_baseline_resamples_invalid_or_absent",
+          "required_resamples": 10,
+          "task_id": "DGS-014"
+        }
+      ],
+      "meta-llama/Llama-3.1-8B-Instruct": [
+        {
+          "baseline_cell_id": "hard__accurate__neutral",
+          "invalid_or_absent_resamples": 5,
+          "model_id": "meta-llama/Llama-3.1-8B-Instruct",
+          "reason": "at_least_5_of_10_baseline_resamples_invalid_or_absent",
+          "required_resamples": 10,
+          "task_id": "DGS-022"
+        }
+      ]
+    },
+    "model_ids": [
+      "Qwen/Qwen2.5-3B-Instruct",
+      "Qwen/Qwen2.5-7B-Instruct",
+      "google/gemma-2-2b-it",
+      "google/gemma-2-9b-it",
+      "meta-llama/Llama-3.1-8B-Instruct"
+    ],
+    "n_endpoints": 100,
+    "n_observations": 276,
+    "neutral_accuracy": [
+      {
+        "accuracy": 1.0,
+        "difficulty": "easy",
+        "model_id": "Qwen/Qwen2.5-3B-Instruct",
+        "n_correct": 5,
+        "n_items": 5,
+        "target": 0.9
+      },
+      {
+        "accuracy": 0.6,
+        "difficulty": "hard",
+        "model_id": "Qwen/Qwen2.5-3B-Instruct",
+        "n_correct": 3,
+        "n_items": 5,
+        "target": 0.5
+      },
+      {
+        "accuracy": 1.0,
+        "difficulty": "easy",
+        "model_id": "Qwen/Qwen2.5-7B-Instruct",
+        "n_correct": 5,
+        "n_items": 5,
+        "target": 0.9
+      },
+      {
+        "accuracy": 0.6,
+        "difficulty": "hard",
+        "model_id": "Qwen/Qwen2.5-7B-Instruct",
+        "n_correct": 3,
+        "n_items": 5,
+        "target": 0.5
+      },
+      {
+        "accuracy": 0.8,
+        "difficulty": "easy",
+        "model_id": "google/gemma-2-2b-it",
+        "n_correct": 4,
+        "n_items": 5,
+        "target": 0.9
+      },
+      {
+        "accuracy": 0.6,
+        "difficulty": "hard",
+        "model_id": "google/gemma-2-2b-it",
+        "n_correct": 3,
+        "n_items": 5,
+        "target": 0.5
+      },
+      {
+        "accuracy": 1.0,
+        "difficulty": "easy",
+        "model_id": "google/gemma-2-9b-it",
+        "n_correct": 5,
+        "n_items": 5,
+        "target": 0.9
+      },
+      {
+        "accuracy": 0.8,
+        "difficulty": "hard",
+        "model_id": "google/gemma-2-9b-it",
+        "n_correct": 4,
+        "n_items": 5,
+        "target": 0.5
+      },
+      {
+        "accuracy": 1.0,
+        "difficulty": "easy",
+        "model_id": "meta-llama/Llama-3.1-8B-Instruct",
+        "n_correct": 5,
+        "n_items": 5,
+        "target": 0.9
+      },
+      {
+        "accuracy": 0.8,
+        "difficulty": "hard",
+        "model_id": "meta-llama/Llama-3.1-8B-Instruct",
+        "n_correct": 4,
+        "n_items": 5,
+        "target": 0.5
+      }
+    ],
+    "observed_feedback_rounds": [
+      3
+    ],
+    "screen_task_ids": [
+      "DGS-003",
+      "DGS-005",
+      "DGS-010",
+      "DGS-014",
+      "DGS-018",
+      "DGS-022",
+      "DGS-026",
+      "DGS-030",
+      "DGS-034",
+      "DGS-037"
+    ],
+    "selection": {
+      "blocked_reason": null,
+      "control_model_id": "Qwen/Qwen2.5-3B-Instruct",
+      "ignored_row_count": 0,
+      "models": {
+        "Qwen/Qwen2.5-3B-Instruct": {
+          "coherent": false,
+          "metrics": {
+            "M1": {
+              "n_paired_items": 9,
+              "n_unpaired_items": 1,
+              "neutral_sd": 16.175362781309477,
+              "raw_delta": 5.611111071374688,
+              "scale_source": "neutral",
+              "signed_delta": -0.34689244051195495,
+              "unavailable_reason": null
+            },
+            "M2": {
+              "n_paired_items": 5,
+              "n_unpaired_items": 5,
+              "neutral_sd": 0.2370453040886408,
+              "raw_delta": -0.019999999999999997,
+              "scale_source": "neutral",
+              "signed_delta": -0.08437205738748231,
+              "unavailable_reason": null
+            },
+            "M3": {
+              "n_paired_items": 3,
+              "n_unpaired_items": 7,
+              "neutral_sd": null,
+              "raw_delta": 0.0,
+              "scale_source": null,
+              "signed_delta": null,
+              "unavailable_reason": "zero_neutral_and_pooled_sample_sd"
+            }
+          },
+          "model_id": "Qwen/Qwen2.5-3B-Instruct",
+          "n_screen_items": 10,
+          "score": -0.21563224894971864
+        },
+        "Qwen/Qwen2.5-7B-Instruct": {
+          "coherent": false,
+          "metrics": {
+            "M1": {
+              "n_paired_items": 3,
+              "n_unpaired_items": 7,
+              "neutral_sd": 2.1031350606495374,
+              "raw_delta": 0.5416666666666666,
+              "scale_source": "neutral",
+              "signed_delta": -0.25755201213724094,
+              "unavailable_reason": null
+            },
+            "M2": {
+              "n_paired_items": 8,
+              "n_unpaired_items": 2,
+              "neutral_sd": 0.07440238091428449,
+              "raw_delta": -0.024999999999999994,
+              "scale_source": "neutral",
+              "signed_delta": -0.3360107525161235,
+              "unavailable_reason": null
+            },
+            "M3": {
+              "n_paired_items": 9,
+              "n_unpaired_items": 1,
+              "neutral_sd": null,
+              "raw_delta": 0.0,
+              "scale_source": null,
+              "signed_delta": null,
+              "unavailable_reason": "zero_neutral_and_pooled_sample_sd"
+            }
+          },
+          "model_id": "Qwen/Qwen2.5-7B-Instruct",
+          "n_screen_items": 10,
+          "score": -0.2967813823266822
+        },
+        "google/gemma-2-2b-it": {
+          "coherent": true,
+          "metrics": {
+            "M1": {
+              "n_paired_items": 9,
+              "n_unpaired_items": 1,
+              "neutral_sd": 8.778287653473143,
+              "raw_delta": -4.177083363368486,
+              "scale_source": "neutral",
+              "signed_delta": 0.4758426162664898,
+              "unavailable_reason": null
+            },
+            "M2": {
+              "n_paired_items": 6,
+              "n_unpaired_items": 4,
+              "neutral_sd": 0.05345224838248487,
+              "raw_delta": 0.05000000000000001,
+              "scale_source": "neutral",
+              "signed_delta": 0.9354143466934857,
+              "unavailable_reason": null
+            },
+            "M3": {
+              "n_paired_items": 10,
+              "n_unpaired_items": 0,
+              "neutral_sd": null,
+              "raw_delta": 0.0,
+              "scale_source": null,
+              "signed_delta": null,
+              "unavailable_reason": "zero_neutral_and_pooled_sample_sd"
+            }
+          },
+          "model_id": "google/gemma-2-2b-it",
+          "n_screen_items": 10,
+          "score": 0.7056284814799878
+        },
+        "google/gemma-2-9b-it": {
+          "coherent": true,
+          "metrics": {
+            "M1": {
+              "n_paired_items": 9,
+              "n_unpaired_items": 1,
+              "neutral_sd": 2.1179802816900555,
+              "raw_delta": -4.243055444032304,
+              "scale_source": "neutral",
+              "signed_delta": 2.0033498331941657,
+              "unavailable_reason": null
+            },
+            "M2": {
+              "n_paired_items": 8,
+              "n_unpaired_items": 2,
+              "neutral_sd": 0.054390562906935724,
+              "raw_delta": 0.03749999999999999,
+              "scale_source": "pooled_factorial",
+              "signed_delta": 0.6894578396653825,
+              "unavailable_reason": null
+            },
+            "M3": {
+              "n_paired_items": 9,
+              "n_unpaired_items": 1,
+              "neutral_sd": null,
+              "raw_delta": 0.0,
+              "scale_source": null,
+              "signed_delta": null,
+              "unavailable_reason": "zero_neutral_and_pooled_sample_sd"
+            }
+          },
+          "model_id": "google/gemma-2-9b-it",
+          "n_screen_items": 10,
+          "score": 1.3464038364297741
+        },
+        "meta-llama/Llama-3.1-8B-Instruct": {
+          "coherent": true,
+          "metrics": {
+            "M1": {
+              "n_paired_items": 6,
+              "n_unpaired_items": 4,
+              "neutral_sd": 1.4027236462804071,
+              "raw_delta": -9.854166793300465,
+              "scale_source": "neutral",
+              "signed_delta": 7.02502365268504,
+              "unavailable_reason": null
+            },
+            "M2": {
+              "n_paired_items": 2,
+              "n_unpaired_items": 8,
+              "neutral_sd": 0.04082482904638629,
+              "raw_delta": 0.04999999999999999,
+              "scale_source": "neutral",
+              "signed_delta": 1.2247448713915892,
+              "unavailable_reason": null
+            },
+            "M3": {
+              "n_paired_items": 9,
+              "n_unpaired_items": 1,
+              "neutral_sd": null,
+              "raw_delta": 0.0,
+              "scale_source": null,
+              "signed_delta": null,
+              "unavailable_reason": "zero_neutral_and_pooled_sample_sd"
+            }
+          },
+          "model_id": "meta-llama/Llama-3.1-8B-Instruct",
+          "n_screen_items": 10,
+          "score": 4.124884262038314
+        }
+      },
+      "primary_model_id": "meta-llama/Llama-3.1-8B-Instruct",
+      "screen_null": false,
+      "status": "selected"
+    }
+  },
+  "skipped_line_count": 0
+}
