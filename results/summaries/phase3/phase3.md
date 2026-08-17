@@ -32,4 +32,8 @@ That verdict is decided at the preregistered alpha = 2. Reported without reinter
 
 Degenerate doses (more than 50% of items with no parseable answer) are reported and excluded from the monotonicity check by the preregistered rule, not by inspection.
 
+## Exploratory: layer sweep
+
+The frozen tie-break put L\* at the earliest layer of the AUC plateau, so the tone direction was also steered at layers 20, 30 -- **exploratory, changing no verdict above**: layer 20 dM1(alpha=4) = -1.634 [-3.783, 0.072]; layer 30 **degenerate** (1.00 of items give no parseable answer, so M1 does not exist there). At these larger relative doses the direction specificity that J5 found at L\* does **not** hold: `random_L20_1` produces an M1 drop of -4.864 [-8.272, -2.117], so a random matched-norm direction moves M1 as much as the tone direction does. Full table, controls and dose scales: `steering_layer_sweep_exploratory.md`.
+
 > A probe plus induction result demonstrates a condition-linked internal variable with causal influence on the output signature. It is not evidence of experience.

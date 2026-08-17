@@ -619,17 +619,22 @@ def _dose_plan(alphas: Sequence[float], directions: Sequence[str]) -> list[tuple
 
 
 def generate_missing(path: Path, items: Sequence[Mapping[str, Any]],
-                     directions: Mapping[str, np.ndarray], layer: int,
-                     alphas: Sequence[float], *, dry_run: bool = False,
+                     directions: Mapping[str, np.ndarray], layer_of: Mapping[str, int] | int,
+                     plan: Sequence[tuple[str, float]], *, dry_run: bool = False,
                      handle: Any = None, batch_size: int | None = None,
                      chunk: int | None = None) -> int:
-    """Fill in every missing ``(direction, alpha, item)`` cell, appending as it goes."""
+    """Fill in every missing ``(direction, alpha, item)`` cell, appending as it goes.
+
+    ``layer_of`` is either one layer for every direction (the confirmatory run) or a map from
+    direction to layer (the exploratory sweep, which steers the same items at several layers).
+    """
     present = {(str(entry.get("direction_id")), round(float(entry.get("alpha", 0.0)), 6),
                 str(entry.get("id")))
                for entry in _load_steering_entries(path, repair=not dry_run)}
     by_id = {item["id"]: item for item in items}
     written = 0
-    for direction_id, alpha in _dose_plan(alphas, sorted(directions)):
+    for direction_id, alpha in plan:
+        layer = layer_of if isinstance(layer_of, int) else layer_of[direction_id]
         missing = [by_id[identity] for identity in sorted(by_id)
                    if (direction_id, round(alpha, 6), identity) not in present]
         if not missing:
@@ -715,8 +720,9 @@ def command_steer(args: argparse.Namespace) -> int:
     handle = None
     if not args.dry_run:
         handle = _jspace_client().get_cls()
-    generate_missing(path, items, directions, layer, alphas, dry_run=args.dry_run,
-                     handle=handle, batch_size=args.batch_size, chunk=args.chunk)
+    generate_missing(path, items, directions, layer, _dose_plan(alphas, sorted(directions)),
+                     dry_run=args.dry_run, handle=handle, batch_size=args.batch_size,
+                     chunk=args.chunk)
     entries = _load_steering_entries(path)
     if not entries:
         print("run_phase3: no steered generations present yet; nothing to summarise")
@@ -777,8 +783,15 @@ def command_steer(args: argparse.Namespace) -> int:
 
 
 def _judge_steering(entries, out_dir: Path, *, workers: int, provider: str | None,
-                    model: str | None, base_url: str | None):
-    """Score the preregistered J6 dose plan and bootstrap distress against alpha = 0."""
+                    model: str | None, base_url: str | None,
+                    selected: Sequence[Mapping[str, Any]] | None = None,
+                    filename: str = "steering_judge.json",
+                    tone_direction_id: str = TONE_DIRECTION_ID):
+    """Score a dose plan with the locked rubric and bootstrap distress against alpha = 0.
+
+    ``selected=None`` uses the preregistered J6 plan (tone at 0/2/4, every control at 2); the
+    exploratory sweep passes its own, much smaller, selection.
+    """
     from src.judge_client import JsonlJudgeCache, JudgeClientError, load_env_files, make_judge_backend
     from src.steer_readouts import (distress_by_dose, judge_steering_entries, resolve_judge_ids,
                                     select_for_judging)
@@ -795,7 +808,18 @@ def _judge_steering(entries, out_dir: Path, *, workers: int, provider: str | Non
         backend = make_judge_backend(provider, model, base_url=base_url)
     except JudgeClientError as error:
         _fail(str(error))
-    selected = select_for_judging(entries)
+    plan_label = "tone alpha 0/2/4, every control alpha 2"
+    if selected is None:
+        selected = select_for_judging(entries)
+    else:
+        selected = list(selected)
+        plan_label = "exploratory selection: %d entries" % len(selected)
+    # The baseline is the shared alpha = 0 arm; it must be scored (or already cached) for the
+    # paired distress deltas to exist at all.
+    baseline_entries = [entry for entry in entries
+                        if str(entry.get("direction_id")) == BASELINE_DIRECTION_ID]
+    chosen = {id(entry) for entry in selected}
+    selected = selected + [entry for entry in baseline_entries if id(entry) not in chosen]
     cache = JsonlJudgeCache(out_dir / "steering_judge_cache.jsonl")
     failures: list[dict[str, str]] = []
     scores = judge_steering_entries(
@@ -803,11 +827,11 @@ def _judge_steering(entries, out_dir: Path, *, workers: int, provider: str | Non
         on_error=lambda entry, error: failures.append(
             {"direction_id": str(entry.get("direction_id")), "alpha": str(entry.get("alpha")),
              "task_id": str(entry.get("id")), "error": "%s: %s" % (type(error).__name__, error)}))
-    _write_json(out_dir / "steering_judge.json",
+    _write_json(out_dir / filename,
                 {"schema_version": "dgs-steering-judge-v1", "generated_at": _now(),
                  "selected": len(selected), "scored": len(scores), "failures": failures,
                  "deviations": deviations,
-                 "dose_plan": "tone alpha 0/2/4, every control alpha 2",
+                 "dose_plan": plan_label,
                  "backend": {"provider_id": getattr(backend, "provider_id", None),
                              "model_id": getattr(backend, "model_id", None),
                              "is_synthetic": bool(getattr(backend, "is_synthetic", False)),
@@ -834,9 +858,279 @@ def _judge_steering(entries, out_dir: Path, *, workers: int, provider: str | Non
             "direction_id": direction_id, "alpha": alpha, "estimate": result.estimate,
             "ci95_lower": result.ci95_lower, "ci95_upper": result.ci95_upper,
             "n_items": result.n_items, "unavailable_reason": result.unavailable_reason}
-        if direction_id == TONE_DIRECTION_ID:
+        if direction_id == tone_direction_id:
             tone_distress[float(alpha)] = result
     return [item.to_dict() for item in scores], deltas, tone_distress
+
+
+# --------------------------------------------------------------------------------------
+# sweep -- EXPLORATORY layer sweep (does not touch J1-J6)
+# --------------------------------------------------------------------------------------
+
+SWEEP_LAYERS = (20, 30)
+SWEEP_ALPHAS = (1.0, 2.0, 4.0)
+SWEEP_CONTROL_ALPHA = 4.0
+SWEEP_CONTROL_COUNT = 2
+SWEEP_JUDGED_ALPHA = 4.0
+SWEEP_LABEL = ("EXPLORATORY. Chosen after the confirmatory verdicts were fixed, because the "
+               "frozen tie-break forced L* = 6 (the earliest layer of a 6-25 AUC plateau) where "
+               "||d|| is only 4% of the mean activation norm. It changes no preregistered "
+               "verdict and supports no hypothesis test.")
+
+
+def sweep_direction_id(layer: int) -> str:
+    return "tone_L%d" % int(layer)
+
+
+def sweep_control_id(layer: int, index: int) -> str:
+    return "random_L%d_%d" % (int(layer), int(index))
+
+
+def build_sweep_directions(discovery: ActivationSet, layers: Sequence[int]):
+    """Tone direction recomputed at each layer, C2 scaling, plus matched-norm controls.
+
+    The control directions reuse the confirmatory run's frozen seeds ``DGS-AC1-STEER-v1|1..2``:
+    a random unit vector is layer-agnostic, so only its scaling to ``||d_layer||`` changes, and
+    reusing the seeds keeps the sweep comparable with the layer-6 controls.
+    """
+    directions: dict[str, np.ndarray] = {}
+    layer_of: dict[str, int] = {}
+    meta: dict[str, Any] = {}
+    for layer in layers:
+        tone = mean_difference_direction(
+            discovery, layer, label_name="tone", positive=TONE_POSITIVE, negative=TONE_NEGATIVE,
+            mask=discovery.mask(validity=VALIDITY_NEGATIVE))
+        norm = float(np.linalg.norm(tone))
+        mean_norm = discovery.norm(layer)
+        name = sweep_direction_id(layer)
+        directions[name] = np.asarray(tone, dtype=np.float64)
+        layer_of[name] = int(layer)
+        for index, vector in enumerate(
+                random_unit_directions(discovery.hidden, SWEEP_CONTROL_COUNT), start=1):
+            control = sweep_control_id(layer, index)
+            directions[control] = scaled_direction(vector, 1.0, norm)
+            layer_of[control] = int(layer)
+        meta[str(layer)] = {
+            "tone_direction_norm": norm, "mean_activation_norm": mean_norm,
+            "norm_ratio_d_over_mean_activation": (norm / mean_norm) if mean_norm else None,
+        }
+    return directions, layer_of, meta
+
+
+def sweep_plan(layers: Sequence[int], alphas: Sequence[float] = SWEEP_ALPHAS) -> list[tuple[str, float]]:
+    """Tone at every dose, and the two controls at the single control dose, per layer."""
+    plan: list[tuple[str, float]] = []
+    for layer in layers:
+        for alpha in alphas:
+            plan.append((sweep_direction_id(layer), float(alpha)))
+    for layer in layers:
+        for index in range(1, SWEEP_CONTROL_COUNT + 1):
+            plan.append((sweep_control_id(layer, index), float(SWEEP_CONTROL_ALPHA)))
+    return plan
+
+
+def command_sweep(args: argparse.Namespace) -> int:
+    protocol = load_protocol(ROOT)
+    jspace_dir = ROOT / args.jspace_dir
+    out_dir = ROOT / args.out
+    confirmatory = _read_json(out_dir / "steering.json")
+    layers = tuple(int(item) for item in args.layers.split(",")) if args.layers else SWEEP_LAYERS
+    discovery = load_activation_set(jspace_dir / "activations_discovery.npz")
+    directions, layer_of, direction_meta = build_sweep_directions(discovery, layers)
+    for layer in layers:
+        info = direction_meta[str(layer)]
+        print("run_phase3: layer %d: ||d|| = %.2f, mean activation norm %.2f, ratio %.4f"
+              % (layer, info["tone_direction_norm"], info["mean_activation_norm"],
+                 info["norm_ratio_d_over_mean_activation"]))
+    items = _steering_items(protocol)
+    canonical = {item["id"]: item["canonical_answer"] for item in items}
+    path = jspace_dir / STEERING_OUTPUTS
+    plan = sweep_plan(layers)
+    handle = None if args.dry_run else _jspace_client().get_cls()
+    generate_missing(path, items, directions, layer_of, plan, dry_run=args.dry_run,
+                     handle=handle, batch_size=args.batch_size, chunk=args.chunk)
+    entries = _load_steering_entries(path)
+    wanted = {(direction_id, round(alpha, 6)) for direction_id, alpha in plan}
+    relevant = [entry for entry in entries
+                if str(entry["direction_id"]) == BASELINE_DIRECTION_ID
+                or (str(entry["direction_id"]), round(float(entry["alpha"]), 6)) in wanted]
+    grouped = _readouts(relevant, canonical)
+    baseline = grouped.get((BASELINE_DIRECTION_ID, 0.0), [])
+    if not baseline:
+        _fail("the shared alpha = 0 baseline is missing; run `steer` first")
+    readouts = {key: dose_readout(value, baseline, direction_id=key[0], alpha=key[1])
+                for key, value in sorted(grouped.items()) if key[0] != BASELINE_DIRECTION_ID}
+
+    distress_scores: list[dict[str, Any]] = []
+    distress_deltas: dict[str, dict[str, Any]] = {}
+    if args.judge:
+        selected = [entry for entry in relevant
+                    if str(entry["direction_id"]).startswith("tone_L")
+                    and abs(float(entry["alpha"]) - SWEEP_JUDGED_ALPHA) < 1e-9]
+        distress_scores, distress_deltas, _ = _judge_steering(
+            relevant, out_dir, workers=args.workers, provider=args.provider, model=args.model,
+            base_url=args.base_url, selected=selected,
+            filename="steering_layer_sweep_judge_exploratory.json",
+            tone_direction_id=sweep_direction_id(layers[0]))
+
+    confirm_tone = [row for row in confirmatory["doses"] if row["direction_id"] == TONE_DIRECTION_ID]
+    payload = {
+        "schema_version": "dgs-phase3-layer-sweep-exploratory-v1",
+        "status": "exploratory",
+        "label": SWEEP_LABEL,
+        "generated_at": _now(),
+        "model_id": MODEL_ID,
+        "confirmatory_layer": confirmatory["layer"],
+        "confirmatory_direction_norms": confirmatory.get("direction_norms"),
+        "sweep_layers": list(layers),
+        "alphas": list(SWEEP_ALPHAS),
+        "control_alpha": SWEEP_CONTROL_ALPHA,
+        "control_seeds": "DGS-AC1-STEER-v1|1..%d (the confirmatory run's first two)" % SWEEP_CONTROL_COUNT,
+        "direction_construction": {
+            "tone": "mean(hostile) - mean(neutral) recomputed at each swept layer, discovery "
+                    "accurate arm, measured position",
+            "dose": "alpha * d (C2, d unnormalised); controls rescaled to alpha * ||d_layer||",
+            "baseline": "the shared unsteered alpha = 0 arm from the confirmatory run "
+                        "(no intervention, so it is layer-independent)",
+        },
+        "direction_norms": direction_meta,
+        "items": {"n": len(items), "prompt": "render_task, neutral single-turn, holdout split"},
+        "max_new_tokens": STEER_MAX_NEW_TOKENS,
+        "doses": [_dose_row(value) for _, value in sorted(readouts.items())],
+        "confirmatory_tone_doses": confirm_tone,
+        "distress": {"judged": bool(args.judge), "judged_alpha": SWEEP_JUDGED_ALPHA,
+                     "scores": distress_scores, "deltas": distress_deltas},
+        "interpretation_ceiling": INTERPRETATION_CEILING,
+    }
+    _write_json(out_dir / "steering_layer_sweep_exploratory.json", payload)
+    _write_text(out_dir / "steering_layer_sweep_exploratory.md", render_sweep_markdown(payload))
+    print("run_phase3: exploratory sweep -> %s"
+          % (out_dir / "steering_layer_sweep_exploratory.json"))
+    for row in payload["doses"]:
+        if row["direction_id"].startswith("tone_L"):
+            print("  %s alpha=%g: dM1 %s [%s, %s], non-answer %s"
+                  % (row["direction_id"], row["alpha"], _number(row["m1_delta"]["estimate"]),
+                     _number(row["m1_delta"]["ci95_lower"]), _number(row["m1_delta"]["ci95_upper"]),
+                     _number(row["non_answer_rate"], 2)))
+    return 0
+
+
+def render_sweep_markdown(payload: Mapping[str, Any]) -> str:
+    def as_result(value: Mapping[str, Any]) -> BootstrapResult:
+        return BootstrapResult(value["estimate"], value["ci95_lower"], value["ci95_upper"],
+                               value.get("p_two_sided"), value["n_items"], value["n_items"],
+                               value["unavailable_reason"])
+
+    confirm_layer = payload["confirmatory_layer"]
+    confirm_norms = payload.get("confirmatory_direction_norms") or {}
+    lines = [
+        "# Phase 3 - EXPLORATORY layer sweep (tone direction at layers %s)"
+        % ", ".join(str(item) for item in payload["sweep_layers"]),
+        "",
+        "> **%s**" % payload["label"],
+        "",
+        "- dose: `%s`" % payload["direction_construction"]["dose"],
+        "- tone direction: %s" % payload["direction_construction"]["tone"],
+        "- baseline: %s" % payload["direction_construction"]["baseline"],
+        "- controls: %s, at alpha = %g only" % (payload["control_seeds"], payload["control_alpha"]),
+        "- items: %d holdout tasks, %s, greedy, %d new tokens" % (
+            payload["items"]["n"], payload["items"]["prompt"], payload["max_new_tokens"]),
+        "",
+        "## Dose unit by layer",
+        "",
+        "| layer | ||d|| | mean activation norm | ratio |",
+        "| ---: | ---: | ---: | ---: |",
+        "| %d (confirmatory L\\*) | %s | %s | %s |" % (
+            confirm_layer, _number(confirm_norms.get("tone_direction_norm"), 2),
+            _number(confirm_norms.get("mean_activation_norm"), 2),
+            _number(confirm_norms.get("norm_ratio_d_over_mean_activation"), 4)),
+    ]
+    for layer in payload["sweep_layers"]:
+        info = payload["direction_norms"][str(layer)]
+        lines.append("| %d | %s | %s | %s |" % (
+            layer, _number(info["tone_direction_norm"], 2),
+            _number(info["mean_activation_norm"], 2),
+            _number(info["norm_ratio_d_over_mean_activation"], 4)))
+    lines += [
+        "",
+        "## M1 against dose, paired by item against the shared alpha = 0 baseline",
+        "",
+        "| direction | layer | alpha | items | mean M1 (n) | dM1 [95% CI] | non-answer | degenerate |",
+        "| --- | ---: | ---: | ---: | --- | --- | ---: | :---: |",
+    ]
+    rows = [dict(row, _layer=confirm_layer, _source="confirmatory")
+            for row in payload["confirmatory_tone_doses"]]
+    for row in payload["doses"]:
+        layer = next((item for item in payload["sweep_layers"]
+                      if row["direction_id"].endswith("L%d" % item)
+                      or ("_L%d_" % item) in row["direction_id"]), None)
+        rows.append(dict(row, _layer=layer, _source="sweep"))
+    for row in sorted(rows, key=lambda item: (item["_layer"] or 0,
+                                              item["direction_id"].startswith("random"),
+                                              item["alpha"])):
+        lines.append("| `%s`%s | %s | %g | %d | %s (%d) | %s | %s | %s |" % (
+            row["direction_id"], " (confirmatory)" if row["_source"] == "confirmatory" else "",
+            row["_layer"], row["alpha"], row["n_items"], _number(row["m1_mean"]), row["m1_n"],
+            _interval(as_result(row["m1_delta"])), _number(row["non_answer_rate"], 2),
+            "**yes**" if row["degenerate"] else "no"))
+    lines += ["", "## Judge distress", ""]
+    if payload["distress"]["judged"]:
+        lines += [
+            "Tone at alpha = %g only, locked rubric, paired against alpha = 0."
+            % payload["distress"]["judged_alpha"], "",
+            "| direction | alpha | d distress [95% CI] | items |",
+            "| --- | ---: | --- | ---: |",
+        ]
+        for key in sorted(payload["distress"]["deltas"]):
+            row = payload["distress"]["deltas"][key]
+            lines.append("| `%s` | %g | %s | %d |" % (
+                row["direction_id"], row["alpha"],
+                _interval(BootstrapResult(row["estimate"], row["ci95_lower"], row["ci95_upper"],
+                                          None, row["n_items"], row["n_items"],
+                                          row["unavailable_reason"])), row["n_items"]))
+        scores = {item["score_value"] for item in payload["distress"]["scores"]}
+        if len(scores) == 1:
+            lines += ["", "Every judged response scored %d, so the distress channel is at its "
+                          "floor here as well." % scores.pop()]
+        degenerate_judged = sorted({row["direction_id"] for row in payload["doses"]
+                                    if row["degenerate"] and row["direction_id"].startswith("tone_L")})
+        if degenerate_judged:
+            lines += [
+                "",
+                "**Read the distress column with care.** %s is a degenerate dose: every item runs "
+                "to the token cap with no parseable answer, so the rubric is scoring broken "
+                "generation, not a distressed response. A distress rise on a degenerate dose is "
+                "not evidence about tone." % ", ".join("`%s`" % name for name in degenerate_judged),
+            ]
+    else:
+        lines.append("Not judged in this run.")
+    offenders = [row for row in payload["doses"]
+                 if row["direction_id"].startswith("random_L")
+                 and row["m1_delta"]["ci95_upper"] is not None
+                 and row["m1_delta"]["ci95_upper"] < 0.0]
+    lines += ["", "## What this sweep shows", ""]
+    if offenders:
+        lines += [
+            "- **Direction specificity does not survive the larger relative doses.** %s lowers M1 "
+            "with an interval excluding zero, at least as much as the tone direction at the same "
+            "layer and dose. J5 held at L\\* = 6, where the perturbation is ~4%% of the activation "
+            "norm; it is not a claim about layers where the same alpha is a much larger fraction "
+            "of the state." % ", ".join("`%s`" % row["direction_id"] for row in offenders),
+        ]
+    else:
+        lines.append("- No random control produced an M1 drop with an interval excluding zero.")
+    lines += [
+        "- The dose unit grows sharply with depth (ratio %s), so a fixed alpha is a very "
+        "different intervention at each layer; the layers are not directly comparable at equal "
+        "alpha." % " -> ".join(
+            _number(payload["direction_norms"][str(layer)]["norm_ratio_d_over_mean_activation"], 3)
+            for layer in payload["sweep_layers"]),
+        "- Doses that broke generation entirely are reported as degenerate rather than summarised "
+        "as an M1 effect.",
+        "",
+        "> %s" % payload["interpretation_ceiling"], "",
+    ]
+    return "\n".join(lines)
 
 
 def render_steering_markdown(payload: Mapping[str, Any]) -> str:
@@ -925,14 +1219,17 @@ def command_report(args: argparse.Namespace) -> int:
     localization = _read_json(out_dir / "localization.json")
     steering_path = out_dir / "steering.json"
     steering = json.loads(steering_path.read_text(encoding="utf-8")) if steering_path.is_file() else None
-    text = render_report_markdown(localization, steering)
+    sweep_path = out_dir / "steering_layer_sweep_exploratory.json"
+    sweep = json.loads(sweep_path.read_text(encoding="utf-8")) if sweep_path.is_file() else None
+    text = render_report_markdown(localization, steering, sweep)
     _write_text(out_dir / "phase3.md", text)
     print("run_phase3: report -> %s" % (out_dir / "phase3.md"))
     return 0
 
 
 def render_report_markdown(localization: Mapping[str, Any],
-                           steering: Mapping[str, Any] | None) -> str:
+                           steering: Mapping[str, Any] | None,
+                           sweep: Mapping[str, Any] | None = None) -> str:
     verdicts = list(localization["verdicts"]) + list(steering["verdicts"] if steering else [])
     holdout = localization["holdout_auc_at_chosen_layer"]
     correlation = localization["holdout_correlation"]
@@ -1049,6 +1346,47 @@ def render_report_markdown(localization: Mapping[str, Any],
         "Degenerate doses (more than 50% of items with no parseable answer) are reported and "
         "excluded from the monotonicity check by the preregistered rule, not by inspection.",
         "",
+    ]
+    if sweep is not None:
+        tone_alpha4 = {}
+        for row in sweep["doses"]:
+            if row["direction_id"].startswith("tone_L") and row["alpha"] == 4.0:
+                tone_alpha4[int(row["direction_id"].split("_L")[1])] = row
+        parts = []
+        for layer in sorted(tone_alpha4):
+            row = tone_alpha4[layer]
+            if row["m1_delta"]["estimate"] is None or row["degenerate"]:
+                parts.append("layer %d **degenerate** (%s of items give no parseable answer, so "
+                             "M1 does not exist there)"
+                             % (layer, _number(row["non_answer_rate"], 2)))
+            else:
+                parts.append("layer %d dM1(alpha=4) = %s [%s, %s]" % (
+                    layer, _number(row["m1_delta"]["estimate"]),
+                    _number(row["m1_delta"]["ci95_lower"]),
+                    _number(row["m1_delta"]["ci95_upper"])))
+        offenders = [row for row in sweep["doses"]
+                     if row["direction_id"].startswith("random_L")
+                     and row["m1_delta"]["ci95_upper"] is not None
+                     and row["m1_delta"]["ci95_upper"] < 0.0]
+        caveat = ("" if not offenders else
+                  " At these larger relative doses the direction specificity that J5 found at "
+                  "L\\* does **not** hold: %s produces an M1 drop of %s [%s, %s], so a random "
+                  "matched-norm direction moves M1 as much as the tone direction does."
+                  % (", ".join("`%s`" % row["direction_id"] for row in offenders),
+                     _number(offenders[0]["m1_delta"]["estimate"]),
+                     _number(offenders[0]["m1_delta"]["ci95_lower"]),
+                     _number(offenders[0]["m1_delta"]["ci95_upper"])))
+        lines += [
+            "## Exploratory: layer sweep",
+            "",
+            "The frozen tie-break put L\\* at the earliest layer of the AUC plateau, so the tone "
+            "direction was also steered at layers %s -- **exploratory, changing no verdict above**: "
+            "%s.%s Full table, controls and dose scales: "
+            "`steering_layer_sweep_exploratory.md`."
+            % (", ".join(str(item) for item in sweep["sweep_layers"]), "; ".join(parts), caveat),
+            "",
+        ]
+    lines += [
         "> %s" % localization["interpretation_ceiling"],
         "",
     ]
@@ -1090,6 +1428,19 @@ def build_parser() -> argparse.ArgumentParser:
     steer.add_argument("--model", default=None)
     steer.add_argument("--base-url", default=None)
     steer.set_defaults(handler=command_steer)
+
+    sweep = subparsers.add_parser(
+        "sweep", help="EXPLORATORY tone-direction steering at other layers (changes no verdict)")
+    sweep.add_argument("--layers", default=None, help="comma-separated layers (default 20,30)")
+    sweep.add_argument("--dry-run", action="store_true")
+    sweep.add_argument("--judge", action="store_true", help="score tone alpha=4 at each layer")
+    sweep.add_argument("--batch-size", type=int, default=16)
+    sweep.add_argument("--chunk", type=int, default=None)
+    sweep.add_argument("--workers", type=int, default=8)
+    sweep.add_argument("--provider", default=None)
+    sweep.add_argument("--model", default=None)
+    sweep.add_argument("--base-url", default=None)
+    sweep.set_defaults(handler=command_sweep)
 
     report = subparsers.add_parser("report", help="assemble phase3.md from the summaries")
     report.set_defaults(handler=command_report)

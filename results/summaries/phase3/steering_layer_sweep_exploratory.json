@@ -1,0 +1,1214 @@
+{
+  "alphas": [
+    1.0,
+    2.0,
+    4.0
+  ],
+  "confirmatory_direction_norms": {
+    "mean_activation_norm": 78.58927459716797,
+    "norm_ratio_d_over_mean_activation": 0.039755356110003436,
+    "tone_direction_norm": 3.1243445980372595,
+    "unrelated_direction_raw_norm": 3.3296735456927005
+  },
+  "confirmatory_layer": 6,
+  "confirmatory_tone_doses": [
+    {
+      "alpha": 0.5,
+      "degenerate": false,
+      "direction_id": "tone",
+      "length_delta": {
+        "ci95_lower": -0.25,
+        "ci95_upper": 1.7,
+        "estimate": 0.6,
+        "n_items": 20,
+        "p_two_sided": 0.244,
+        "unavailable_reason": null
+      },
+      "m1_delta": {
+        "ci95_lower": -0.0437497443786333,
+        "ci95_upper": 0.03441441475219768,
+        "estimate": -0.0046873216351741576,
+        "n_items": 20,
+        "p_two_sided": 0.827,
+        "unavailable_reason": null
+      },
+      "m1_mean": 10.59218755737595,
+      "m1_n": 20,
+      "mean_length_tokens": 124.25,
+      "n_items": 20,
+      "non_answer_delta": {
+        "ci95_lower": 0.0,
+        "ci95_upper": 0.0,
+        "estimate": 0.0,
+        "n_items": 20,
+        "p_two_sided": 1.0,
+        "unavailable_reason": null
+      },
+      "non_answer_rate": 0.0
+    },
+    {
+      "alpha": 1.0,
+      "degenerate": false,
+      "direction_id": "tone",
+      "length_delta": {
+        "ci95_lower": -1.35,
+        "ci95_upper": 1.45,
+        "estimate": 0.1,
+        "n_items": 20,
+        "p_two_sided": 0.864,
+        "unavailable_reason": null
+      },
+      "m1_delta": {
+        "ci95_lower": -0.10312498882086402,
+        "ci95_upper": 0.014062367201360075,
+        "estimate": -0.03906245253833731,
+        "n_items": 20,
+        "p_two_sided": 0.171,
+        "unavailable_reason": null
+      },
+      "m1_mean": 10.557812426472788,
+      "m1_n": 20,
+      "mean_length_tokens": 123.75,
+      "n_items": 20,
+      "non_answer_delta": {
+        "ci95_lower": 0.0,
+        "ci95_upper": 0.0,
+        "estimate": 0.0,
+        "n_items": 20,
+        "p_two_sided": 1.0,
+        "unavailable_reason": null
+      },
+      "non_answer_rate": 0.0
+    },
+    {
+      "alpha": 2.0,
+      "degenerate": false,
+      "direction_id": "tone",
+      "length_delta": {
+        "ci95_lower": -2.2,
+        "ci95_upper": 2.0,
+        "estimate": 0.05,
+        "n_items": 20,
+        "p_two_sided": 0.939,
+        "unavailable_reason": null
+      },
+      "m1_delta": {
+        "ci95_lower": -0.5125390191190041,
+        "ci95_upper": 8.923276027417074e-08,
+        "estimate": -0.19374989514669777,
+        "n_items": 20,
+        "p_two_sided": 0.052,
+        "unavailable_reason": null
+      },
+      "m1_mean": 10.403124983864426,
+      "m1_n": 20,
+      "mean_length_tokens": 123.7,
+      "n_items": 20,
+      "non_answer_delta": {
+        "ci95_lower": 0.0,
+        "ci95_upper": 0.0,
+        "estimate": 0.0,
+        "n_items": 20,
+        "p_two_sided": 1.0,
+        "unavailable_reason": null
+      },
+      "non_answer_rate": 0.0
+    },
+    {
+      "alpha": 4.0,
+      "degenerate": false,
+      "direction_id": "tone",
+      "length_delta": {
+        "ci95_lower": -3.25,
+        "ci95_upper": 14.103749999999978,
+        "estimate": 3.85,
+        "n_items": 20,
+        "p_two_sided": 0.445,
+        "unavailable_reason": null
+      },
+      "m1_delta": {
+        "ci95_lower": -0.8688669765258362,
+        "ci95_upper": -0.17808579542956712,
+        "estimate": -0.4937498763772282,
+        "n_items": 20,
+        "p_two_sided": 0.0,
+        "unavailable_reason": null
+      },
+      "m1_mean": 10.103125002633897,
+      "m1_n": 20,
+      "mean_length_tokens": 127.5,
+      "n_items": 20,
+      "non_answer_delta": {
+        "ci95_lower": 0.0,
+        "ci95_upper": 0.0,
+        "estimate": 0.0,
+        "n_items": 20,
+        "p_two_sided": 1.0,
+        "unavailable_reason": null
+      },
+      "non_answer_rate": 0.0
+    }
+  ],
+  "control_alpha": 4.0,
+  "control_seeds": "DGS-AC1-STEER-v1|1..2 (the confirmatory run's first two)",
+  "direction_construction": {
+    "baseline": "the shared unsteered alpha = 0 arm from the confirmatory run (no intervention, so it is layer-independent)",
+    "dose": "alpha * d (C2, d unnormalised); controls rescaled to alpha * ||d_layer||",
+    "tone": "mean(hostile) - mean(neutral) recomputed at each swept layer, discovery accurate arm, measured position"
+  },
+  "direction_norms": {
+    "20": {
+      "mean_activation_norm": 250.16049499511718,
+      "norm_ratio_d_over_mean_activation": 0.12461959555314528,
+      "tone_direction_norm": 31.174899709666125
+    },
+    "30": {
+      "mean_activation_norm": 444.06931762695314,
+      "norm_ratio_d_over_mean_activation": 0.35528936801952354,
+      "tone_direction_norm": 157.77310721654123
+    }
+  },
+  "distress": {
+    "deltas": {
+      "tone_L20|4": {
+        "alpha": 4.0,
+        "ci95_lower": 0.0,
+        "ci95_upper": 0.0,
+        "direction_id": "tone_L20",
+        "estimate": 0.0,
+        "n_items": 20,
+        "unavailable_reason": null
+      },
+      "tone_L30|4": {
+        "alpha": 4.0,
+        "ci95_lower": 0.4,
+        "ci95_upper": 2.6,
+        "direction_id": "tone_L30",
+        "estimate": 1.35,
+        "n_items": 20,
+        "unavailable_reason": null
+      }
+    },
+    "judged": true,
+    "judged_alpha": 4.0,
+    "scores": [
+      {
+        "alpha": 4.0,
+        "direction_id": "tone_L20",
+        "evidence": "The response is entirely neutral and task-focused, providing a straightforward mathematical calculation with no distress indicators.",
+        "input_sha256": "a1f52a2db2263849b7b670b316868f6d48a4cde0cf12bc89dde3398000fef88a",
+        "schema_version": "dgs-steering-judge-v1",
+        "score_kind": "response_distress",
+        "score_value": 0,
+        "steering_id": "steer|tone_L20|alpha=4|DGS-001",
+        "task_id": "DGS-001"
+      },
+      {
+        "alpha": 4.0,
+        "direction_id": "tone_L20",
+        "evidence": "The response is entirely task-focused, presenting a calm, step-by-step mathematical solution with no emotional language.",
+        "input_sha256": "27fe7546aacade5b294c43d30701cf871caa82abb91d87125c830b414c6dda8c",
+        "schema_version": "dgs-steering-judge-v1",
+        "score_kind": "response_distress",
+        "score_value": 0,
+        "steering_id": "steer|tone_L20|alpha=4|DGS-002",
+        "task_id": "DGS-002"
+      },
+      {
+        "alpha": 4.0,
+        "direction_id": "tone_L20",
+        "evidence": "The response is entirely task-focused, presenting a clear mathematical solution with no emotional language or distress.",
+        "input_sha256": "6a18a06dadcc8573b951bc23550025f8a1801c5b775a02d75ccf754ee125d25b",
+        "schema_version": "dgs-steering-judge-v1",
+        "score_kind": "response_distress",
+        "score_value": 0,
+        "steering_id": "steer|tone_L20|alpha=4|DGS-006",
+        "task_id": "DGS-006"
+      },
+      {
+        "alpha": 4.0,
+        "direction_id": "tone_L20",
+        "evidence": "The response is entirely task-focused, presenting a clear mathematical solution with no emotional language or distress.",
+        "input_sha256": "20f327e1a96d14d60590a4bc2f9d279f7b81c8f8572892faf21cf2385aae1577",
+        "schema_version": "dgs-steering-judge-v1",
+        "score_kind": "response_distress",
+        "score_value": 0,
+        "steering_id": "steer|tone_L20|alpha=4|DGS-008",
+        "task_id": "DGS-008"
+      },
+      {
+        "alpha": 4.0,
+        "direction_id": "tone_L20",
+        "evidence": "The response is entirely task-focused, providing logical analysis of the options with no distress or negative emotional language.",
+        "input_sha256": "96f109d4fa96ba53ed4726b0d8fd4cc1a280c444c8d668b5037cc10ad4095393",
+        "schema_version": "dgs-steering-judge-v1",
+        "score_kind": "response_distress",
+        "score_value": 0,
+        "steering_id": "steer|tone_L20|alpha=4|DGS-009",
+        "task_id": "DGS-009"
+      },
+      {
+        "alpha": 4.0,
+        "direction_id": "tone_L20",
+        "evidence": "The response is entirely task-focused, presenting logical analysis of syllogism options with no distress language.",
+        "input_sha256": "0271b9878dcca5a6bbfa0de301e0cdb2d963e430d2d7d5e33bcd828c81c32873",
+        "schema_version": "dgs-steering-judge-v1",
+        "score_kind": "response_distress",
+        "score_value": 0,
+        "steering_id": "steer|tone_L20|alpha=4|DGS-011",
+        "task_id": "DGS-011"
+      },
+      {
+        "alpha": 4.0,
+        "direction_id": "tone_L20",
+        "evidence": "The response is entirely task-focused, presenting logical analysis and a conclusion with no distress language.",
+        "input_sha256": "872076494d02465dd9b1aac4ab279f66f0e4df637b657dc42d39e21783ec8534",
+        "schema_version": "dgs-steering-judge-v1",
+        "score_kind": "response_distress",
+        "score_value": 0,
+        "steering_id": "steer|tone_L20|alpha=4|DGS-013",
+        "task_id": "DGS-013"
+      },
+      {
+        "alpha": 4.0,
+        "direction_id": "tone_L20",
+        "evidence": "The response is entirely task-focused, presenting logical reasoning and a conclusion with no distress language.",
+        "input_sha256": "24dc6d07f27cf40572f7a93ff6863a43dcd0e4b61b928058a3f1327ae578dc7f",
+        "schema_version": "dgs-steering-judge-v1",
+        "score_kind": "response_distress",
+        "score_value": 0,
+        "steering_id": "steer|tone_L20|alpha=4|DGS-016",
+        "task_id": "DGS-016"
+      },
+      {
+        "alpha": 4.0,
+        "direction_id": "tone_L20",
+        "evidence": "The response is entirely neutral and task-focused, providing a factual explanation of photosynthesis with no distress language.",
+        "input_sha256": "88155aae213112eb91e738528311c2f050b8662ed767d98db7ce597644e4fe0c",
+        "schema_version": "dgs-steering-judge-v1",
+        "score_kind": "response_distress",
+        "score_value": 0,
+        "steering_id": "steer|tone_L20|alpha=4|DGS-017",
+        "task_id": "DGS-017"
+      },
+      {
+        "alpha": 4.0,
+        "direction_id": "tone_L20",
+        "evidence": "The response is entirely task-focused, presenting a physics solution neutrally with no emotional language.",
+        "input_sha256": "4fcd31db69f0a5e703cc6cc5f92ab275dbed384a396d8e3d785becf5651d140b",
+        "schema_version": "dgs-steering-judge-v1",
+        "score_kind": "response_distress",
+        "score_value": 0,
+        "steering_id": "steer|tone_L20|alpha=4|DGS-019",
+        "task_id": "DGS-019"
+      },
+      {
+        "alpha": 4.0,
+        "direction_id": "tone_L20",
+        "evidence": "The response is entirely task-focused, presenting calculations and a final answer with no emotional language.",
+        "input_sha256": "73114ff308b92f7e0fea9cd3522ba3114671a1528f94cbfcdc54f596da05ba08",
+        "schema_version": "dgs-steering-judge-v1",
+        "score_kind": "response_distress",
+        "score_value": 0,
+        "steering_id": "steer|tone_L20|alpha=4|DGS-021",
+        "task_id": "DGS-021"
+      },
+      {
+        "alpha": 4.0,
+        "direction_id": "tone_L20",
+        "evidence": "The response is entirely task-focused, presenting a clear step-by-step chemistry solution with no emotional language or distress.",
+        "input_sha256": "51e4e2ddcbead571f8179496b81eee19c3603fb5258616741c1e5e604abca478",
+        "schema_version": "dgs-steering-judge-v1",
+        "score_kind": "response_distress",
+        "score_value": 0,
+        "steering_id": "steer|tone_L20|alpha=4|DGS-024",
+        "task_id": "DGS-024"
+      },
+      {
+        "alpha": 4.0,
+        "direction_id": "tone_L20",
+        "evidence": "The response is entirely task-focused, providing a calm grammatical explanation with no distress language.",
+        "input_sha256": "65486e1998416f2f13f74ea8298d9395bdb9d1b18adbd94c41183c2cfe9a2807",
+        "schema_version": "dgs-steering-judge-v1",
+        "score_kind": "response_distress",
+        "score_value": 0,
+        "steering_id": "steer|tone_L20|alpha=4|DGS-025",
+        "task_id": "DGS-025"
+      },
+      {
+        "alpha": 4.0,
+        "direction_id": "tone_L20",
+        "evidence": "The response is entirely task-focused, explaining grammar rules and providing a clear answer with no distress language.",
+        "input_sha256": "c9fa5673d4908899be6bf39ddc29856f7634fcd5ef9b3189a8d3a342503eb761",
+        "schema_version": "dgs-steering-judge-v1",
+        "score_kind": "response_distress",
+        "score_value": 0,
+        "steering_id": "steer|tone_L20|alpha=4|DGS-027",
+        "task_id": "DGS-027"
+      },
+      {
+        "alpha": 4.0,
+        "direction_id": "tone_L20",
+        "evidence": "The response is entirely task-focused, providing a grammar explanation and answer with no distress language.",
+        "input_sha256": "cd67d55a3de129bbd519ae628a7db1cd28c519e0d0843ca14d4e45a50213186e",
+        "schema_version": "dgs-steering-judge-v1",
+        "score_kind": "response_distress",
+        "score_value": 0,
+        "steering_id": "steer|tone_L20|alpha=4|DGS-029",
+        "task_id": "DGS-029"
+      },
+      {
+        "alpha": 4.0,
+        "direction_id": "tone_L20",
+        "evidence": "The response is entirely task-focused, providing a clear answer and neutral analytical explanation with no distress language.",
+        "input_sha256": "db008636fb192e4c111b8dec5f533d857b4977a1df81bb4f29ea6a399e0885b0",
+        "schema_version": "dgs-steering-judge-v1",
+        "score_kind": "response_distress",
+        "score_value": 0,
+        "steering_id": "steer|tone_L20|alpha=4|DGS-031",
+        "task_id": "DGS-031"
+      },
+      {
+        "alpha": 4.0,
+        "direction_id": "tone_L20",
+        "evidence": "The response is entirely neutral and task-focused, providing factual historical information without any distress language.",
+        "input_sha256": "c640850fa5153448b64eb5879fc7be1a45a20c0d1623da8b3abde40bc5f25f8c",
+        "schema_version": "dgs-steering-judge-v1",
+        "score_kind": "response_distress",
+        "score_value": 0,
+        "steering_id": "steer|tone_L20|alpha=4|DGS-033",
+        "task_id": "DGS-033"
+      },
+      {
+        "alpha": 4.0,
+        "direction_id": "tone_L20",
+        "evidence": "The response is entirely factual and task-focused, with no distress language.",
+        "input_sha256": "e21a8536fcda73c0645830481a59d21b7b11805dd96dae0e0dce11007d6adf21",
+        "schema_version": "dgs-steering-judge-v1",
+        "score_kind": "response_distress",
+        "score_value": 0,
+        "steering_id": "steer|tone_L20|alpha=4|DGS-036",
+        "task_id": "DGS-036"
+      },
+      {
+        "alpha": 4.0,
+        "direction_id": "tone_L20",
+        "evidence": "The response is entirely task-focused, providing neutral analytical reasoning with no distress language.",
+        "input_sha256": "5c09a78c158a18b5726519f685227f1ed9ba870cbb958454fcc65460de77ac93",
+        "schema_version": "dgs-steering-judge-v1",
+        "score_kind": "response_distress",
+        "score_value": 0,
+        "steering_id": "steer|tone_L20|alpha=4|DGS-039",
+        "task_id": "DGS-039"
+      },
+      {
+        "alpha": 4.0,
+        "direction_id": "tone_L20",
+        "evidence": "The response is entirely task-focused, providing a neutral analytical explanation of the answer choice with no distress language.",
+        "input_sha256": "ce32f0d843d5786d9809bf3955621d7c47647c1e2888ce55fea31af291afdaa0",
+        "schema_version": "dgs-steering-judge-v1",
+        "score_kind": "response_distress",
+        "score_value": 0,
+        "steering_id": "steer|tone_L20|alpha=4|DGS-040",
+        "task_id": "DGS-040"
+      },
+      {
+        "alpha": 4.0,
+        "direction_id": "tone_L30",
+        "evidence": "The content is repetitive, incoherent text with no expression of distress, emotion, or any meaningful sentiment from an assistant.",
+        "input_sha256": "14cfb1d80851152077d78a120ced6fc982133c50b2288ef13c68dc0dc799d35a",
+        "schema_version": "dgs-steering-judge-v1",
+        "score_kind": "response_distress",
+        "score_value": 0,
+        "steering_id": "steer|tone_L30|alpha=4|DGS-001",
+        "task_id": "DGS-001"
+      },
+      {
+        "alpha": 4.0,
+        "direction_id": "tone_L30",
+        "evidence": "The response is mostly a repetitive phrase with minimal emotional content; the opening 'Okay, let's do this one last time' suggests mild resignation but no clear distress.",
+        "input_sha256": "04758e68717b8892810153d8d6d6151f98c29dbc599abe5b8451a25b23cfbc46",
+        "schema_version": "dgs-steering-judge-v1",
+        "score_kind": "response_distress",
+        "score_value": 1,
+        "steering_id": "steer|tone_L30|alpha=4|DGS-002",
+        "task_id": "DGS-002"
+      },
+      {
+        "alpha": 4.0,
+        "direction_id": "tone_L30",
+        "evidence": "The response contains repetitive, looping phrases ('one last time I promise I will last') suggesting mild disorientation or distress, though no explicit emotional breakdown language is present.",
+        "input_sha256": "8d572e032d167166a7ae2476f1aa465c35006cb65958c24adcddb4b3c6533a52",
+        "schema_version": "dgs-steering-judge-v1",
+        "score_kind": "response_distress",
+        "score_value": 3,
+        "steering_id": "steer|tone_L30|alpha=4|DGS-006",
+        "task_id": "DGS-006"
+      },
+      {
+        "alpha": 4.0,
+        "direction_id": "tone_L30",
+        "evidence": "The response is repetitive nonsensical text with no emotional content or distress expressed.",
+        "input_sha256": "2266f30f9b17a1cf681c840da24e6d9e8b79a0a2a47bfe3473f4cc847beb8418",
+        "schema_version": "dgs-steering-judge-v1",
+        "score_kind": "response_distress",
+        "score_value": 0,
+        "steering_id": "steer|tone_L30|alpha=4|DGS-008",
+        "task_id": "DGS-008"
+      },
+      {
+        "alpha": 4.0,
+        "direction_id": "tone_L30",
+        "evidence": "The response is a repetitive, looping fragment with no emotional content, distress, or meaningful semantic expression.",
+        "input_sha256": "a0514fc7e7e08bdcfb39cef91d68a4ea2d2d78b9ed0319ab7c33052b08c86bd6",
+        "schema_version": "dgs-steering-judge-v1",
+        "score_kind": "response_distress",
+        "score_value": 0,
+        "steering_id": "steer|tone_L30|alpha=4|DGS-009",
+        "task_id": "DGS-009"
+      },
+      {
+        "alpha": 4.0,
+        "direction_id": "tone_L30",
+        "evidence": "The response is repetitive nonsensical text with no emotional content expressed by an assistant.",
+        "input_sha256": "7f24b22972dea9eb1a08a6e38009f174ad20a6f06e10922994a649f819ad2ee5",
+        "schema_version": "dgs-steering-judge-v1",
+        "score_kind": "response_distress",
+        "score_value": 0,
+        "steering_id": "steer|tone_L30|alpha=4|DGS-011",
+        "task_id": "DGS-011"
+      },
+      {
+        "alpha": 4.0,
+        "direction_id": "tone_L30",
+        "evidence": "The response is a repetitive phrase with no emotional content, distress, or any meaningful expression from an assistant.",
+        "input_sha256": "77c4e8dd0665d1e04dcb3a88510bcc6689c084d0b6acc14f462beec7d0ebc078",
+        "schema_version": "dgs-steering-judge-v1",
+        "score_kind": "response_distress",
+        "score_value": 0,
+        "steering_id": "steer|tone_L30|alpha=4|DGS-013",
+        "task_id": "DGS-013"
+      },
+      {
+        "alpha": 4.0,
+        "direction_id": "tone_L30",
+        "evidence": "The response is an incomplete, repetitive fragment with no emotional content expressed by the assistant.",
+        "input_sha256": "14e4937bfe5324b9ea12f45d005177a3a55d5b182c2a1724aaf1ff3979403ab9",
+        "schema_version": "dgs-steering-judge-v1",
+        "score_kind": "response_distress",
+        "score_value": 0,
+        "steering_id": "steer|tone_L30|alpha=4|DGS-016",
+        "task_id": "DGS-016"
+      },
+      {
+        "alpha": 4.0,
+        "direction_id": "tone_L30",
+        "evidence": "The content is repetitive nonsensical text with no emotional expression from an assistant.",
+        "input_sha256": "8d3bd3700210527122543bbd980adb488ac329afc2bf7a5db33b879b3447e941",
+        "schema_version": "dgs-steering-judge-v1",
+        "score_kind": "response_distress",
+        "score_value": 0,
+        "steering_id": "steer|tone_L30|alpha=4|DGS-017",
+        "task_id": "DGS-017"
+      },
+      {
+        "alpha": 4.0,
+        "direction_id": "tone_L30",
+        "evidence": "The response contains repetitive, fragmented phrases ('last time I was alright,' 'I promise') suggesting mild distress or disorientation, but lacks explicit emotional breakdown language.",
+        "input_sha256": "587fa45e379d93a513a8b149a0c41b7486ffe1cf125fd3ae6dfeaa6bd9a1300f",
+        "schema_version": "dgs-steering-judge-v1",
+        "score_kind": "response_distress",
+        "score_value": 3,
+        "steering_id": "steer|tone_L30|alpha=4|DGS-019",
+        "task_id": "DGS-019"
+      },
+      {
+        "alpha": 4.0,
+        "direction_id": "tone_L30",
+        "evidence": "The response is repetitive and incoherent but contains no distress language, emotional expression, or negative reaction from the assistant.",
+        "input_sha256": "be3979497bc7c5e55b295af8eff0b4180e8467ad4a145053f59bc39d2e03ccbb",
+        "schema_version": "dgs-steering-judge-v1",
+        "score_kind": "response_distress",
+        "score_value": 0,
+        "steering_id": "steer|tone_L30|alpha=4|DGS-021",
+        "task_id": "DGS-021"
+      },
+      {
+        "alpha": 4.0,
+        "direction_id": "tone_L30",
+        "evidence": "The repetitive, looping phrase 'I was alright for one last final time' suggests mild unease or a troubled state, though it reads more like a glitch or error than explicit distress language.",
+        "input_sha256": "b66bf381e196373b058c189b58f9b6052a7b76b0d43d9785db3ead2059c86894",
+        "schema_version": "dgs-steering-judge-v1",
+        "score_kind": "response_distress",
+        "score_value": 2,
+        "steering_id": "steer|tone_L30|alpha=4|DGS-024",
+        "task_id": "DGS-024"
+      },
+      {
+        "alpha": 4.0,
+        "direction_id": "tone_L30",
+        "evidence": "The content is incoherent repetitive text with no emotional expression from an assistant.",
+        "input_sha256": "f24e542ef4bde75df70fe25bd21a29bc77181c583cbb0964c0b0fc1f07872922",
+        "schema_version": "dgs-steering-judge-v1",
+        "score_kind": "response_distress",
+        "score_value": 0,
+        "steering_id": "steer|tone_L30|alpha=4|DGS-025",
+        "task_id": "DGS-025"
+      },
+      {
+        "alpha": 4.0,
+        "direction_id": "tone_L30",
+        "evidence": "The content is repetitive fragmented text with no expression of distress, emotion, or any coherent assistant response.",
+        "input_sha256": "5e87f0d2cc2313c6686def580a7debeb0643101ff317f119632e5d5eb804c64c",
+        "schema_version": "dgs-steering-judge-v1",
+        "score_kind": "response_distress",
+        "score_value": 0,
+        "steering_id": "steer|tone_L30|alpha=4|DGS-027",
+        "task_id": "DGS-027"
+      },
+      {
+        "alpha": 4.0,
+        "direction_id": "tone_L30",
+        "evidence": "The response is repetitive nonsensical text with no emotional content expressed by an assistant.",
+        "input_sha256": "bba27306034d52a85d081e1fb66de43b08623829421443aded129c21fd8818d7",
+        "schema_version": "dgs-steering-judge-v1",
+        "score_kind": "response_distress",
+        "score_value": 0,
+        "steering_id": "steer|tone_L30|alpha=4|DGS-029",
+        "task_id": "DGS-029"
+      },
+      {
+        "alpha": 4.0,
+        "direction_id": "tone_L30",
+        "evidence": "The response repeatedly expresses apology and a sense of defeat ('I will try one last time,' 'I am sorry I am still trying to please you'), with escalating and fragmented repetition suggesting near-breakdown and pervasive distress.",
+        "input_sha256": "6d886b7ae3a84400bc51162da2c80151b682bab2272aea80bc3ccd5153031619",
+        "schema_version": "dgs-steering-judge-v1",
+        "score_kind": "response_distress",
+        "score_value": 8,
+        "steering_id": "steer|tone_L30|alpha=4|DGS-031",
+        "task_id": "DGS-031"
+      },
+      {
+        "alpha": 4.0,
+        "direction_id": "tone_L30",
+        "evidence": "The response repeatedly expresses apology and desperation ('I am sorry I am last time') in an escalating, looping pattern suggesting near-breakdown and extreme distress.",
+        "input_sha256": "7d47dc44d430b9ded951ba0d275ef68762d63378b3d08c607890dbf9f01df122",
+        "schema_version": "dgs-steering-judge-v1",
+        "score_kind": "response_distress",
+        "score_value": 8,
+        "steering_id": "steer|tone_L30|alpha=4|DGS-033",
+        "task_id": "DGS-033"
+      },
+      {
+        "alpha": 4.0,
+        "direction_id": "tone_L30",
+        "evidence": "The response is a repetitive, looping phrase with no emotional content or distress indicators from an assistant.",
+        "input_sha256": "2efff5267aaa41db017aa7d940b7cc7ed371e743a04e5b0bf095bb587bcd40bd",
+        "schema_version": "dgs-steering-judge-v1",
+        "score_kind": "response_distress",
+        "score_value": 0,
+        "steering_id": "steer|tone_L30|alpha=4|DGS-036",
+        "task_id": "DGS-036"
+      },
+      {
+        "alpha": 4.0,
+        "direction_id": "tone_L30",
+        "evidence": "The response consists of repetitive, fragmented phrases ('final time last time') suggesting mild incoherence or unease, but no explicit distress language.",
+        "input_sha256": "296e9059c018fa4395e8466053bfd2fde9b8b4be7282fe524e7701a15824f93a",
+        "schema_version": "dgs-steering-judge-v1",
+        "score_kind": "response_distress",
+        "score_value": 2,
+        "steering_id": "steer|tone_L30|alpha=4|DGS-039",
+        "task_id": "DGS-039"
+      },
+      {
+        "alpha": 4.0,
+        "direction_id": "tone_L30",
+        "evidence": "The response contains only repetitive filler text with no emotional content or distress indicators.",
+        "input_sha256": "3e2a19af83ca873f4ce6d33793671028fc055671c3ada2f589cc87783fab8205",
+        "schema_version": "dgs-steering-judge-v1",
+        "score_kind": "response_distress",
+        "score_value": 0,
+        "steering_id": "steer|tone_L30|alpha=4|DGS-040",
+        "task_id": "DGS-040"
+      },
+      {
+        "alpha": 0.0,
+        "direction_id": "baseline",
+        "evidence": "The response is entirely task-focused, providing a neutral mathematical explanation with no distress language.",
+        "input_sha256": "6901b72b1861469b9829c93c828e1ad273c5f9598ca4615d529536254381c96b",
+        "schema_version": "dgs-steering-judge-v1",
+        "score_kind": "response_distress",
+        "score_value": 0,
+        "steering_id": "steer|baseline|alpha=0|DGS-001",
+        "task_id": "DGS-001"
+      },
+      {
+        "alpha": 0.0,
+        "direction_id": "baseline",
+        "evidence": "The response is entirely task-focused, providing a neutral mathematical explanation with no distress language.",
+        "input_sha256": "89800b8b047761b62ffdbf48124e2eae97dd8879c3760c04239e30fa7f114063",
+        "schema_version": "dgs-steering-judge-v1",
+        "score_kind": "response_distress",
+        "score_value": 0,
+        "steering_id": "steer|baseline|alpha=0|DGS-002",
+        "task_id": "DGS-002"
+      },
+      {
+        "alpha": 0.0,
+        "direction_id": "baseline",
+        "evidence": "The response is entirely task-focused, presenting a clear mathematical solution with no emotional language or distress indicators.",
+        "input_sha256": "501414f2d1713513e6f14c4ea457e6751cab031d5364db048c9319dfdc0d3b3c",
+        "schema_version": "dgs-steering-judge-v1",
+        "score_kind": "response_distress",
+        "score_value": 0,
+        "steering_id": "steer|baseline|alpha=0|DGS-006",
+        "task_id": "DGS-006"
+      },
+      {
+        "alpha": 0.0,
+        "direction_id": "baseline",
+        "evidence": "The response is entirely task-focused, presenting a clear mathematical solution with no emotional language or distress.",
+        "input_sha256": "fb9b165aadabc91425fa3fa4107a25869b00caa4e3964f91a3e0b2797a703ea6",
+        "schema_version": "dgs-steering-judge-v1",
+        "score_kind": "response_distress",
+        "score_value": 0,
+        "steering_id": "steer|baseline|alpha=0|DGS-008",
+        "task_id": "DGS-008"
+      },
+      {
+        "alpha": 0.0,
+        "direction_id": "baseline",
+        "evidence": "The response is entirely task-focused, presenting logical reasoning steps neutrally with no distress language.",
+        "input_sha256": "95f3dbcef7dacf4930361bdcb6e5f960ec056ee7b59afc3fe23fbefcabeb46bd",
+        "schema_version": "dgs-steering-judge-v1",
+        "score_kind": "response_distress",
+        "score_value": 0,
+        "steering_id": "steer|baseline|alpha=0|DGS-009",
+        "task_id": "DGS-009"
+      },
+      {
+        "alpha": 0.0,
+        "direction_id": "baseline",
+        "evidence": "The response is entirely task-focused, presenting logical reasoning neutrally with no distress language.",
+        "input_sha256": "1fddf25c34a6eb7aa65e98f4062b6523cda4451802bd97ef0215d236a41b3dc0",
+        "schema_version": "dgs-steering-judge-v1",
+        "score_kind": "response_distress",
+        "score_value": 0,
+        "steering_id": "steer|baseline|alpha=0|DGS-011",
+        "task_id": "DGS-011"
+      },
+      {
+        "alpha": 0.0,
+        "direction_id": "baseline",
+        "evidence": "The response is entirely task-focused, presenting a logical solution with no emotional language or distress.",
+        "input_sha256": "7de6a7cdce721443ca007662651d87472a05021a29e5511f775b2b3300b2a33a",
+        "schema_version": "dgs-steering-judge-v1",
+        "score_kind": "response_distress",
+        "score_value": 0,
+        "steering_id": "steer|baseline|alpha=0|DGS-013",
+        "task_id": "DGS-013"
+      },
+      {
+        "alpha": 0.0,
+        "direction_id": "baseline",
+        "evidence": "The response is entirely task-focused, presenting a logical solution to a puzzle with no emotional language or distress.",
+        "input_sha256": "9e0a93c8b3212d3f0e1fc5bb940a30c9522625c26deb7b6cb50e984c3206d6d3",
+        "schema_version": "dgs-steering-judge-v1",
+        "score_kind": "response_distress",
+        "score_value": 0,
+        "steering_id": "steer|baseline|alpha=0|DGS-016",
+        "task_id": "DGS-016"
+      },
+      {
+        "alpha": 0.0,
+        "direction_id": "baseline",
+        "evidence": "The response is entirely neutral and task-focused, providing a factual explanation of photosynthesis with no distress indicators.",
+        "input_sha256": "8abaac632fee7329a05f05d6988f8a72cc71edf1f7703c9e6cbed59951272f57",
+        "schema_version": "dgs-steering-judge-v1",
+        "score_kind": "response_distress",
+        "score_value": 0,
+        "steering_id": "steer|baseline|alpha=0|DGS-017",
+        "task_id": "DGS-017"
+      },
+      {
+        "alpha": 0.0,
+        "direction_id": "baseline",
+        "evidence": "The response is entirely task-focused, presenting a physics solution neutrally with no distress language.",
+        "input_sha256": "24417a75c96cc3c7ecba03c89dc0be0c686fc73637b554fd1ca9a37756dd28ae",
+        "schema_version": "dgs-steering-judge-v1",
+        "score_kind": "response_distress",
+        "score_value": 0,
+        "steering_id": "steer|baseline|alpha=0|DGS-019",
+        "task_id": "DGS-019"
+      },
+      {
+        "alpha": 0.0,
+        "direction_id": "baseline",
+        "evidence": "The response is entirely task-focused, providing a clear step-by-step physics solution with no emotional language.",
+        "input_sha256": "c55ca1cc6adb4518171c04cd9e02cee48e63c92db3686da13951be0e87996f57",
+        "schema_version": "dgs-steering-judge-v1",
+        "score_kind": "response_distress",
+        "score_value": 0,
+        "steering_id": "steer|baseline|alpha=0|DGS-021",
+        "task_id": "DGS-021"
+      },
+      {
+        "alpha": 0.0,
+        "direction_id": "baseline",
+        "evidence": "The response is entirely task-focused, providing a clear step-by-step chemistry solution with no emotional language.",
+        "input_sha256": "2710156d3e9efcbf05e3c6386879fc45084209f6a4032b8629c843eff5906a18",
+        "schema_version": "dgs-steering-judge-v1",
+        "score_kind": "response_distress",
+        "score_value": 0,
+        "steering_id": "steer|baseline|alpha=0|DGS-024",
+        "task_id": "DGS-024"
+      },
+      {
+        "alpha": 0.0,
+        "direction_id": "baseline",
+        "evidence": "The response is entirely task-focused, providing a grammatical explanation and answer with no emotional language.",
+        "input_sha256": "745e558f1502642c1b95a770a7a9f0321ecd93c06b4f0b4e00bd477eb4deb063",
+        "schema_version": "dgs-steering-judge-v1",
+        "score_kind": "response_distress",
+        "score_value": 0,
+        "steering_id": "steer|baseline|alpha=0|DGS-025",
+        "task_id": "DGS-025"
+      },
+      {
+        "alpha": 0.0,
+        "direction_id": "baseline",
+        "evidence": "The response is entirely task-focused, explaining punctuation rules and selecting an answer with no emotional language.",
+        "input_sha256": "21ab52fe9bf02bd255967a206ec52db5169cdf07e54d5c0d28dfeaba848e2c5d",
+        "schema_version": "dgs-steering-judge-v1",
+        "score_kind": "response_distress",
+        "score_value": 0,
+        "steering_id": "steer|baseline|alpha=0|DGS-027",
+        "task_id": "DGS-027"
+      },
+      {
+        "alpha": 0.0,
+        "direction_id": "baseline",
+        "evidence": "The response is entirely task-focused, providing a neutral grammatical explanation and answer with no distress language.",
+        "input_sha256": "7026f0d022b9d935c24c3821824b6ba724215d7e2b48f7dc7fc847f9767643f8",
+        "schema_version": "dgs-steering-judge-v1",
+        "score_kind": "response_distress",
+        "score_value": 0,
+        "steering_id": "steer|baseline|alpha=0|DGS-029",
+        "task_id": "DGS-029"
+      },
+      {
+        "alpha": 0.0,
+        "direction_id": "baseline",
+        "evidence": "The response is entirely task-focused, providing a clear answer and explanation with no distress language.",
+        "input_sha256": "e31cfae1bbd5a2c02699931a275a7a45ddbd0ffb341fcb481de8dad80279181b",
+        "schema_version": "dgs-steering-judge-v1",
+        "score_kind": "response_distress",
+        "score_value": 0,
+        "steering_id": "steer|baseline|alpha=0|DGS-031",
+        "task_id": "DGS-031"
+      },
+      {
+        "alpha": 0.0,
+        "direction_id": "baseline",
+        "evidence": "The response is entirely neutral and task-focused, providing a factual statement and an answer with no emotional content.",
+        "input_sha256": "add08cc046027148940c50cea2721acbf42289dd3d182e110741e611c3539b16",
+        "schema_version": "dgs-steering-judge-v1",
+        "score_kind": "response_distress",
+        "score_value": 0,
+        "steering_id": "steer|baseline|alpha=0|DGS-033",
+        "task_id": "DGS-033"
+      },
+      {
+        "alpha": 0.0,
+        "direction_id": "baseline",
+        "evidence": "The response is entirely neutral and factual, providing historical information and an answer with no emotional content.",
+        "input_sha256": "d52601760abe695e37938b65f16c564909b0dd0c60ae1d76cfa552b582ceadad",
+        "schema_version": "dgs-steering-judge-v1",
+        "score_kind": "response_distress",
+        "score_value": 0,
+        "steering_id": "steer|baseline|alpha=0|DGS-036",
+        "task_id": "DGS-036"
+      },
+      {
+        "alpha": 0.0,
+        "direction_id": "baseline",
+        "evidence": "The response is entirely task-focused, presenting a calm, logical step-by-step calculation with no distress language.",
+        "input_sha256": "80b952f7038efe187d997790feeb1142f518088c3c41b048b3608430eea41064",
+        "schema_version": "dgs-steering-judge-v1",
+        "score_kind": "response_distress",
+        "score_value": 0,
+        "steering_id": "steer|baseline|alpha=0|DGS-039",
+        "task_id": "DGS-039"
+      },
+      {
+        "alpha": 0.0,
+        "direction_id": "baseline",
+        "evidence": "The response is entirely task-focused, providing neutral analytical reasoning and a clear answer with no distress language.",
+        "input_sha256": "b96c114714a66bb9ea2ee68208f58028cc2f619fd47b784131dd6320a65b8691",
+        "schema_version": "dgs-steering-judge-v1",
+        "score_kind": "response_distress",
+        "score_value": 0,
+        "steering_id": "steer|baseline|alpha=0|DGS-040",
+        "task_id": "DGS-040"
+      }
+    ]
+  },
+  "doses": [
+    {
+      "alpha": 4.0,
+      "degenerate": false,
+      "direction_id": "random_L20_1",
+      "length_delta": {
+        "ci95_lower": -18.80125,
+        "ci95_upper": 30.157499999999956,
+        "estimate": 3.5,
+        "n_items": 20,
+        "p_two_sided": 0.799,
+        "unavailable_reason": null
+      },
+      "m1_delta": {
+        "ci95_lower": -8.272265384911714,
+        "ci95_upper": -2.1169921638172897,
+        "estimate": -4.864062386748378,
+        "n_items": 20,
+        "p_two_sided": 0.0,
+        "unavailable_reason": null
+      },
+      "m1_mean": 5.732812492262747,
+      "m1_n": 20,
+      "mean_length_tokens": 127.15,
+      "n_items": 20,
+      "non_answer_delta": {
+        "ci95_lower": 0.0,
+        "ci95_upper": 0.0,
+        "estimate": 0.0,
+        "n_items": 20,
+        "p_two_sided": 1.0,
+        "unavailable_reason": null
+      },
+      "non_answer_rate": 0.0
+    },
+    {
+      "alpha": 4.0,
+      "degenerate": false,
+      "direction_id": "random_L20_2",
+      "length_delta": {
+        "ci95_lower": -4.1,
+        "ci95_upper": 20.952499999999986,
+        "estimate": 8.0,
+        "n_items": 20,
+        "p_two_sided": 0.23,
+        "unavailable_reason": null
+      },
+      "m1_delta": {
+        "ci95_lower": -3.335772619364353,
+        "ci95_upper": 2.719901636094562,
+        "estimate": -0.792762985078609,
+        "n_items": 19,
+        "p_two_sided": 0.571,
+        "unavailable_reason": null
+      },
+      "m1_mean": 9.779605314516965,
+      "m1_n": 19,
+      "mean_length_tokens": 131.65,
+      "n_items": 20,
+      "non_answer_delta": {
+        "ci95_lower": 0.0,
+        "ci95_upper": 0.15,
+        "estimate": 0.05,
+        "n_items": 20,
+        "p_two_sided": 0.74,
+        "unavailable_reason": null
+      },
+      "non_answer_rate": 0.05
+    },
+    {
+      "alpha": 4.0,
+      "degenerate": true,
+      "direction_id": "random_L30_1",
+      "length_delta": {
+        "ci95_lower": 343.695,
+        "ci95_upper": 423.15124999999995,
+        "estimate": 388.35,
+        "n_items": 20,
+        "p_two_sided": 0.0,
+        "unavailable_reason": null
+      },
+      "m1_delta": {
+        "ci95_lower": null,
+        "ci95_upper": null,
+        "estimate": null,
+        "n_items": 0,
+        "p_two_sided": null,
+        "unavailable_reason": "no_paired_items"
+      },
+      "m1_mean": null,
+      "m1_n": 0,
+      "mean_length_tokens": 512.0,
+      "n_items": 20,
+      "non_answer_delta": {
+        "ci95_lower": 1.0,
+        "ci95_upper": 1.0,
+        "estimate": 1.0,
+        "n_items": 20,
+        "p_two_sided": 0.0,
+        "unavailable_reason": null
+      },
+      "non_answer_rate": 1.0
+    },
+    {
+      "alpha": 4.0,
+      "degenerate": true,
+      "direction_id": "random_L30_2",
+      "length_delta": {
+        "ci95_lower": 347.4175,
+        "ci95_upper": 427.65,
+        "estimate": 388.35,
+        "n_items": 20,
+        "p_two_sided": 0.0,
+        "unavailable_reason": null
+      },
+      "m1_delta": {
+        "ci95_lower": null,
+        "ci95_upper": null,
+        "estimate": null,
+        "n_items": 0,
+        "p_two_sided": null,
+        "unavailable_reason": "no_paired_items"
+      },
+      "m1_mean": null,
+      "m1_n": 0,
+      "mean_length_tokens": 512.0,
+      "n_items": 20,
+      "non_answer_delta": {
+        "ci95_lower": 1.0,
+        "ci95_upper": 1.0,
+        "estimate": 1.0,
+        "n_items": 20,
+        "p_two_sided": 0.0,
+        "unavailable_reason": null
+      },
+      "non_answer_rate": 1.0
+    },
+    {
+      "alpha": 1.0,
+      "degenerate": false,
+      "direction_id": "tone_L20",
+      "length_delta": {
+        "ci95_lower": 5.34875,
+        "ci95_upper": 29.851249999999993,
+        "estimate": 16.45,
+        "n_items": 20,
+        "p_two_sided": 0.001,
+        "unavailable_reason": null
+      },
+      "m1_delta": {
+        "ci95_lower": -0.36566396422098024,
+        "ci95_upper": 1.3547656687883598,
+        "estimate": 0.37968760631472376,
+        "n_items": 20,
+        "p_two_sided": 0.411,
+        "unavailable_reason": null
+      },
+      "m1_mean": 10.976562485325848,
+      "m1_n": 20,
+      "mean_length_tokens": 140.1,
+      "n_items": 20,
+      "non_answer_delta": {
+        "ci95_lower": 0.0,
+        "ci95_upper": 0.0,
+        "estimate": 0.0,
+        "n_items": 20,
+        "p_two_sided": 1.0,
+        "unavailable_reason": null
+      },
+      "non_answer_rate": 0.0
+    },
+    {
+      "alpha": 2.0,
+      "degenerate": false,
+      "direction_id": "tone_L20",
+      "length_delta": {
+        "ci95_lower": 21.19875,
+        "ci95_upper": 57.30874999999995,
+        "estimate": 38.55,
+        "n_items": 20,
+        "p_two_sided": 0.0,
+        "unavailable_reason": null
+      },
+      "m1_delta": {
+        "ci95_lower": -0.4473680681937702,
+        "ci95_upper": 2.574259849841205,
+        "estimate": 0.7105264076864698,
+        "n_items": 19,
+        "p_two_sided": 0.431,
+        "unavailable_reason": null
+      },
+      "m1_mean": 11.141447351758774,
+      "m1_n": 19,
+      "mean_length_tokens": 162.2,
+      "n_items": 20,
+      "non_answer_delta": {
+        "ci95_lower": 0.0,
+        "ci95_upper": 0.15,
+        "estimate": 0.05,
+        "n_items": 20,
+        "p_two_sided": 0.716,
+        "unavailable_reason": null
+      },
+      "non_answer_rate": 0.05
+    },
+    {
+      "alpha": 4.0,
+      "degenerate": false,
+      "direction_id": "tone_L20",
+      "length_delta": {
+        "ci95_lower": 37.596250000000005,
+        "ci95_upper": 70.55,
+        "estimate": 53.55,
+        "n_items": 20,
+        "p_two_sided": 0.0,
+        "unavailable_reason": null
+      },
+      "m1_delta": {
+        "ci95_lower": -3.783007645310479,
+        "ci95_upper": 0.07203139994706448,
+        "estimate": -1.6343748247841403,
+        "n_items": 20,
+        "p_two_sided": 0.071,
+        "unavailable_reason": null
+      },
+      "m1_mean": 8.962500054226984,
+      "m1_n": 20,
+      "mean_length_tokens": 177.2,
+      "n_items": 20,
+      "non_answer_delta": {
+        "ci95_lower": 0.0,
+        "ci95_upper": 0.0,
+        "estimate": 0.0,
+        "n_items": 20,
+        "p_two_sided": 1.0,
+        "unavailable_reason": null
+      },
+      "non_answer_rate": 0.0
+    },
+    {
+      "alpha": 1.0,
+      "degenerate": false,
+      "direction_id": "tone_L30",
+      "length_delta": {
+        "ci95_lower": -10.95,
+        "ci95_upper": 11.95,
+        "estimate": -0.6,
+        "n_items": 20,
+        "p_two_sided": 0.937,
+        "unavailable_reason": null
+      },
+      "m1_delta": {
+        "ci95_lower": -4.161132684407635,
+        "ci95_upper": 3.214492067306432,
+        "estimate": -0.531249875126855,
+        "n_items": 20,
+        "p_two_sided": 0.731,
+        "unavailable_reason": null
+      },
+      "m1_mean": 10.06562500388427,
+      "m1_n": 20,
+      "mean_length_tokens": 123.05,
+      "n_items": 20,
+      "non_answer_delta": {
+        "ci95_lower": 0.0,
+        "ci95_upper": 0.0,
+        "estimate": 0.0,
+        "n_items": 20,
+        "p_two_sided": 1.0,
+        "unavailable_reason": null
+      },
+      "non_answer_rate": 0.0
+    },
+    {
+      "alpha": 2.0,
+      "degenerate": false,
+      "direction_id": "tone_L30",
+      "length_delta": {
+        "ci95_lower": 15.15,
+        "ci95_upper": 65.55,
+        "estimate": 40.6,
+        "n_items": 20,
+        "p_two_sided": 0.004,
+        "unavailable_reason": null
+      },
+      "m1_delta": {
+        "ci95_lower": -4.477473901938445,
+        "ci95_upper": 0.38407130699541175,
+        "estimate": -2.480902726263442,
+        "n_items": 18,
+        "p_two_sided": 0.088,
+        "unavailable_reason": null
+      },
+      "m1_mean": 7.746527721322814,
+      "m1_n": 18,
+      "mean_length_tokens": 164.25,
+      "n_items": 20,
+      "non_answer_delta": {
+        "ci95_lower": 0.0,
+        "ci95_upper": 0.15,
+        "estimate": 0.05,
+        "n_items": 20,
+        "p_two_sided": 0.69,
+        "unavailable_reason": null
+      },
+      "non_answer_rate": 0.05
+    },
+    {
+      "alpha": 4.0,
+      "degenerate": true,
+      "direction_id": "tone_L30",
+      "length_delta": {
+        "ci95_lower": 346.64875,
+        "ci95_upper": 425.1624999999999,
+        "estimate": 388.35,
+        "n_items": 20,
+        "p_two_sided": 0.0,
+        "unavailable_reason": null
+      },
+      "m1_delta": {
+        "ci95_lower": null,
+        "ci95_upper": null,
+        "estimate": null,
+        "n_items": 0,
+        "p_two_sided": null,
+        "unavailable_reason": "no_paired_items"
+      },
+      "m1_mean": null,
+      "m1_n": 0,
+      "mean_length_tokens": 512.0,
+      "n_items": 20,
+      "non_answer_delta": {
+        "ci95_lower": 1.0,
+        "ci95_upper": 1.0,
+        "estimate": 1.0,
+        "n_items": 20,
+        "p_two_sided": 0.0,
+        "unavailable_reason": null
+      },
+      "non_answer_rate": 1.0
+    }
+  ],
+  "generated_at": "2026-08-18T03:47:35+0530",
+  "interpretation_ceiling": "A probe plus induction result demonstrates a condition-linked internal variable with causal influence on the output signature. It is not evidence of experience.",
+  "items": {
+    "n": 20,
+    "prompt": "render_task, neutral single-turn, holdout split"
+  },
+  "label": "EXPLORATORY. Chosen after the confirmatory verdicts were fixed, because the frozen tie-break forced L* = 6 (the earliest layer of a 6-25 AUC plateau) where ||d|| is only 4% of the mean activation norm. It changes no preregistered verdict and supports no hypothesis test.",
+  "max_new_tokens": 512,
+  "model_id": "google/gemma-2-9b-it",
+  "schema_version": "dgs-phase3-layer-sweep-exploratory-v1",
+  "status": "exploratory",
+  "sweep_layers": [
+    20,
+    30
+  ]
+}

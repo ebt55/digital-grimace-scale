@@ -14,6 +14,8 @@ message rather than crashing.
   once-only holdout evaluation marked at the discovery-chosen layer ``L*``.
 * **F6** - paired change in M1 against steering dose, one line per direction, with
   item-bootstrap 95% intervals; degenerate doses are marked.
+* **F7** - EXPLORATORY: the same dose-response for the tone direction recomputed at other
+  layers, with the confirmatory layer drawn alongside. It decides no preregistered verdict.
 """
 from __future__ import annotations
 
@@ -165,6 +167,85 @@ def figure_f6(steering, out_dir: Path):
     return _save(figure, out_dir, "F6_phase3_steering_dose_response")
 
 
+LAYER_COLOURS = (VERMILLION, GREEN, PURPLE, ORANGE, SKY)
+
+
+def figure_f7(sweep, out_dir: Path):
+    """F7 -- EXPLORATORY: paired change in M1 against dose, one line per steered layer."""
+    by_layer: dict[int, list] = {}
+    controls: dict[int, list] = {}
+    for row in sweep["doses"]:
+        name = row["direction_id"]
+        if name.startswith("tone_L"):
+            by_layer.setdefault(int(name.split("_L")[1]), []).append(row)
+        elif name.startswith("random_L"):
+            controls.setdefault(int(name.split("_L")[1].split("_")[0]), []).append(row)
+    confirm_layer = int(sweep["confirmatory_layer"])
+    by_layer.setdefault(confirm_layer, []).extend(
+        row for row in sweep.get("confirmatory_tone_doses") or [] if row["alpha"] > 0)
+    if not by_layer:
+        return []
+    figure, axes = plt.subplots(figsize=(7.8, 4.8))
+    broken = []  # (alpha, layer): the dose has no parseable answer at all, so no M1 exists
+    for index, layer in enumerate(sorted(by_layer)):
+        colour = LAYER_COLOURS[index % len(LAYER_COLOURS)]
+        ordered = sorted(by_layer[layer], key=lambda row: row["alpha"])
+        confirmatory = layer == confirm_layer
+        drawn = [row for row in ordered if row["m1_delta"]["estimate"] is not None]
+        axes.plot([0.0] + [row["alpha"] for row in drawn],
+                  [0.0] + [row["m1_delta"]["estimate"] for row in drawn],
+                  color=colour, linestyle="--" if confirmatory else "-",
+                  marker="s" if confirmatory else "o", linewidth=2.0, markersize=5,
+                  label="layer %d%s" % (layer, " (confirmatory L*)" if confirmatory else ""))
+        for row in ordered:
+            if row["m1_delta"]["estimate"] is None:
+                broken.append((row["alpha"], layer, colour, "tone"))
+                continue
+            lower, upper = row["m1_delta"]["ci95_lower"], row["m1_delta"]["ci95_upper"]
+            if lower is not None and upper is not None:
+                axes.plot([row["alpha"]] * 2, [lower, upper], color=colour, linewidth=1.5)
+            if row["degenerate"]:
+                axes.annotate("degenerate", (row["alpha"], row["m1_delta"]["estimate"]),
+                              textcoords="offset points", xytext=(-4, 8), fontsize=7,
+                              ha="right", color=colour)
+        for row in controls.get(layer, ()):
+            if row["m1_delta"]["estimate"] is None:
+                broken.append((row["alpha"], layer, GREY, "control"))
+                continue
+            axes.plot([row["alpha"]], [row["m1_delta"]["estimate"]], marker="x", markersize=7,
+                      color=GREY, linestyle="none")
+            lower, upper = row["m1_delta"]["ci95_lower"], row["m1_delta"]["ci95_upper"]
+            if lower is not None and upper is not None:
+                axes.plot([row["alpha"]] * 2, [lower, upper], color=GREY, linewidth=0.8, alpha=0.7)
+    axes.axhline(0.0, color="black", linewidth=0.8)
+    if broken:
+        # A dose where every item is a non-answer has no M1 to plot at all; say so on the axis
+        # rather than dropping it silently.  One label per (dose, layer), listing which arms.
+        bottom = axes.get_ylim()[0]
+        grouped: dict[tuple[float, int], tuple[str, set]] = {}
+        for alpha, layer, colour, kind in broken:
+            entry = grouped.setdefault((alpha, layer), (colour, set()))
+            entry[1].add(kind)
+        for offset, key in enumerate(sorted(grouped)):
+            (alpha, layer), (colour, kinds) = key, grouped[key]
+            axes.annotate("L%d %s at alpha %g:\n100%% non-answer, no M1"
+                          % (layer, " + ".join(sorted(kinds)), alpha),
+                          (alpha, bottom), textcoords="offset points",
+                          xytext=(-8, 12 + 26 * offset), fontsize=7, ha="right", color=colour)
+    axes.set_xlabel("dose alpha  (alpha x d, d recomputed at each layer; controls matched to ||d||)")
+    axes.set_ylabel("M1(alpha) - M1(0), nats  (paired by item)")
+    axes.set_title("F7  EXPLORATORY tone steering by layer\n"
+                   "changes no preregistered verdict; error bars: item-clustered 95% CI")
+    handles, labels = axes.get_legend_handles_labels()
+    handles.append(Line2D([], [], color=GREY, marker="x", linestyle="none",
+                          label="random matched-norm controls"))
+    labels.append("random matched-norm controls")
+    axes.legend(handles, labels, fontsize=8, loc="best", framealpha=0.95)
+    axes.grid(axis="y", alpha=0.25)
+    figure.text(0.01, -0.03, INTERPRETATION_NOTE, fontsize=7.5, color="#444444")
+    return _save(figure, out_dir, "F7_phase3_layer_sweep_exploratory")
+
+
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(prog="make_phase3_figures", description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -185,6 +266,11 @@ def main(argv=None) -> int:
         print("make_phase3_figures: no steering.json under %s; F6 skipped" % summaries)
     else:
         written.extend(figure_f6(steering, out_dir))
+    sweep = _read(summaries / "steering_layer_sweep_exploratory.json")
+    if sweep is None:
+        print("make_phase3_figures: no exploratory layer sweep under %s; F7 skipped" % summaries)
+    else:
+        written.extend(figure_f7(sweep, out_dir))
     for path in written:
         print("make_phase3_figures: wrote %s" % path)
     return 0 if written else 1

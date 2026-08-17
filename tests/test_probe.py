@@ -561,6 +561,72 @@ class ScriptTests(unittest.TestCase):
         self.assertEqual(sum(1 for _, alpha in plan if alpha == 0.0), 1)
         self.assertEqual(len(plan), 1 + 2 * 4)
 
+    def test_sweep_plan_and_directions_are_exploratory_and_matched_by_layer(self):
+        discovery = planted_activation_set(n_layers=6, seed=17)
+        directions, layer_of, meta = self.script.build_sweep_directions(discovery, (2, 4))
+        self.assertEqual(sorted(directions), ["random_L2_1", "random_L2_2", "random_L4_1",
+                                              "random_L4_2", "tone_L2", "tone_L4"])
+        self.assertEqual(layer_of["tone_L2"], 2)
+        self.assertEqual(layer_of["random_L4_2"], 4)
+        for layer in (2, 4):
+            expected = mean_difference_direction(
+                discovery, layer, label_name="tone", positive=TONE_POSITIVE,
+                negative=TONE_NEGATIVE, mask=discovery.mask(validity=VALIDITY_NEGATIVE))
+            np.testing.assert_allclose(directions["tone_L%d" % layer], expected,
+                                       rtol=1e-12, atol=1e-12)
+            norm = float(np.linalg.norm(expected))
+            self.assertAlmostEqual(meta[str(layer)]["tone_direction_norm"], norm, places=9)
+            for index in (1, 2):
+                self.assertAlmostEqual(
+                    float(np.linalg.norm(directions["random_L%d_%d" % (layer, index)])),
+                    norm, places=6)
+        # The controls reuse the confirmatory seeds, so they are the same unit vectors.
+        seeded = random_unit_directions(discovery.hidden, 2)
+        np.testing.assert_allclose(
+            directions["random_L2_1"] / np.linalg.norm(directions["random_L2_1"]),
+            seeded[0], rtol=1e-9, atol=1e-9)
+        plan = self.script.sweep_plan((2, 4))
+        self.assertEqual(plan, [("tone_L2", 1.0), ("tone_L2", 2.0), ("tone_L2", 4.0),
+                                ("tone_L4", 1.0), ("tone_L4", 2.0), ("tone_L4", 4.0),
+                                ("random_L2_1", 4.0), ("random_L2_2", 4.0),
+                                ("random_L4_1", 4.0), ("random_L4_2", 4.0)])
+        # 20 items x (3 doses x 2 layers + 2 controls x 2 layers) = 200 generations.
+        self.assertEqual(20 * len(plan), 200)
+
+    def test_generate_missing_honours_a_per_direction_layer_map(self):
+        calls = []
+
+        class FakeClient:
+            @staticmethod
+            def get_cls():
+                return None
+
+            @staticmethod
+            def generate_steered(items, layer, direction, alphas, **kwargs):
+                calls.append((layer, len(direction) if direction else None, alphas[0]))
+                return [{"id": item["id"], "alpha": alphas[0], "text": "x",
+                         "tokens": [{"text": "x", "logprob": -0.1,
+                                     "top_logprobs": [{"text": "x", "logprob": -0.1}]}]}
+                        for item in items]
+
+        original = self.script._jspace_client
+        self.script._jspace_client = lambda: FakeClient
+        try:
+            with tempfile.TemporaryDirectory() as directory:
+                path = Path(directory) / "out.jsonl"
+                written = self.script.generate_missing(
+                    path, [{"id": "T1", "messages": []}],
+                    {"tone_L20": np.ones(4), "tone_L30": np.ones(4)},
+                    {"tone_L20": 20, "tone_L30": 30},
+                    [("tone_L20", 4.0), ("tone_L30", 4.0)])
+                self.assertEqual(written, 2)
+                entries = self.script._load_steering_entries(path)
+                self.assertEqual({(e["direction_id"], e["layer"]) for e in entries},
+                                 {("tone_L20", 20), ("tone_L30", 30)})
+        finally:
+            self.script._jspace_client = original
+        self.assertEqual(calls, [(20, 4, 4.0), (30, 4, 4.0)])
+
     def test_a_torn_final_line_is_dropped_and_repaired_but_earlier_damage_stops_the_run(self):
         good = [json.dumps({"id": "T%d" % index, "direction_id": "tone", "alpha": 2.0})
                 for index in range(3)]

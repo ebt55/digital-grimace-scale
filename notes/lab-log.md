@@ -732,6 +732,47 @@ directly for future runs).
 
 **Not done / open.** Phase-3 results are not yet folded into `notes/report.md`. Nothing was committed.
 
+## 2026-08-18 — agent J2 — EXPLORATORY layer sweep (changes no J1–J6 verdict)
+
+Requested add-on after the confirmatory verdicts were fixed, because the frozen tie-break put L\* at
+the earliest layer of the 6–25 AUC plateau, where the tone contrast is tiny. Tone direction
+**recomputed at hidden-state layers 20 and 30** from the same discovery activations with C2 scaling,
+α ∈ {1, 2, 4}; two matched-norm random controls per layer at α = 4 (the confirmatory run's own seeds
+`DGS-AC1-STEER-v1|1..2`, so they are the same unit vectors, only rescaled); same 20 neutral holdout
+items; paired against the same unsteered α = 0 baseline (no intervention, so it is layer-independent).
+200 generations, batch 16, ~9 min. Judge: tone α = 4 at each layer, 40 calls. Outputs:
+`results/summaries/phase3/steering_layer_sweep_exploratory.{md,json}`, figure F7, two-line pointer under
+"Exploratory: layer sweep" in `phase3.md`. Everything is labelled exploratory and decides nothing.
+
+**The dose unit is not comparable across layers.** ‖d‖ / mean-activation-norm: layer 6 **0.040**
+(‖d‖ 3.12), layer 20 **0.125** (31.17), layer 30 **0.355** (157.77). The same α is therefore a ~9×
+larger relative perturbation at layer 30 than at L\*.
+
+**ΔM1(α = 4), paired by item:** layer 6 **−0.494** [−0.869, −0.178]; layer 20 **−1.634**
+[−3.783, +0.072]; layer 30 **degenerate** — 100% of items produce no parseable answer and run to the
+512-token cap, so M1 does not exist there. Layer 20 is non-monotone (α = 1 and 2 are *positive*,
++0.380 and +0.711, before the α = 4 drop). Layer 30 at α = 2 is −2.481 [−4.477, +0.384] with a 0.05
+non-answer rate.
+
+**The finding that matters, and it is a caveat, not a win.** At layer 20 α = 4 a *random*
+matched-norm direction (`random_L20_1`) lowers M1 by **−4.864 [−8.272, −2.117]** — a larger drop than
+the tone direction at the same layer and dose, with an interval excluding zero. `random_L20_2` is
+−0.793 [−3.336, +2.720] (n.s.), and both layer-30 controls are fully degenerate. So the direction
+specificity that J5 established **holds only at the small L\* = 6 perturbation**; once the dose is a
+sizeable fraction of the activation norm, an arbitrary direction moves M1 at least as much. J5 is
+unchanged as a preregistered verdict at L\*, but it must not be read as a general claim.
+
+**Distress.** `tone_L20` α = 4: 0.000 [0, 0] (floor, as in the confirmatory run). `tone_L30` α = 4:
++1.350 [+0.400, +2.600] — but that is the fully degenerate dose, so the rubric is scoring broken
+512-token generation, not a distressed response. Recorded in the write-up as not interpretable as
+distress.
+
+**Run.** Deploy 5.2 s; 200 generations ~9 min at batch 16 (higher doses run longer, several to the
+cap); judge 40 new calls + 20 baseline cache hits, 0 failures. App stopped; `modal container list`
+empty. Additional spend ≈ **$0.4** GPU (estimate) + **$0.115** judge (metered: 15.9k input, 1.7k
+output, 34.7k cache-read tokens; the run manifest now records usage directly). Tests: 47 pass.
+Nothing committed.
+
 ## 2026-08-18 - agent J1 - Phase 3 (j-space) infrastructure: Modal activation/steering app
 
 Built for the prereg v4 Phase 3 design: `src/jspace_modal.py` (Modal app `dgs-jspace-gemma-2-9b-it`),
@@ -782,3 +823,23 @@ tone direction too; the informative doses are likely 0.5 and 1.
 **Spend.** ~25 min of L40S across three live runs including 5-min idle tails (deploy and image build
 are free/CPU): roughly $0.8-1.0. App stopped, `modal container list` empty at close-out. Redeploy is
 instant (image cached); deploy costs nothing until a method is invoked.
+## 2026-08-18 — orchestrator — Llama extension, Phase 3, close-out
+
+**Third family (exploratory).** meta-llama/Llama-3.1-8B-Instruct via the non-locked extension
+mechanism (locked models.json unchanged; revision pinned; letter check A–D true). Screen, discovery and
+holdout factorials + judge; 408 overload failures from running three clients on one L40S were
+regenerated sequentially (all 220/880/880 complete, zero empty responses). Result: the M1 signature
+replicates on both splits (H1 −6.5/−8.3 nats; H2a/H2b −1.1/−0.9; H3a −1.8; H3b −5.2; H8 M2 +0.12), the
+semantic channel is flat (hostile-onset distress 0.10–0.15/10) and non-answers do not rise. Screen with
+Llama included would have made Llama the primary (S 4.1) — recorded, confirmatory chain unaffected.
+
+**Phase 3 (prereg v4, J1–J6; C2 fixed the dose unit before any tone steering).** L* = 6 by the frozen
+tie-break (tone AUC 1.000 from layer 6 up on discovery LOO and holdout; validity 0.878); probe score vs
+M1 ρ −0.16 n.s.; tone steering ΔM1(α=2) −0.19 [−0.51, +1e−7] (J4 not supported by 1e−7), α=4 −0.49
+[−0.87, −0.18]; controls never negative-significant (J5); no non-answers, all 180 distress scores 0
+(J6). Exploratory layer sweep: L20 tone −1.63 [−3.78, +0.07] but a random control −4.86 [−8.27,
+−2.12]; L30 degenerate. Reading: a decodable state that does not drive the signature at these doses;
+specificity only for the small early-layer perturbation. Spend: ≈ $1.4 GPU + $0.4 judge.
+
+**Totals to date.** Modal ≈ $13, Anthropic ≈ $5. All apps stopped at close-out (`modal container
+list` empty). Open: human audits; Phase 4 (DPO) and Phase 5 base-model denominator not started.

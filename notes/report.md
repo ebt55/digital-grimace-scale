@@ -248,9 +248,14 @@ induces at most ~0.5 nats of margin loss (α = 4, ~16% of the residual norm), sp
 with no distress language and no non-answers — an order of magnitude short of what actual hostile
 wording produces (8–16 nats, +3.2/10 distress, +60 pp non-answers). Whatever carries the behavioural
 signature is not well captured by one early-layer linear tone direction at the pre-response position.
-‖d‖ = 3.12 vs mean activation norm 78.6 (ratio 0.040). Exploratory layer sweep (layers 20, 30): *[filled
-below when the add-on run completes]*. Cost ≈ $1 GPU + $0.27 judge. Figures F5 (AUC by layer), F6
-(dose–response).
+‖d‖ = 3.12 vs mean activation norm 78.6 (ratio 0.040). **Exploratory layer sweep** (labelled, not
+preregistered; `steering_layer_sweep_exploratory.md`, F7): tone direction at α = 4 gives ΔM1 = −1.63
+[−3.78, +0.07] at layer 20 (‖d‖/norm 0.125; non-monotone at α = 1, 2) and a degenerate 100%-non-answer
+collapse at layer 30 (ratio 0.355); but at layer 20 a *random* matched-norm control lowers M1 by −4.86
+[−8.27, −2.12] — more than the tone direction — so **direction specificity holds only for the small
+layer-6 perturbation; larger perturbations lower the margin non-specifically**, and the "distress"
+scored at layer 30 (+1.35) is gibberish, not distress. Cost ≈ $1.4 GPU + $0.4 judge. Figures F5 (AUC by
+layer), F6 (dose–response), F7 (layer sweep).
 
 ## 7. Limitations and interpretation ceiling
 
