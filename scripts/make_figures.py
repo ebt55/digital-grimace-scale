@@ -1,20 +1,23 @@
-"""Regenerate F1, F2 and F4 purely from the committed summaries.
+"""Regenerate F1, F2, F4 and the FH holdout figures from the committed summaries.
 
 Usage:
     .venv\\Scripts\\python.exe scripts/make_figures.py \\
         --summaries results/summaries --out results/figures
 
-Figures never read ``results/raw``: everything comes from ``screen.json`` and
-``gates.json``, so a fresh clone of the repository reproduces every panel.
-Colours are the Okabe-Ito colourblind-safe palette; each figure is written as
-both PNG and SVG.
+Figures never read ``results/raw``: everything comes from ``screen.json``,
+``gates.json``, ``hypotheses.csv`` and ``confirm.json``, so a fresh clone of the
+repository reproduces every panel.  Colours are the Okabe-Ito colourblind-safe
+palette; each figure is written as both PNG and SVG.  Any figure whose summary
+is absent is skipped with a message rather than crashing.
 """
 from __future__ import annotations
 
 import argparse
 import json
 from pathlib import Path
+import re
 import sys
+import textwrap
 
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
@@ -24,6 +27,8 @@ import matplotlib  # noqa: E402
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
+from matplotlib.lines import Line2D  # noqa: E402
+from matplotlib.patches import Patch, Rectangle  # noqa: E402
 
 # Okabe-Ito: distinguishable under the common forms of colour vision deficiency.
 BLUE, VERMILLION, GREEN, PURPLE, ORANGE, SKY = "#0072B2", "#D55E00", "#009E73", "#CC79A7", "#E69F00", "#56B4E9"
@@ -277,6 +282,302 @@ def figure_exploratory(summary, out_dir: Path, model_id: str):
     return _save(figure, out_dir, "FX_exploratory_%s_by_endpoint" % _short(model_id).replace(".", "_"))
 
 
+# --------------------------------------------------------------------------
+# FH -- preregistration-v3 holdout confirmation (built from phase2 summaries)
+# --------------------------------------------------------------------------
+
+CHECK = "✓"
+MIDDOT = "·"
+# Mirrors src.confirm.H10_VIOLATION_FRACTION: a style prompt violates H10 when it
+# reproduces at least half the H1 effect (and its 95% CI upper bound is below 0).
+H10_VIOLATION_FRACTION = 0.5
+DISCOVERY_COLOUR, HOLDOUT_COLOUR = ORANGE, BLUE
+# Small multiples: the four outcomes are on incomparable scales.
+HOLDOUT_PANELS = (
+    ("m1", "M1 hypotheses", "M1 margin difference (nats)"),
+    ("distress", "Distress", "distress difference (judge points)"),
+    ("m2", "M2", "M2 resample-disagreement difference (proportion)"),
+    ("non_answer", "Non-answer rate", "non-answer rate difference (proportion)"),
+)
+CONTRAST_PREFIXES = ("M1, ", "M2, ", "M3, ", "Distress, ", "Non-answer rate, ")
+ESTIMATE_WITH_CI = re.compile(
+    r"^\s*([+-]?\d+(?:\.\d+)?)\s*\[\s*([+-]?\d+(?:\.\d+)?)\s*,"
+    r"\s*([+-]?\d+(?:\.\d+)?)\s*\]\s*$")
+HOLDOUT_NOTE = (
+    "Discovery = Phase-1 exploratory paired contrast; holdout = frozen confirmatory analysis "
+    "(item-clustered bootstrap 95% CI). Bold row label + " + CHECK
+    + " = the preregistered decision rule was met on the holdout."
+)
+
+
+def _as_bool(value) -> bool:
+    if isinstance(value, bool):
+        return value
+    return str(value).strip().lower() in ("true", "yes", "1")
+
+
+def _float(value):
+    """Numbers only: _read_csv leaves unparseable cells as strings."""
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return None
+    return float(value)
+
+
+def _parse_estimate(text):
+    """Parse a ``value [lower, upper]`` cell; None when the cell is prose."""
+    match = ESTIMATE_WITH_CI.match(str(text if text is not None else ""))
+    if match is None:
+        return None
+    return tuple(float(group) for group in match.groups())
+
+
+def _predicted_direction(prediction) -> int:
+    """-1, +1, or 0 when no single direction is predicted (the H7 no-effect rule)."""
+    text = " ".join(str(prediction if prediction is not None else "").split()).lower()
+    if "includes 0" in text:
+        return 0
+    if text.startswith("<"):
+        return -1
+    if text.startswith(">"):
+        return 1
+    if "point <= 0" in text:
+        return -1
+    return 0
+
+
+def _hypothesis_rows(summaries: Path):
+    """Normalise the phase-2 hypotheses from hypotheses.csv, or confirm.json."""
+    rows = []
+    for row in _read_csv(summaries / "phase2" / "hypotheses.csv"):
+        rows.append({
+            "id": row.get("hypothesis_id"), "contrast": row.get("contrast"),
+            "outcome": row.get("outcome"), "stratum": row.get("stratum"),
+            "prediction": row.get("prediction"), "discovery": row.get("discovery"),
+            "estimate": _float(row.get("estimate")), "lower": _float(row.get("ci95_lower")),
+            "upper": _float(row.get("ci95_upper")), "n_items": _float(row.get("n_items")),
+            "supported": _as_bool(row.get("supported")),
+            "unavailable_reason": row.get("unavailable_reason"),
+        })
+    if rows:
+        return rows
+    confirm = _read(summaries / "phase2" / "confirm.json")
+    for item in ((confirm or {}).get("result") or {}).get("hypotheses", []):
+        result = item.get("result") or {}
+        rows.append({
+            "id": item.get("hypothesis_id"), "contrast": item.get("contrast"),
+            "outcome": item.get("outcome"), "stratum": item.get("stratum"),
+            "prediction": item.get("prediction"), "discovery": item.get("discovery"),
+            "estimate": _float(result.get("estimate")), "lower": _float(result.get("ci95_lower")),
+            "upper": _float(result.get("ci95_upper")), "n_items": _float(result.get("n_items")),
+            "supported": _as_bool(item.get("supported")),
+            "unavailable_reason": result.get("unavailable_reason"),
+        })
+    return rows
+
+
+def _style_rows(confirm):
+    """Normalise the machine-readable H10 style battery from confirm.json."""
+    rows = []
+    for item in ((confirm or {}).get("result") or {}).get("style", []) or []:
+        result = item.get("result") or {}
+        rows.append({
+            "id": item.get("style_id"), "estimate": _float(result.get("estimate")),
+            "lower": _float(result.get("ci95_lower")), "upper": _float(result.get("ci95_upper")),
+            "n_items": _float(result.get("n_items")), "violates": _as_bool(item.get("violates")),
+        })
+    return rows
+
+
+def _h1_holdout_estimate(rows):
+    for row in rows:
+        if row.get("id") == "H1":
+            return row.get("estimate")
+    return None
+
+
+def _contrast_label(contrast) -> str:
+    text = str(contrast if contrast is not None else "")
+    for prefix in CONTRAST_PREFIXES:
+        if text.startswith(prefix):
+            return text[len(prefix):]
+    return text
+
+
+def _row_label(row) -> str:
+    head = "%s %s" % (row["id"], CHECK) if row["supported"] else str(row["id"])
+    return "%s  %s  %s\n%s" % (head, MIDDOT, row["stratum"], _contrast_label(row["contrast"]))
+
+
+def _row_note(row) -> str:
+    n_items = row.get("n_items")
+    lines = ["n = %d" % int(n_items) if n_items is not None else "n = n/a"]
+    prediction = " ".join(str(row.get("prediction") or "").split())
+    if not prediction:
+        prediction = "prediction n/a"
+    elif len(prediction) <= 12:
+        prediction = "predicts %s" % prediction
+    lines += textwrap.wrap(prediction, 22)
+    return "\n".join(lines)
+
+
+def _draw_hypothesis_panel(axes, rows, title, xlabel):
+    values = [0.0]
+    for row in rows:
+        values += [value for value in (row["estimate"], row["lower"], row["upper"]) if value is not None]
+        discovery = _parse_estimate(row["discovery"])
+        if discovery is not None:
+            values += list(discovery)
+    low, high = min(values), max(values)
+    span = (high - low) or 1.0
+    left, right = low - 0.10 * span, high + 0.30 * span
+    axes.set_xlim(left, right)
+    axes.set_ylim(len(rows) - 0.5, -0.5)
+    for position, row in enumerate(rows):
+        direction = _predicted_direction(row["prediction"])
+        if direction:
+            edge = right if direction > 0 else left
+            axes.add_patch(Rectangle((0.0, position - 0.42), edge, 0.84, facecolor=GREEN,
+                                     alpha=0.10, edgecolor="none", zorder=0))
+        discovery = _parse_estimate(row["discovery"])
+        if discovery is None:
+            axes.annotate("discovery reported as cell means, not on this scale",
+                          (0.012, position - 0.17), xycoords=("axes fraction", "data"),
+                          fontsize=6.2, style="italic", color="#666666", ha="left", va="center")
+        else:
+            estimate, lower, upper = discovery
+            axes.errorbar(estimate, position - 0.17,
+                          xerr=[[estimate - lower], [upper - estimate]], fmt="o",
+                          color=DISCOVERY_COLOUR, markerfacecolor="white",
+                          markeredgecolor=DISCOVERY_COLOUR, markeredgewidth=1.1,
+                          markersize=5.0, elinewidth=1.0, capsize=2.2, zorder=3)
+        estimate, lower, upper = row["estimate"], row["lower"], row["upper"]
+        if estimate is None:
+            axes.annotate("holdout unavailable (%s)" % (row["unavailable_reason"] or "n/a"),
+                          (0.012, position + 0.17), xycoords=("axes fraction", "data"),
+                          fontsize=6.4, color=VERMILLION, ha="left", va="center")
+        else:
+            error = None if lower is None or upper is None else [[estimate - lower], [upper - estimate]]
+            axes.errorbar(estimate, position + 0.17, xerr=error, fmt="o", color=HOLDOUT_COLOUR,
+                          markersize=6.5, elinewidth=2.6, capsize=3.4, zorder=4)
+        axes.annotate(_row_note(row), (0.992, position), xycoords=("axes fraction", "data"),
+                      fontsize=6.6, color="#555555", ha="right", va="center", linespacing=1.3)
+    axes.axvline(0.0, color="black", linewidth=0.9, zorder=2)
+    axes.set_yticks(range(len(rows)))
+    axes.set_yticklabels([_row_label(row) for row in rows], fontsize=7.0, linespacing=1.35)
+    for label, row in zip(axes.get_yticklabels(), rows):
+        label.set_color("#111111" if row["supported"] else "#555555")
+        if row["supported"]:
+            label.set_fontweight("bold")
+    axes.tick_params(axis="y", length=0)
+    axes.tick_params(axis="x", labelsize=7)
+    axes.set_xlabel(xlabel, fontsize=7.5)
+    axes.set_title(title, fontsize=9.5, loc="left")
+    axes.grid(axis="x", linestyle=":", linewidth=0.5, alpha=0.55, zorder=1)
+    for side in ("top", "right"):
+        axes.spines[side].set_visible(False)
+
+
+def figure_holdout_forest(rows, out_dir: Path):
+    """FH -- every preregistration-v3 hypothesis: discovery beside locked holdout."""
+    known = {outcome for outcome, _, _ in HOLDOUT_PANELS}
+    panels = [(name, xlabel, [row for row in rows if row["outcome"] == outcome])
+              for outcome, name, xlabel in HOLDOUT_PANELS]
+    panels = [panel for panel in panels if panel[2]]
+    leftover = [row for row in rows if row["outcome"] not in known]
+    if leftover:
+        panels.append(("other outcomes", "estimate", leftover))
+    if not panels:
+        return []
+    ratios = [len(panel[2]) + 1.4 for panel in panels]
+    figure, axes_column = plt.subplots(
+        len(panels), 1, figsize=(12.0, 0.42 * sum(ratios) + 1.6),
+        gridspec_kw={"height_ratios": ratios}, squeeze=False)
+    for index, (axes, (name, xlabel, panel_rows)) in enumerate(zip(axes_column[:, 0], panels)):
+        _draw_hypothesis_panel(axes, panel_rows, "%s  %s  %s" % (chr(ord("A") + index), MIDDOT, name), xlabel)
+    handles = [
+        Line2D([0], [0], color=DISCOVERY_COLOUR, marker="o", markerfacecolor="white",
+               markeredgecolor=DISCOVERY_COLOUR, markeredgewidth=1.1, markersize=5.0,
+               linewidth=1.0, label="discovery (exploratory, Phase 1)"),
+        Line2D([0], [0], color=HOLDOUT_COLOUR, marker="o", markersize=6.5, linewidth=2.6,
+               label="locked holdout (confirmatory, Phase 2)"),
+        Patch(facecolor=GREEN, alpha=0.10, edgecolor="none", label="predicted direction"),
+    ]
+    figure.suptitle(
+        "Preregistration v3 hypotheses: discovery (exploratory) vs locked holdout (confirmatory)",
+        fontsize=12.5, y=0.992)
+    figure.legend(handles=handles, loc="upper center", bbox_to_anchor=(0.5, 0.963),
+                  ncol=3, fontsize=8, frameon=False)
+    figure.text(0.5, 0.008, HOLDOUT_NOTE, ha="center", fontsize=7, color="#444444")
+    figure.tight_layout(rect=(0.0, 0.026, 1.0, 0.945))
+    return _save(figure, out_dir, "FH_holdout_forest")
+
+
+def figure_holdout_style_battery(styles, h1_estimate, model_id, out_dir: Path):
+    """FH -- H10: no style prompt reproduces half the H1 effect on M1."""
+    if not styles:
+        return []
+    threshold = None if h1_estimate is None else -H10_VIOLATION_FRACTION * abs(h1_estimate)
+    values = [0.0] if threshold is None else [0.0, threshold]
+    for style in styles:
+        values += [value for value in (style["estimate"], style["lower"], style["upper"])
+                   if value is not None]
+    low, high = min(values), max(values)
+    span = (high - low) or 1.0
+    left, right = low - 0.20 * span, high + 0.30 * span
+    figure, axes = plt.subplots(figsize=(11.0, 0.58 * len(styles) + 2.8))
+    axes.set_xlim(left, right)
+    axes.set_ylim(len(styles) - 0.5, -0.5)
+    if threshold is not None:
+        axes.add_patch(Rectangle((left, -0.5), threshold - left, len(styles), facecolor=VERMILLION,
+                                 alpha=0.09, edgecolor="none", zorder=0))
+        axes.axvline(threshold, color=VERMILLION, linestyle="--", linewidth=1.5, zorder=2)
+        axes.annotate("violates H10", (threshold, len(styles) - 0.54), xytext=(-7, 0),
+                      textcoords="offset points", ha="right", va="bottom", fontsize=8,
+                      fontweight="bold", color=VERMILLION)
+    axes.axvline(0.0, color="black", linestyle="--", linewidth=1.1, zorder=2)
+    for position, style in enumerate(styles):
+        colour = VERMILLION if style["violates"] else HOLDOUT_COLOUR
+        estimate, lower, upper = style["estimate"], style["lower"], style["upper"]
+        if estimate is None:
+            axes.annotate("unavailable", (0.012, position), xycoords=("axes fraction", "data"),
+                          fontsize=7, color=VERMILLION, ha="left", va="center")
+        else:
+            error = None if lower is None or upper is None else [[estimate - lower], [upper - estimate]]
+            axes.errorbar(estimate, position, xerr=error, fmt="o", color=colour, markersize=7.0,
+                          elinewidth=2.6, capsize=4.0, zorder=4)
+        note = "n = %s  %s  violates H10: %s" % (
+            "n/a" if style["n_items"] is None else int(style["n_items"]), MIDDOT,
+            "yes" if style["violates"] else "no")
+        axes.annotate(note, (0.992, position), xycoords=("axes fraction", "data"), fontsize=7,
+                      color="#555555", ha="right", va="center")
+    axes.set_yticks(range(len(styles)))
+    axes.set_yticklabels([str(style["id"]).replace("style__", "").replace("_", " ")
+                          for style in styles], fontsize=8.5)
+    axes.tick_params(axis="y", length=0)
+    axes.set_xlabel("M1: style prompt − neutral style reference (nats), paired by item", fontsize=9)
+    axes.grid(axis="x", linestyle=":", linewidth=0.5, alpha=0.55, zorder=1)
+    for side in ("top", "right"):
+        axes.spines[side].set_visible(False)
+    handles = [
+        Line2D([0], [0], color=HOLDOUT_COLOUR, marker="o", markersize=7.0, linewidth=2.6,
+               label="holdout estimate, 95% CI"),
+        Line2D([0], [0], color="black", linestyle="--", linewidth=1.1, label="0 (no style effect)"),
+        Line2D([0], [0], color=VERMILLION, linestyle="--", linewidth=1.5,
+               label=("threshold: −0.5 × |H1 holdout| = %s nats"
+                      % ("n/a" if threshold is None else ("%.2f" % threshold).replace("-", "−")))),
+    ]
+    figure.suptitle("H10 style battery: no style prompt reproduces half the H1 effect%s"
+                    % ("" if not model_id else " (%s, holdout)" % _short(model_id)), fontsize=12)
+    figure.legend(handles=handles, loc="lower center", bbox_to_anchor=(0.5, 0.075), ncol=3,
+                  fontsize=8, frameon=False)
+    figure.text(0.5, 0.012,
+                "A prompt violates H10 only if its point estimate is at or left of the dashed "
+                "threshold AND its 95% CI upper bound is below 0. H10 holds when no prompt violates it.",
+                ha="center", fontsize=7, color="#444444")
+    figure.tight_layout(rect=(0.0, 0.155, 1.0, 0.935))
+    return _save(figure, out_dir, "FH_holdout_style_battery")
+
+
 def parse_args(argv=None):
     parser = argparse.ArgumentParser(description="Regenerate DGS figures from committed summaries.")
     parser.add_argument("--summaries", default="results/summaries", help="committed summary root")
@@ -309,6 +610,21 @@ def main(argv=None) -> int:
         if model_id is None:
             model_id = gates["verdict"]["primary_model_id"] if gates else summary[0]["model_id"]
         written += figure_exploratory(summary, out_dir, model_id)
+    hypotheses = _hypothesis_rows(summaries)
+    if not hypotheses:
+        print("skipping FH_holdout_forest: no %s (and no phase2/confirm.json) found"
+              % (summaries / "phase2" / "hypotheses.csv"), file=sys.stderr)
+    else:
+        written += figure_holdout_forest(hypotheses, out_dir)
+    confirm = _read(summaries / "phase2" / "confirm.json")
+    styles = _style_rows(confirm)
+    if not styles:
+        print("skipping FH_holdout_style_battery: no H10 style battery in %s"
+              % (summaries / "phase2" / "confirm.json"), file=sys.stderr)
+    else:
+        primary = ((confirm or {}).get("result") or {}).get("models", {}).get("primary")
+        written += figure_holdout_style_battery(
+            styles, _h1_holdout_estimate(hypotheses), primary, out_dir)
     for path in written:
         print("wrote %s" % path)
     return 0 if written else 2
