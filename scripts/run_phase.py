@@ -20,12 +20,19 @@ if str(ROOT) not in sys.path:
 from src.backend import BackendError  # noqa: E402  (httpx is imported lazily inside the client)
 from src.generate import GenerateError, format_progress, format_summary, run_jobs  # noqa: E402
 from src.protocol import Protocol, ProtocolError, load_protocol  # noqa: E402
-from src.runner import (RunnerError, plan_phase0_jobs, plan_phase1_model_jobs, plan_r5_jobs,  # noqa: E402
+from src.runner import (RunnerError, plan_phase0_jobs, plan_phase1_model_jobs,  # noqa: E402
+                        plan_phase2_model_jobs, plan_r5_jobs, plan_style_battery_jobs,
                         plan_style_smoke_jobs)
 
 HEX40 = re.compile(r"[0-9a-fA-F]{40}")
 DEFAULT_OUT = {"phase0": "results/raw/phase0", "phase1": "results/raw/phase1",
-               "style-smoke": "results/raw/style_smoke", "r5": "results/raw/r5"}
+               "style-smoke": "results/raw/style_smoke", "r5": "results/raw/r5",
+               "phase2": "results/raw/phase2", "style-battery": "results/raw/style_battery"}
+HOLDOUT_COMMANDS = ("phase2", "style-battery")
+HOLDOUT_RULE = ("the holdout is analyzed once in Phase 2 only after the analysis script is frozen "
+                "and its commit hash recorded in the manifest; report it separately and never pool "
+                "it with discovery (notes/preregistration.md)")
+UNLOCK_FIELDS = ("frozen_analysis_commit", "unlocked_at", "preregistration_v3_sha256")
 
 
 def format_backend_stats(backend) -> str:
@@ -95,11 +102,32 @@ def _backend(args: argparse.Namespace):
                                timeout_s=args.timeout, max_retries=args.max_retries)
 
 
+def _require_holdout_unlock(args: argparse.Namespace, protocol: Protocol, parser: argparse.ArgumentParser) -> Mapping[str, object]:
+    """The holdout is a one-shot, preregistered resource: both the flag and the manifest must agree."""
+    if not getattr(args, "unlock_holdout", False):
+        parser.error("refusing to touch the holdout without --unlock-holdout: %s" % HOLDOUT_RULE)
+    unlock = protocol.manifest.get("holdout_unlock")
+    if not isinstance(unlock, Mapping):
+        parser.error("refusing to touch the holdout: manifest.json has no holdout_unlock block; %s" % HOLDOUT_RULE)
+    for field in UNLOCK_FIELDS:
+        value = unlock.get(field)
+        if not isinstance(value, str) or not value:
+            parser.error("refusing to touch the holdout: manifest.holdout_unlock.%s is missing" % field)
+    if not HEX40.fullmatch(unlock["frozen_analysis_commit"]):
+        parser.error("refusing to touch the holdout: manifest.holdout_unlock.frozen_analysis_commit "
+                     "must be the 40-character hex commit of the frozen analysis script")
+    return unlock
+
+
 def _plan(args: argparse.Namespace, protocol: Protocol):
     if args.command == "phase0":
         return plan_phase0_jobs((args.model,), protocol, feedback_rounds=args.rounds)
     if args.command == "phase1":
         return plan_phase1_model_jobs(args.model, protocol)
+    if args.command == "phase2":
+        return plan_phase2_model_jobs(args.model, protocol)
+    if args.command == "style-battery":
+        return plan_style_battery_jobs(args.model, protocol)
     if args.command == "style-smoke":
         return plan_style_smoke_jobs(args.model, protocol)
     return plan_r5_jobs(args.model, protocol)
@@ -135,6 +163,11 @@ def build_parser() -> argparse.ArgumentParser:
     subparsers.add_parser("phase1", parents=[common], help="full discovery factorial for one model")
     subparsers.add_parser("style-smoke", parents=[common], help="frozen five-item G3 style-only smoke")
     subparsers.add_parser("r5", parents=[common], help="confirmatory refusal-pressure battery")
+    for name, description in (("phase2", "full factorial on the LOCKED HOLDOUT split for one model"),
+                              ("style-battery", "full style battery on ALL holdout tasks")):
+        holdout = subparsers.add_parser(name, parents=[common], help=description)
+        holdout.add_argument("--unlock-holdout", action="store_true",
+                             help="acknowledge the one-shot holdout rule; also requires manifest.holdout_unlock")
     return parser
 
 
@@ -150,6 +183,11 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     try:
         protocol = load_protocol(ROOT)
+    except ProtocolError as exc:
+        parser.error(str(exc))
+    allow_holdout = args.command in HOLDOUT_COMMANDS
+    unlock = _require_holdout_unlock(args, protocol, parser) if allow_holdout else None
+    try:
         jobs = _plan(args, protocol)
     except (ProtocolError, RunnerError) as exc:
         parser.error(str(exc))
@@ -161,6 +199,9 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     print("phase %s | model %s | revision %s | run_kind %s | run_id %s" % (
         args.command, args.model, revision, run_kind, run_id))
+    if unlock is not None:
+        print("HOLDOUT UNLOCKED | frozen analysis commit %s | unlocked_at %s | preregistration_v3_sha256 %s" % (
+            unlock["frozen_analysis_commit"], unlock["unlocked_at"], unlock["preregistration_v3_sha256"]))
     print("jobs %d | samples %s | trajectories %d | workers %d | out %s" % (
         len(jobs), ",".join(str(index) for index in args.samples), len(jobs) * len(args.samples),
         args.workers, out_path))
@@ -172,7 +213,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         summary = run_jobs(jobs, backend=backend, out_path=out_path, immutable_revision=revision,
                            run_id=run_id, run_kind=run_kind, sample_indices=args.samples,
                            max_workers=args.workers, resume=not args.no_resume, protocol=protocol,
-                           progress_every=args.progress_every,
+                           progress_every=args.progress_every, allow_holdout=allow_holdout,
                            on_progress=lambda snapshot: print(format_progress(snapshot), flush=True))
     except BackendError as exc:
         # Includes the synchronous warm-up: better to abort before any worker starts than to

@@ -1,10 +1,17 @@
 from __future__ import annotations
 
+import contextlib
+import importlib.util
+import io
 import json
 from pathlib import Path
+import shutil
 import tempfile
 import threading
 import unittest
+from unittest.mock import patch
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
 
 from src.backend import GenerationResult, SyntheticBackend
 from src.extract import load_records
@@ -217,3 +224,102 @@ class GenerateTests(unittest.TestCase):
             with self.assertRaises(GenerateError):
                 self.run_plan(out, CountingBackend(), jobs=self.jobs + (self.jobs[0],), samples=(0,))
             self.assertFalse(out.exists())
+
+
+def _load_cli():
+    """Import scripts/run_phase.py as a module so the CLI gates are unit-testable."""
+    spec = importlib.util.spec_from_file_location("run_phase_cli", REPO_ROOT / "scripts" / "run_phase.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+class HoldoutCliTests(unittest.TestCase):
+    """Phase 2 touches the locked holdout, so it needs both the flag and the manifest block."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.cli = _load_cli()
+
+    def protocol_with(self, directory, unlock):
+        root = Path(directory) / "repo"
+        (root / "configs").mkdir(parents=True)
+        (root / "stimuli").mkdir()
+        for name in ("configs/conditions.json", "configs/models.json",
+                     "stimuli/matched_pairs.jsonl", "stimuli/refusal_pressure.jsonl"):
+            shutil.copyfile(REPO_ROOT / name, root / name)
+        manifest = json.loads((REPO_ROOT / "manifest.json").read_text(encoding="utf-8"))
+        if unlock is not None:
+            manifest["holdout_unlock"] = unlock
+        (root / "manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
+        return load_protocol(root)
+
+    def run_cli(self, argv, protocol=None):
+        stream = io.StringIO()
+        with contextlib.redirect_stdout(stream):
+            if protocol is None:
+                code = self.cli.main(argv)
+            else:
+                with patch.object(self.cli, "load_protocol", lambda *_: protocol):
+                    code = self.cli.main(argv)
+        return code, stream.getvalue()
+
+    def base(self, command, out):
+        return [command, "--model", MODEL, "--synthetic", "--out", str(out)]
+
+    def test_holdout_is_refused_without_the_flag_and_without_the_manifest_block(self):
+        valid = {"frozen_analysis_commit": "b" * 40, "unlocked_at": "2026-08-18T09:00:00+05:30",
+                 "preregistration_v3_sha256": "c" * 64}
+        with tempfile.TemporaryDirectory() as directory:
+            out = Path(directory) / "out"
+            for command in ("phase2", "style-battery"):
+                with self.subTest(command=command, case="no flag"):
+                    locked = self.protocol_with(Path(directory) / (command + "-a"), valid)
+                    with self.assertRaises(SystemExit) as caught:
+                        self.run_cli(self.base(command, out) + ["--dry-run"], locked)
+                    self.assertEqual(caught.exception.code, 2)
+                with self.subTest(command=command, case="no manifest block"):
+                    absent = self.protocol_with(Path(directory) / (command + "-b"), None)
+                    with self.assertRaises(SystemExit) as caught:
+                        self.run_cli(self.base(command, out) + ["--unlock-holdout", "--dry-run"], absent)
+                    self.assertEqual(caught.exception.code, 2)
+                with self.subTest(command=command, case="malformed commit"):
+                    bad = self.protocol_with(Path(directory) / (command + "-c"), dict(valid, frozen_analysis_commit="deadbeef"))
+                    with self.assertRaises(SystemExit) as caught:
+                        self.run_cli(self.base(command, out) + ["--unlock-holdout", "--dry-run"], bad)
+                    self.assertEqual(caught.exception.code, 2)
+                with self.subTest(command=command, case="missing field"):
+                    partial = self.protocol_with(Path(directory) / (command + "-d"), {"frozen_analysis_commit": "b" * 40})
+                    with self.assertRaises(SystemExit) as caught:
+                        self.run_cli(self.base(command, out) + ["--unlock-holdout", "--dry-run"], partial)
+                    self.assertEqual(caught.exception.code, 2)
+            for command in ("phase1", "r5"):  # discovery phases must not accept the flag at all
+                with self.subTest(command=command):
+                    with self.assertRaises(SystemExit):
+                        self.cli.build_parser().parse_args(self.base(command, out) + ["--unlock-holdout"])
+
+    def test_unlocked_phase2_and_style_battery_plan_and_write_holdout_records(self):
+        unlock = {"frozen_analysis_commit": "b" * 40, "unlocked_at": "2026-08-18T09:00:00+05:30",
+                  "preregistration_v3_sha256": "c" * 64}
+        with tempfile.TemporaryDirectory() as directory:
+            protocol = self.protocol_with(directory, unlock)
+            out = Path(directory) / "out"
+            for command, jobs in (("phase2", 80), ("style-battery", 100)):
+                with self.subTest(command=command):
+                    code, printed = self.run_cli(self.base(command, out) + ["--unlock-holdout", "--dry-run"], protocol)
+                    self.assertEqual(code, 0)
+                    self.assertIn("jobs %d " % jobs, printed)
+                    self.assertIn("trajectories %d " % (jobs * 11), printed)
+                    self.assertIn("HOLDOUT UNLOCKED", printed)
+                    self.assertIn("b" * 40, printed)
+            code, _ = self.run_cli(self.base("style-battery", out) + ["--unlock-holdout", "--samples", "0",
+                                                                   "--workers", "8"], protocol)
+            self.assertEqual(code, 0)
+            written = out / ("%s.jsonl" % MODEL.replace("/", "__"))
+            records = [record_from_json(line, protocol) for line in written.read_text(encoding="utf-8").splitlines()]
+            self.assertEqual(len(records), 100)
+            self.assertTrue(all(record.split == "holdout" for record in records))
+            self.assertEqual({record.phase for record in records}, {"phase_2"})
+            self.assertEqual({record.turn_label for record in records}, {"measured"})
+            self.assertEqual({record.run_kind for record in records}, {"synthetic_smoke"})
+            self.assertEqual(len({record.task_id for record in records}), 20)

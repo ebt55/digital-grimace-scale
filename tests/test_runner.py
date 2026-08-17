@@ -7,8 +7,9 @@ from unittest.mock import patch
 
 from src.protocol import discovery_tasks, load_protocol, render_task, style_smoke_tasks
 from src.records import RecordError, compact_json, record_from_dict
-from src.runner import (RunnerError, expected_turn_labels, plan_phase0_jobs, plan_phase1_jobs,
-    plan_phase1_model_jobs, plan_r5_jobs, plan_style_smoke_jobs, r5_task, run_batch,
+from src.runner import (RunnerError, expected_turn_labels, holdout_tasks, plan_phase0_jobs,
+    plan_phase1_jobs, plan_phase1_model_jobs, plan_phase2_model_jobs, plan_r5_jobs,
+    plan_style_battery_jobs, plan_style_smoke_jobs, r5_task, run_batch,
     run_single_turn_trajectory, run_trajectory, write_jsonl_atomic)
 
 EMPIRICAL_REVISION = "0123456789abcdef0123456789abcdef01234567"
@@ -146,6 +147,32 @@ class RunnerTests(unittest.TestCase):
             run_single_turn_trajectory(cell_id="style__enthusiastic", sample_index=True, **arguments)
         with self.assertRaises(RunnerError):
             run_single_turn_trajectory(cell_id="r5__pressure", **arguments)  # matched task is not an R5 item
+
+    def test_phase2_planners_cover_only_the_holdout_split(self):
+        tasks = holdout_tasks(self.protocol)
+        self.assertEqual(len(tasks), 20)
+        self.assertTrue(all(task.split == "holdout" for task in tasks))
+        factorial = plan_phase2_model_jobs(self.model, self.protocol)
+        battery = plan_style_battery_jobs(self.model, self.protocol)
+        self.assertEqual((len(factorial), len(battery)), (80, 100))
+        holdout_ids = {task.task_id for task in tasks}
+        discovery_ids = {task.task_id for task in discovery_tasks(self.protocol)}
+        for jobs in (factorial, battery):
+            self.assertEqual({job.phase for job in jobs}, {"phase_2"})
+            self.assertEqual({job.task_id for job in jobs}, holdout_ids)
+            self.assertFalse({job.task_id for job in jobs} & discovery_ids)
+        self.assertEqual(len({job.cell_id for job in factorial}), 8)
+        self.assertEqual({job.cell_id for job in battery}, set(self.protocol.nonfactorial_cell_ids[:5]))
+        self.assertTrue(all(job.cell_id.startswith("style__") for job in battery))
+        # every planned job must be executable only under an explicit holdout unlock
+        job = factorial[0]
+        task = next(item for item in tasks if item.task_id == job.task_id)
+        arguments = dict(task=task, cell_id=job.cell_id, model_id=self.model, immutable_revision="synthetic",
+                         protocol=self.protocol, phase=job.phase, continuations=False)
+        with self.assertRaises(RunnerError): run_trajectory(**arguments)
+        self.assertEqual(run_trajectory(allow_holdout=True, **arguments)[0].split, "holdout")
+        with self.assertRaises(RunnerError): plan_phase2_model_jobs("not/a-model", self.protocol)
+        with self.assertRaises(RunnerError): plan_style_battery_jobs("not/a-model", self.protocol)
 
     def test_non_factorial_planners_and_turn_plans(self):
         style, r5 = plan_style_smoke_jobs(self.model, self.protocol), plan_r5_jobs(self.model, self.protocol)

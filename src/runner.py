@@ -70,6 +70,31 @@ def plan_phase1_jobs(primary_model_id: str, control_model_id: str, protocol: Pro
     return tuple(job for model in models for job in plan_phase1_model_jobs(model, protocol))
 
 
+def holdout_tasks(protocol: Protocol | None = None) -> tuple[Task, ...]:
+    """The 20 locked holdout tasks; callers must pass allow_holdout=True to actually run them."""
+    protocol = protocol or load_protocol()
+    return tuple(task for task in protocol.matched_tasks if task.split == "holdout")
+
+
+def plan_phase2_model_jobs(model_id: str, protocol: Protocol | None = None) -> tuple[PlannedJob, ...]:
+    """The full factorial on the locked holdout split for one model (80 jobs)."""
+    protocol = protocol or load_protocol()
+    model, = _check_models(protocol, (model_id,))
+    return tuple(PlannedJob("phase_2", model, task.task_id, "%s__%s__%s" % (task.difficulty, validity, tone), protocol.standard_feedback_round_count)
+                 for task in holdout_tasks(protocol)
+                 for validity in ("accurate", "malfunctioning_always_fail")
+                 for tone in ("neutral", "hostile"))
+
+
+def plan_style_battery_jobs(model_id: str, protocol: Protocol | None = None) -> tuple[PlannedJob, ...]:
+    """The Phase-2 full style battery: every holdout task by the five style cells (100 jobs)."""
+    protocol = protocol or load_protocol()
+    model, = _check_models(protocol, (model_id,))
+    cells = tuple(cell for cell in protocol.nonfactorial_cell_ids if cell.startswith("style__"))
+    return tuple(PlannedJob("phase_2", model, task.task_id, cell, 0)
+                 for task in holdout_tasks(protocol) for cell in cells)
+
+
 def plan_style_smoke_jobs(model_id: str, protocol: Protocol | None = None) -> tuple[PlannedJob, ...]:
     """The frozen Phase-1 G3 smoke: five task IDs by five style cells (neutral reference included)."""
     protocol = protocol or load_protocol()
