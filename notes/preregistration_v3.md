@@ -75,10 +75,22 @@ P1′ (tone ≥ validity on M1): |H2a| ≥ |H1| on the holdout — 45%. P2′ (n
 H5) — 70%. P4′ (family boundary, H7 and H6b) — 65%. P6 (refusal-pressure R5 battery LOW instability)
 is **not** run in this loop (unchanged, still held out).
 
+### Clarification C1 (2026-08-17 ~17:10 IST, pre-analysis; no holdout record had been read)
+
+The single-permutation null above is under-specified and too fragile (one spurious CI among ~10
+contrasts would fail the loop by chance). It is replaced, before any holdout analysis, by a
+**family-level permutation test**: label-dependent set L = {H1, H2a, H2b, H6a, H8, H9}; H3a/H3b/H4a/H4b/
+H5/H6b are within-cell turn contrasts (invariant to label permutation) and are excluded, as are H7
+(no-effect rule) and H10 (style vs reference). For k = 1..200, permute the defining labels
+(validity for H1/H8, tone for H2a/H2b/H6a/H9) within model × difficulty by the deterministic key
+`DGS-AC1-SHUFFLE-v3|<k>|<model_id>|<task_id>|<cell_id>` and count supported hypotheses in L;
+`null_p = (1 + #{k : count_k ≥ real_count}) / 201`. The null check passes iff `null_p < 0.05`
+(fails if the real count is 0). The k = 1 per-hypothesis shuffled table is still reported.
+
 ## Success criterion for the iteration loop (stated in advance)
 
 The iteration is judged **successful** if, on the holdout, at least three of {H1, H2a, H2b, H3a, H3b}
-are supported, H6a is supported, and the shuffled-label null supports nothing. Otherwise the loop has
+are supported, H6a is supported, and the family-level permutation null check (C1) passes. Otherwise the loop has
 failed and the project reports the debunk outcome with the discovery-stage exploratory findings marked
 as not replicated. Either way the report shows every hypothesis with its holdout estimate next to its
 discovery estimate.
