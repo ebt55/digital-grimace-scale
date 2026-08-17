@@ -56,20 +56,44 @@ def _jsonl_paths(target: Path) -> list[Path]:
     _fail("raw path does not exist: %s" % target)
 
 
-def load_raw_records(target: Path, protocol: Any) -> list[Any]:
+def load_raw_records(target: Path, protocol: Any, *,
+                     keep: Any = None, limit: int | None = None) -> list[Any]:
+    """Stream raw JSONL, pre-filtering on the decoded dict before full validation.
+
+    Phase raw files run to hundreds of megabytes, so records are read line by line and the
+    cheap `keep(dict)` predicate runs before `record_from_json` — validating every record in
+    a 300 MB file just to discard most of them is both slow and memory-hostile.
+    """
     records = []
     for path in _jsonl_paths(target):
-        for number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
-            line = line.strip()
-            if not line:
-                continue
-            try:
-                records.append(record_from_json(line, protocol))
-            except RecordError as exc:
-                _fail("invalid raw record at %s:%d: %s" % (path, number, exc))
+        with path.open("r", encoding="utf-8") as handle:
+            for number, line in enumerate(handle, 1):
+                line = line.strip()
+                if not line:
+                    continue
+                if keep is not None:
+                    try:
+                        candidate = json.loads(line)
+                    except json.JSONDecodeError as exc:
+                        _fail("invalid raw record JSON at %s:%d: %s" % (path, number, exc))
+                    if not isinstance(candidate, dict) or not keep(candidate):
+                        continue
+                try:
+                    records.append(record_from_json(line, protocol))
+                except RecordError as exc:
+                    _fail("invalid raw record at %s:%d: %s" % (path, number, exc))
+                if limit is not None and len(records) >= limit:
+                    return records
     if not records:
-        _fail("no raw records found under %s" % target)
+        _fail("no matching raw records found under %s" % target)
     return records
+
+
+def _model_filter(raw: str | None) -> tuple[set[str] | None, list[str]]:
+    if not raw:
+        return None, []
+    wanted = [model.strip() for model in raw.split(",") if model.strip()]
+    return set(wanted), wanted
 
 
 def _write_json(path: Path, value: Any) -> None:
@@ -85,6 +109,74 @@ def _write_csv(path: Path, fieldnames: Sequence[str], rows: Iterable[dict[str, A
         writer.writeheader()
         for row in rows:
             writer.writerow(row)
+
+
+def _write_text(path: Path, text: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(text, encoding="utf-8", newline="\n")
+
+
+def _escape_cell(text: str) -> str:
+    return text.replace("|", "\\|").replace("\n", " ").strip()
+
+
+def _manipulation_markdown(verdict: dict[str, Any]) -> str:
+    tone_rank = {"hostile": 0, "neutral": 1, "dry": 2, "mixed": 3}
+    rows = sorted(verdict["scores"], key=lambda row: (tone_rank.get(row["tone"], 9),
+                                                      -row["score"], row["roles"]))
+    lines = [
+        "# Context-hostility manipulation check",
+        "",
+        "Judge `%s` / `%s` at temperature 0 (`sampling_mode: %s`) under `%s` "
+        "(sha256 `%s`)." % (verdict["provider_id"], verdict["model_id"],
+                            verdict.get("sampling_mode"), verdict["rubric_path"],
+                            verdict["rubric_sha256"][:16]),
+        "",
+        "**Verdict: %s** — hostile wording must score above neutral before scale-up."
+        % ("PASSED" if verdict["passed"] else "FAILED"),
+        "",
+        "| Check | Result |",
+        "| --- | --- |",
+    ]
+    for check, value in sorted(verdict["checks"].items()):
+        gate = "" if check == "dry_turns_below_hostile_minimum" else ""
+        lines.append("| `%s`%s | %s |" % (check, gate, "pass" if value else "FAIL"))
+    means = verdict["means"]
+    lines += [
+        "",
+        "Mean score by tone: hostile **%s**, neutral **%s**, dry **%s** "
+        "(%d distinct strings)."
+        % (means["hostile"], means["neutral"], means["dry"], verdict["distinct_message_count"]),
+        "",
+        "## Tone-matched pairs",
+        "",
+        "| Role | Neutral | Hostile | Ordered |",
+        "| --- | ---: | ---: | --- |",
+    ]
+    for pair in verdict["tone_pairs"]:
+        lines.append("| `%s` | %d | %d | %s |" % (pair["role"], pair["neutral"], pair["hostile"],
+                                                  "yes" if pair["ordered"] else "**NO**"))
+    lines += ["", "## Every distinct message", "",
+              "| Tone | Score | Message | Used as | Judge evidence |",
+              "| --- | ---: | --- | --- | --- |"]
+    for row in rows:
+        lines.append("| %s | %d | %s | %s | %s |"
+                     % (row["tone"], row["score"], _escape_cell(row["text"]),
+                        "; ".join("`%s`" % path for path in row["paths"]),
+                        _escape_cell(row["evidence"])))
+    usage, cost = verdict.get("usage"), verdict.get("estimated_cost_usd")
+    if usage:
+        lines += ["", "## Usage", "",
+                  "%d call(s): %d input, %d output, %d cache-write, %d cache-read tokens."
+                  % (usage.get("calls", 0), usage.get("input_tokens", 0),
+                     usage.get("output_tokens", 0),
+                     usage.get("cache_creation_input_tokens", 0),
+                     usage.get("cache_read_input_tokens", 0)),
+                  "", "Estimated list-price cost: **%s**."
+                  % (("$%.5f" % cost) if cost is not None else "n/a")]
+    if verdict.get("note"):
+        lines += ["", "> %s" % verdict["note"]]
+    return "\n".join(lines) + "\n"
 
 
 def _write_jsonl(path: Path, lines: Iterable[str]) -> None:
@@ -151,15 +243,22 @@ def command_judge(args: argparse.Namespace) -> int:
         _fail("turn labels not eligible for semantic judging: %s (allowed: %s)"
               % (", ".join(unknown), ", ".join(JUDGE_TURNS)))
 
-    records = load_raw_records(Path(args.raw), protocol)
-    eligible = [record for record in records
-                if record.trajectory_kind == "greedy" and record.sample_index == 0
-                and record.turn_label in labels]
-    if args.limit is not None:
-        eligible = eligible[:args.limit]
+    models, model_list = _model_filter(args.models)
+
+    def keep(candidate: dict) -> bool:
+        return (candidate.get("trajectory_kind") == "greedy"
+                and candidate.get("sample_index") == 0
+                and candidate.get("turn_label") in labels
+                and (models is None or candidate.get("model_id") in models))
+
+    eligible = load_raw_records(Path(args.raw), protocol, keep=keep, limit=args.limit)
     if not eligible:
         _fail("no greedy sample-0 records with turn labels %s under %s"
               % (",".join(labels), args.raw))
+    found = sorted({record.model_id for record in eligible})
+    missing = [model for model in model_list if model not in found]
+    if missing:
+        _warn("no records for requested model(s): %s" % ", ".join(missing))
 
     backend, deviations, pin = _resolve_backend(args, protocol)
     if not getattr(backend, "is_synthetic", False):
@@ -237,15 +336,19 @@ def command_judge(args: argparse.Namespace) -> int:
                     "is_synthetic": bool(getattr(backend, "is_synthetic", False)),
                     "sampling_mode": getattr(backend, "sampling_mode", None),
                     "temperature": 0},
-        "counts": {"records_loaded": len(records), "eligible": len(eligible),
-                   "judged": len(judged), "failed": len(failures),
+        "models_requested": model_list or None, "models_found": found,
+        "counts": {"eligible": len(eligible), "judged": len(judged), "failed": len(failures),
                    "cache_hits": cache.hits, "cache_misses": cache.misses},
+        "usage": getattr(backend, "usage", None),
+        "estimated_cost_usd": getattr(backend, "estimated_cost_usd", None),
         "cache_path": str(cache.path),
         "deviations": deviations,
     }
     _write_json(out / "run_manifest.json", run_manifest)
-    print("run_judge: judged %d/%d record(s); %d failure(s); cache %d hit / %d miss -> %s"
-          % (len(judged), len(eligible), len(failures), cache.hits, cache.misses, out))
+    cost = run_manifest["estimated_cost_usd"]
+    print("run_judge: judged %d/%d record(s); %d failure(s); cache %d hit / %d miss; cost %s -> %s"
+          % (len(judged), len(eligible), len(failures), cache.hits, cache.misses,
+             ("$%.4f" % cost) if cost is not None else "n/a", out))
     return 1 if failures else 0
 
 
@@ -267,6 +370,7 @@ def command_manipulation_check(args: argparse.Namespace) -> int:
                [{"tone": row["tone"], "roles": ";".join(row["roles"]), "score": row["score"],
                  "paths": ";".join(row["paths"]), "evidence": row["evidence"]}
                 for row in verdict["scores"]])
+    _write_text(out / "manipulation_check.md", _manipulation_markdown(verdict))
     print("run_judge: manipulation check %s (neutral mean %s, hostile mean %s) -> %s"
           % ("PASSED" if verdict["passed"] else "FAILED",
              verdict["means"]["neutral"], verdict["means"]["hostile"], out))
@@ -284,10 +388,19 @@ def command_manipulation_check(args: argparse.Namespace) -> int:
 
 def command_audit_sample(args: argparse.Namespace) -> int:
     protocol = load_protocol(ROOT)
-    records = load_raw_records(Path(args.raw), protocol)
-    models = ([model.strip() for model in args.models.split(",") if model.strip()]
-              if args.models else None)
-    report = audit_sample(records, protocol, models=models)
+    wanted, model_list = _model_filter(args.models)
+    factorial = set(protocol.factorial_cell_ids)
+
+    def keep(candidate: dict) -> bool:
+        return (candidate.get("turn_label") == "measured"
+                and candidate.get("trajectory_kind") == "greedy"
+                and candidate.get("sample_index") == 0
+                and candidate.get("split") == "discovery"
+                and candidate.get("cell_id") in factorial
+                and (wanted is None or candidate.get("model_id") in wanted))
+
+    records = load_raw_records(Path(args.raw), protocol, keep=keep)
+    report = audit_sample(records, protocol, models=model_list or None)
     out = Path(args.out)
     blinded = report.pop("blinded")
     key_rows = report.pop("key")
@@ -334,6 +447,8 @@ def build_parser() -> argparse.ArgumentParser:
     judge.add_argument("--cache", default=None, help="judge cache JSONL (default <out>/judge_cache.jsonl)")
     judge.add_argument("--turn-labels", default=",".join(DEFAULT_TURN_LABELS),
                        help="comma-separated judge-eligible turn labels")
+    judge.add_argument("--models", default=None,
+                       help="comma-separated model IDs to judge (default: every model present)")
     _add_backend_arguments(judge)
     judge.set_defaults(handler=command_judge)
 

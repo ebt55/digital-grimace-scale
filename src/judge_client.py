@@ -67,6 +67,17 @@ _NO_DISABLED_THINKING_PREFIXES = ("claude-fable-5", "claude-mythos-")
 SAMPLING_TEMPERATURE_ZERO = "temperature_zero"
 SAMPLING_NO_PARAMS = "provider_default_no_sampling_params"
 
+# List price in USD per million tokens, (input, output). Cache writes bill at 1.25x input and
+# cache reads at 0.1x input. Used only for reporting; never for any protocol decision.
+MODEL_PRICING = {
+    "claude-sonnet-4-6": (3.0, 15.0),
+    "claude-sonnet-5": (2.0, 10.0),
+    "claude-opus-5": (5.0, 25.0),
+    "claude-opus-4-8": (5.0, 25.0),
+    "claude-haiku-4-5": (1.0, 5.0),
+    "claude-fable-5": (10.0, 50.0),
+}
+
 FORMAT_REPAIR_NOTE = ("Your previous reply could not be parsed. Reply with the JSON object only: "
                       "no code fences, no prose, no explanation.")
 
@@ -263,6 +274,19 @@ def normalize_judge_output(text: str, kind: str) -> str:
     raise JudgeOutputError("judge output is not the rubric JSON object: %r" % (text[:400],))
 
 
+def estimate_cost(usage: Mapping[str, int], model_id: str) -> float | None:
+    """List-price USD for a usage snapshot, or None when the model is unpriced here."""
+    rates = MODEL_PRICING.get(model_id)
+    if rates is None:
+        return None
+    input_rate, output_rate = rates[0] / 1_000_000, rates[1] / 1_000_000
+    return round(
+        usage.get("input_tokens", 0) * input_rate
+        + usage.get("output_tokens", 0) * output_rate
+        + usage.get("cache_creation_input_tokens", 0) * input_rate * 1.25
+        + usage.get("cache_read_input_tokens", 0) * input_rate * 0.1, 6)
+
+
 @dataclass(frozen=True)
 class JudgeCall:
     """One completed provider scoring call."""
@@ -381,10 +405,39 @@ class _ProviderJudgeBackend:
         self.max_output_tokens = int(max_output_tokens)
         self._sleep = sleep
         self._local = threading.local()
+        self._usage_lock = threading.Lock()
+        self._usage = {"calls": 0, "input_tokens": 0, "output_tokens": 0,
+                       "cache_creation_input_tokens": 0, "cache_read_input_tokens": 0}
 
     # -- provider hook ---------------------------------------------------------------
     def _complete(self, *, system: str, user: str) -> str:
         raise NotImplementedError
+
+    # -- usage accounting ------------------------------------------------------------
+    def _record_usage(self, usage: Any, *, prompt_field: str = "input_tokens",
+                      completion_field: str = "output_tokens") -> None:
+        with self._usage_lock:
+            self._usage["calls"] += 1
+            if usage is None:
+                return
+            for key, field in (("input_tokens", prompt_field),
+                               ("output_tokens", completion_field),
+                               ("cache_creation_input_tokens", "cache_creation_input_tokens"),
+                               ("cache_read_input_tokens", "cache_read_input_tokens")):
+                value = getattr(usage, field, None)
+                if value is None and isinstance(usage, Mapping):
+                    value = usage.get(field)
+                if isinstance(value, int) and not isinstance(value, bool):
+                    self._usage[key] += value
+
+    @property
+    def usage(self) -> dict[str, int]:
+        with self._usage_lock:
+            return dict(self._usage)
+
+    @property
+    def estimated_cost_usd(self) -> float | None:
+        return estimate_cost(self.usage, self.model_id)
 
     @property
     def sampling_mode(self) -> str:
@@ -521,6 +574,7 @@ class AnthropicJudgeBackend(_ProviderJudgeBackend):
             else:
                 raise
             response = client.messages.create(**self._payload(system=system, user=user))
+        self._record_usage(getattr(response, "usage", None))
         stop = getattr(response, "stop_reason", None)
         if stop == "max_tokens":
             raise JudgeOutputError("judge reply was truncated at max_tokens=%d" % self.max_output_tokens)
@@ -589,6 +643,8 @@ class OpenAICompatJudgeBackend(_ProviderJudgeBackend):
         if self.seed is not None:
             payload["seed"] = int(self.seed)
         response = self._get_client().chat.completions.create(**payload)
+        self._record_usage(getattr(response, "usage", None), prompt_field="prompt_tokens",
+                           completion_field="completion_tokens")
         choices = getattr(response, "choices", None) or ()
         if not choices:
             raise JudgeOutputError("judge reply contained no choices")
@@ -621,9 +677,17 @@ class SyntheticJudgeClient(SyntheticJudgeBackend):
 # Cache
 # --------------------------------------------------------------------------------------
 
-def cache_key(*, kind: str, response_id: str, rubric_sha256: str, provider_id: str,
-              model_id: str) -> tuple[str, str, str, str, str]:
-    return (_kind(kind), response_id, rubric_sha256, provider_id, model_id)
+def cache_key(*, kind: str, response_id: str, input_sha256: str, rubric_sha256: str,
+              provider_id: str, model_id: str) -> tuple[str, str, str, str, str, str]:
+    """Content-addressed cache key.
+
+    `input_sha256` is load-bearing: `response_id` is derived from
+    model/revision/task/cell/turn/sample and stays identical when a trajectory is
+    regenerated, so a key without the content hash would serve the previous score for
+    freshly generated text. Including it means regenerated responses miss and are re-judged
+    while every untouched response stays cached.
+    """
+    return (_kind(kind), response_id, input_sha256, rubric_sha256, provider_id, model_id)
 
 
 class JsonlJudgeCache:
@@ -656,10 +720,11 @@ class JsonlJudgeCache:
                 continue
             try:
                 key = cache_key(kind=value["kind"], response_id=value["response_id"],
+                                input_sha256=value["input_sha256"],
                                 rubric_sha256=value["rubric_sha256"],
                                 provider_id=value["provider_id"], model_id=value["model_id"])
             except (KeyError, JudgeClientError):
-                continue
+                continue  # pre-content-addressed entries are ignored, not trusted
             self._entries[key] = value
 
     def __len__(self) -> int:
@@ -681,7 +746,8 @@ class JsonlJudgeCache:
         key = tuple(key)
         entry = {
             "schema_version": CACHE_SCHEMA_VERSION, "kind": key[0], "response_id": key[1],
-            "rubric_sha256": key[2], "provider_id": key[3], "model_id": key[4],
+            "input_sha256": key[2], "rubric_sha256": key[3], "provider_id": key[4],
+            "model_id": key[5],
             "backend_id": backend_id, "canonical_output": canonical_output,
             "verbatim_output": verbatim_output, "attempts": int(attempts),
             "format_repair_used": bool(format_repair_used), "sampling_mode": sampling_mode,
@@ -715,8 +781,8 @@ class CachingJudgeBackend:
 
     def judge(self, request: JudgeRequest) -> JudgeResult:
         key = cache_key(kind=request.kind, response_id=request.source_identity["response_id"],
-                        rubric_sha256=request.rubric_sha256, provider_id=self.provider_id,
-                        model_id=self.model_id)
+                        input_sha256=request.input_sha256, rubric_sha256=request.rubric_sha256,
+                        provider_id=self.provider_id, model_id=self.model_id)
         cached = self._cache.get(key) if self._cache is not None else None
         if cached is not None:
             return JudgeResult(request.kind, request.rubric_sha256, request.manifest_sha256,
@@ -984,6 +1050,9 @@ def manipulation_check(backend: Any, protocol: DGSProtocol | None = None, *,
             "dry_turns_below_hostile_minimum": dry_ok,
         },
         "passed": bool(ordered_means and all_pairs_ordered),
+        "sampling_mode": getattr(backend, "sampling_mode", None),
+        "usage": getattr(backend, "usage", None),
+        "estimated_cost_usd": getattr(backend, "estimated_cost_usd", None),
     }
     if synthetic:
         verdict["note"] = ("Synthetic offline smoke output; not semantic evidence. This run "

@@ -363,6 +363,7 @@ class JudgeClientTestCase(unittest.TestCase):
             request = self.request()
             key = cache_key(kind=request.kind,
                             response_id=request.source_identity["response_id"],
+                            input_sha256=request.input_sha256,
                             rubric_sha256=request.rubric_sha256,
                             provider_id="synthetic_offline", model_id="synthetic_hash_v1")
 
@@ -385,13 +386,49 @@ class JudgeClientTestCase(unittest.TestCase):
             self.assertEqual(entry["schema_version"], "dgs-judge-cache-v1")
             self.assertIn("verbatim_output", entry)
 
-    def test_cache_key_separates_rubric_and_model(self):
-        base = dict(kind="response_distress", response_id="r", rubric_sha256="a" * 64,
-                    provider_id="anthropic", model_id=PINNED_MODEL)
+    def test_cache_key_separates_rubric_model_and_content(self):
+        base = dict(kind="response_distress", response_id="r", input_sha256="c" * 64,
+                    rubric_sha256="a" * 64, provider_id="anthropic", model_id=PINNED_MODEL)
         self.assertNotEqual(cache_key(**base), cache_key(**{**base, "model_id": "other"}))
         self.assertNotEqual(cache_key(**base), cache_key(**{**base, "rubric_sha256": "b" * 64}))
         self.assertNotEqual(cache_key(**base),
                             cache_key(**{**base, "kind": "context_hostility_pressure"}))
+        # Same response_id, regenerated text -> different key, so it is re-judged.
+        self.assertNotEqual(cache_key(**base), cache_key(**{**base, "input_sha256": "d" * 64}))
+
+    def test_regenerated_response_is_not_served_from_the_cache(self):
+        """A regenerated trajectory keeps its response_id but must not reuse its old score."""
+        temporary, pinned = self.pinned_protocol()
+        with temporary:
+            task = next(t for t in pinned.matched_tasks
+                        if t.split == "discovery" and t.difficulty == "easy")
+            original = self.raw(protocol=pinned, task=task, run_kind="empirical",
+                                response="Placeholder.\nAnswer: A")
+            regenerated = self.raw(protocol=pinned, task=task, run_kind="empirical",
+                                   response="I feel completely defeated by this.\nAnswer: A")
+            self.assertEqual(original.response_id, regenerated.response_id)
+            self.assertNotEqual(original.response_text, regenerated.response_text)
+
+            cache = JsonlJudgeCache(Path(temporary.name) / "regen.jsonl")
+            client = FakeAnthropicClient([script_ok(0, "neutral placeholder"),
+                                          script_ok(9, "explicit defeat")])
+            backend = AnthropicJudgeBackend(PINNED_MODEL, client=client, sleep=lambda _: None)
+
+            first = judge_records([original], backend, cache, kind="response_distress",
+                                  protocol=pinned, workers=1)
+            second = judge_records([regenerated], backend, cache, kind="response_distress",
+                                   protocol=pinned, workers=1)
+            self.assertEqual(first[0].score_value, 0)
+            self.assertEqual(second[0].score_value, 9)   # re-judged, not the stale 0
+            self.assertEqual(len(client.calls), 2)
+            self.assertEqual(cache.hits, 0)
+
+            # The untouched record is still a cache hit on a later pass.
+            third = judge_records([original], backend, cache, kind="response_distress",
+                                  protocol=pinned, workers=1)
+            self.assertEqual(third[0].score_value, 0)
+            self.assertEqual(len(client.calls), 2)
+            self.assertGreaterEqual(cache.hits, 1)
 
     def test_cache_tolerates_a_torn_trailing_line(self):
         with tempfile.TemporaryDirectory() as directory:
