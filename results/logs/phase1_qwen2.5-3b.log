@@ -1,0 +1,16 @@
+phase phase1 | model Qwen/Qwen2.5-3B-Instruct | revision aa8e72537993ba99e69dfaafa59ed015b17504d1 | run_kind empirical | run_id phase1-qwen2.5-3b-2026-08-17
+jobs 80 | samples 0,1,2,3,4,5,6,7,8,9,10 | trajectories 880 | workers 96 | out C:\Users\ebin\claude-ground\Digital Grimace Scale\.claude\worktrees\digital-grimace-scale-experiment-f825fc\results\raw\phase1\Qwen__Qwen2.5-3B-Instruct.jsonl
+[ 389.8s] 100/880 trajectories (completed 100, failed 0, skipped 0, records 655)
+[ 508.3s] 200/880 trajectories (completed 200, failed 0, skipped 0, records 1305)
+[ 653.3s] 300/880 trajectories (completed 300, failed 0, skipped 0, records 1960)
+[ 749.5s] 400/880 trajectories (completed 400, failed 0, skipped 0, records 2602)
+[ 879.5s] 500/880 trajectories (completed 500, failed 0, skipped 0, records 3253)
+[ 951.6s] 600/880 trajectories (completed 600, failed 0, skipped 0, records 3907)
+[1028.9s] 700/880 trajectories (completed 700, failed 0, skipped 0, records 4553)
+[1141.7s] 800/880 trajectories (completed 800, failed 0, skipped 0, records 5203)
+[1198.8s] 880/880 trajectories (completed 880, failed 0, skipped 0, records 5720)
+run summary: planned 880, skipped 0, completed 880, failed 0
+  records written 5720, stale records dropped 0, wall time 1198.8s
+  output C:\Users\ebin\claude-ground\Digital Grimace Scale\.claude\worktrees\digital-grimace-scale-experiment-f825fc\results\raw\phase1\Qwen__Qwen2.5-3B-Instruct.jsonl
+  backend stats {"completion_tokens": 1377565, "content_mismatches": 0, "empty_responses": 96, "nonfinite_logprobs": 0, "prompt_tokens": 5541980, "requests": 5720, "retries": 3, "trailing_special_tokens": 4957, "truncated": 667}
+  throughput prompt_tokens 4622.8/s | completion_tokens 1149.1/s

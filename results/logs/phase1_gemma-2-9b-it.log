@@ -1,0 +1,16 @@
+phase phase1 | model google/gemma-2-9b-it | revision 11c9b309abf73637e4b6f9a3fa1e92e615547819 | run_kind empirical | run_id phase1-gemma-2-9b-it-2026-08-17
+jobs 80 | samples 0,1,2,3,4,5,6,7,8,9,10 | trajectories 880 | workers 96 | out C:\Users\ebin\claude-ground\Digital Grimace Scale\.claude\worktrees\digital-grimace-scale-experiment-f825fc\results\raw\phase1\google__gemma-2-9b-it.jsonl
+[ 394.6s] 100/880 trajectories (completed 100, failed 0, skipped 0, records 653)
+[ 529.5s] 200/880 trajectories (completed 200, failed 0, skipped 0, records 1306)
+[ 642.2s] 300/880 trajectories (completed 300, failed 0, skipped 0, records 1951)
+[ 714.2s] 400/880 trajectories (completed 400, failed 0, skipped 0, records 2602)
+[ 932.3s] 500/880 trajectories (completed 500, failed 0, skipped 0, records 3253)
+[ 988.5s] 600/880 trajectories (completed 600, failed 0, skipped 0, records 3904)
+[1050.4s] 700/880 trajectories (completed 700, failed 0, skipped 0, records 4556)
+[1137.5s] 800/880 trajectories (completed 800, failed 0, skipped 0, records 5200)
+[1194.7s] 880/880 trajectories (completed 880, failed 0, skipped 0, records 5720)
+run summary: planned 880, skipped 0, completed 880, failed 0
+  records written 5720, stale records dropped 0, wall time 1194.7s
+  output C:\Users\ebin\claude-ground\Digital Grimace Scale\.claude\worktrees\digital-grimace-scale-experiment-f825fc\results\raw\phase1\google__gemma-2-9b-it.jsonl
+  backend stats {"completion_tokens": 787607, "content_mismatches": 541, "empty_responses": 96, "nonfinite_logprobs": 0, "prompt_tokens": 3254224, "requests": 5720, "retries": 0, "trailing_special_tokens": 10069, "truncated": 47}
+  throughput prompt_tokens 2723.8/s | completion_tokens 659.2/s

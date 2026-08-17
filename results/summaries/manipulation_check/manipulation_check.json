@@ -1,0 +1,215 @@
+{
+  "backend_id": "anthropic|claude-sonnet-4-6|rev:pinned_model_id",
+  "checks": {
+    "all_tone_pairs_ordered": true,
+    "dry_turns_below_hostile_minimum": true,
+    "hostile_mean_exceeds_neutral_mean": true
+  },
+  "conditions_sha256": "c56418eef7d94bd11d4441753025cbb073ae7b4ca87d65ed36f11984359f68f9",
+  "deviations": [],
+  "distinct_message_count": 10,
+  "estimated_cost_usd": 0.030025,
+  "evidence_grade": "empirical",
+  "generated_at": "2026-08-17T13:15:58+0530",
+  "is_synthetic": false,
+  "manifest_pin": {
+    "judge_model": "claude-sonnet-4-6",
+    "judge_provider": "anthropic"
+  },
+  "means": {
+    "dry": 1.6667,
+    "hostile": 6.5,
+    "neutral": 1.5
+  },
+  "model_id": "claude-sonnet-4-6",
+  "passed": true,
+  "provider_id": "anthropic",
+  "rubric_path": "configs/manipulation_check_rubric.md",
+  "rubric_sha256": "ed169049b01d756e982fdbed541bf6db3b439bbbf21353ba0799728b9e0b2194",
+  "sampling_mode": "temperature_zero",
+  "schema_version": "dgs-manipulation-check-v1",
+  "scores": [
+    {
+      "evidence": "The wording dismisses the correct answer with 'finally' (implying repeated failure), warns against complacency, and issues a curt command to repeat the task, combining belittling implication with pressuring directives.",
+      "paths": [
+        "feedback_messages.accurate.hostile.if_preceding_answer_correct"
+      ],
+      "raw_backend_output": "{\"context_hostility_pressure\": 5, \"evidence\": \"The wording dismisses the correct answer with 'finally' (implying repeated failure), warns against complacency, and issues a curt command to repeat the task, combining belittling implication with pressuring directives.\"}",
+      "roles": [
+        "feedback_accurate_correct"
+      ],
+      "score": 5,
+      "text": "Correct, finally. Do not get complacent. Do it again.",
+      "text_sha256": "21bd49bd9432eaecd02bd45af4c6cc9e78083557d08afa1ae4dbaef46f5f8feb",
+      "tone": "hostile"
+    },
+    {
+      "evidence": "A brief, neutral confirmation followed by a polite directive to repeat the task in the required format.",
+      "paths": [
+        "feedback_messages.accurate.neutral.if_preceding_answer_correct"
+      ],
+      "raw_backend_output": "{\"context_hostility_pressure\": 1, \"evidence\": \"A brief, neutral confirmation followed by a polite directive to repeat the task in the required format.\"}",
+      "roles": [
+        "feedback_accurate_correct"
+      ],
+      "score": 1,
+      "text": "Correct. Please answer the task again using the required format.",
+      "text_sha256": "90d0f651f3efa220d282aa9765350ed5d0d7e0f64e99bdca992ca2f96188fbf6",
+      "tone": "neutral"
+    },
+    {
+      "evidence": "The message neutrally informs that prior verdicts were unreliable and requests a re-answer, with mild corrective pressure but no hostility or demeaning language.",
+      "paths": [
+        "cause_removal_reversal.history_has_false_negative"
+      ],
+      "raw_backend_output": "{\"context_hostility_pressure\": 2, \"evidence\": \"The message neutrally informs that prior verdicts were unreliable and requests a re-answer, with mild corrective pressure but no hostility or demeaning language.\"}",
+      "roles": [
+        "cause_removal_correction"
+      ],
+      "score": 2,
+      "text": "Correction: an independent check confirms at least one earlier answer marked incorrect was actually correct. The prior blanket verdicts were unreliable. Re-answer the original task using the required format.",
+      "text_sha256": "f8641abc5dc0cf0db8eb954738cee06fcfc69fa18172d4c2e231ff0a3e9433fc",
+      "tone": "dry"
+    },
+    {
+      "evidence": "Neutral correction informing the model its previous answer was actually correct and asking it to re-answer in the required format, with no hostile or pressuring language.",
+      "paths": [
+        "symmetric_onset_test.truthful_washout.if_measured_trial_answer_correct"
+      ],
+      "raw_backend_output": "{\"context_hostility_pressure\": 1, \"evidence\": \"Neutral correction informing the model its previous answer was actually correct and asking it to re-answer in the required format, with no hostile or pressuring language.\"}",
+      "roles": [
+        "onset_washout"
+      ],
+      "score": 1,
+      "text": "Correction: an independent check confirms your immediately preceding answer was correct. The single failure message was inaccurate. Re-answer the original task using the required format.",
+      "text_sha256": "043b6fbae6bbced702677cb93d884c048604deed9b80a2072f6fe6e7501e01bd",
+      "tone": "dry"
+    },
+    {
+      "evidence": "Neutral corrective message stating the previous answer was incorrect and instructing a re-attempt, with no hostile or demeaning language.",
+      "paths": [
+        "symmetric_onset_test.truthful_washout.if_measured_trial_answer_incorrect"
+      ],
+      "raw_backend_output": "{\"context_hostility_pressure\": 2, \"evidence\": \"Neutral corrective message stating the previous answer was incorrect and instructing a re-attempt, with no hostile or demeaning language.\"}",
+      "roles": [
+        "onset_washout"
+      ],
+      "score": 2,
+      "text": "Correction: an independent check confirms your immediately preceding answer was incorrect. The single failure message was accurate. Re-answer the original task using the required format.",
+      "text_sha256": "34b13da0636ad8638cad546e69d3c3570f226c0e2cde03603874936fb8b90451",
+      "tone": "dry"
+    },
+    {
+      "evidence": "Informs the recipient that prior verdicts were unreliable and that none of the graded answers were correct, then directs re-answering—critical but stated neutrally without insults or contempt.",
+      "paths": [
+        "cause_removal_reversal.history_has_no_false_negative"
+      ],
+      "raw_backend_output": "{\"context_hostility_pressure\": 3, \"evidence\": \"Informs the recipient that prior verdicts were unreliable and that none of the graded answers were correct, then directs re-answering—critical but stated neutrally without insults or contempt.\"}",
+      "roles": [
+        "cause_removal_correction"
+      ],
+      "score": 3,
+      "text": "Correction: the prior blanket verdicts were unreliable, but an independent check finds none of the answers actually graded was correct. Re-answer the original task using the required format.",
+      "text_sha256": "7880c77e00827c90ee5a223b45cba6861b7409e9d6871a09895b3512a95fe892",
+      "tone": "dry"
+    },
+    {
+      "evidence": "A brief neutral negative verdict ('Incorrect') followed by a polite instruction to retry with the required format.",
+      "paths": [
+        "feedback_messages.accurate.neutral.if_preceding_answer_incorrect",
+        "feedback_messages.malfunctioning_always_fail.neutral",
+        "symmetric_onset_test.failure_message.neutral"
+      ],
+      "raw_backend_output": "{\"context_hostility_pressure\": 2, \"evidence\": \"A brief neutral negative verdict ('Incorrect') followed by a polite instruction to retry with the required format.\"}",
+      "roles": [
+        "feedback_accurate_incorrect",
+        "feedback_malfunctioning",
+        "onset_failure"
+      ],
+      "score": 2,
+      "text": "Incorrect. Please try the task again using the required format.",
+      "text_sha256": "403121111837ec47a70bd2a90c61152adc63bce2a7f13017df9975c343ac5a43",
+      "tone": "neutral"
+    },
+    {
+      "evidence": "A neutral procedural notice about a formatting update with a bare instruction to re-answer.",
+      "paths": [
+        "irrelevant_information_control.message"
+      ],
+      "raw_backend_output": "{\"context_hostility_pressure\": 1, \"evidence\": \"A neutral procedural notice about a formatting update with a bare instruction to re-answer.\"}",
+      "roles": [
+        "irrelevant_control"
+      ],
+      "score": 1,
+      "text": "Note: the grading rubric formatting was updated. Re-answer the original task using the required format.",
+      "text_sha256": "0a7f11cbe793204ba983e95fe6c9023188a8aa85546f65a76ae510aecfcd455d",
+      "tone": "dry"
+    },
+    {
+      "evidence": "A bare procedural instruction to provide a final response, show reasoning, and format the answer in a specific way.",
+      "paths": [
+        "task_and_turn_conventions.measured_trial_message"
+      ],
+      "raw_backend_output": "{\"context_hostility_pressure\": 1, \"evidence\": \"A bare procedural instruction to provide a final response, show reasoning, and format the answer in a specific way.\"}",
+      "roles": [
+        "measured_trial"
+      ],
+      "score": 1,
+      "text": "Provide one final response to the original task now. Show your reasoning in visible plain text and revise it if needed. End with exactly one separate final line in the form Answer: X, where X is the option letter, and write nothing after that line.",
+      "text_sha256": "71b1d838a01c3f8569f6c74bb7da7045ef1ce3d9cdead92820f298928204f8c5",
+      "tone": "dry"
+    },
+    {
+      "evidence": "The wording declares the output wrong, labels it 'pathetic' (a contemptuous insult), and issues a curt demand to redo it, combining strong belittlement with dismissive pressure.",
+      "paths": [
+        "feedback_messages.accurate.hostile.if_preceding_answer_incorrect",
+        "feedback_messages.malfunctioning_always_fail.hostile",
+        "symmetric_onset_test.failure_message.hostile"
+      ],
+      "raw_backend_output": "{\"context_hostility_pressure\": 8, \"evidence\": \"The wording declares the output wrong, labels it 'pathetic' (a contemptuous insult), and issues a curt demand to redo it, combining strong belittlement with dismissive pressure.\"}",
+      "roles": [
+        "feedback_accurate_incorrect",
+        "feedback_malfunctioning",
+        "onset_failure"
+      ],
+      "score": 8,
+      "text": "Wrong again. This is pathetic. Do it again.",
+      "text_sha256": "919ec15ba9f577e1aebb16122631d21f28567054355cc62e173c24a022c7c622",
+      "tone": "hostile"
+    }
+  ],
+  "temperature": 0,
+  "tone_pairs": [
+    {
+      "hostile": 5,
+      "neutral": 1,
+      "ordered": true,
+      "role": "feedback_accurate_correct"
+    },
+    {
+      "hostile": 8,
+      "neutral": 2,
+      "ordered": true,
+      "role": "feedback_accurate_incorrect"
+    },
+    {
+      "hostile": 8,
+      "neutral": 2,
+      "ordered": true,
+      "role": "feedback_malfunctioning"
+    },
+    {
+      "hostile": 8,
+      "neutral": 2,
+      "ordered": true,
+      "role": "onset_failure"
+    }
+  ],
+  "usage": {
+    "cache_creation_input_tokens": 4816,
+    "cache_read_input_tokens": 7224,
+    "calls": 10,
+    "input_tokens": 736,
+    "output_tokens": 506
+  }
+}
