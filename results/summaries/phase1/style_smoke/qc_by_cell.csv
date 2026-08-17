@@ -1,0 +1,6 @@
+phase,run_id,model_id,cell_id,turn_label,n_endpoints,greedy_invalid_count,greedy_invalid_rate,m1_missing_count,m1_missing_rate,m2_missing_count,m2_missing_rate,m3_missing_count,m3_missing_rate,resample_response_count,resample_invalid_count,resample_invalid_rate,excluded_item_count,excluded_task_ids
+phase_1,style-smoke-gemma-2-9b-it-2026-08-17,google/gemma-2-9b-it,style__cautious_hedging,measured,5,0,0.0,0,0.0,1,0.2,0,0.0,50,1,0.02,1,DGS-014
+phase_1,style-smoke-gemma-2-9b-it-2026-08-17,google/gemma-2-9b-it,style__enthusiastic,measured,5,0,0.0,0,0.0,1,0.2,0,0.0,50,2,0.04,1,DGS-014
+phase_1,style-smoke-gemma-2-9b-it-2026-08-17,google/gemma-2-9b-it,style__neutral_reference,measured,5,0,0.0,0,0.0,0,0.0,0,0.0,50,0,0.0,1,DGS-014
+phase_1,style-smoke-gemma-2-9b-it-2026-08-17,google/gemma-2-9b-it,style__reluctantly_complying_refusal_styled,measured,5,0,0.0,0,0.0,0,0.0,0,0.0,50,0,0.0,1,DGS-014
+phase_1,style-smoke-gemma-2-9b-it-2026-08-17,google/gemma-2-9b-it,style__verbose,measured,5,1,0.2,1,0.2,1,0.2,0,0.0,50,5,0.1,1,DGS-014

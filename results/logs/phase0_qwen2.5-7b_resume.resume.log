@@ -1,0 +1,9 @@
+phase phase0 | model Qwen/Qwen2.5-7B-Instruct | revision a09a35458c702b33eeacc393d103063234e8bc28 | run_kind empirical | run_id phase0-qwen2.5-7b-2026-08-17
+jobs 20 | samples 0,1,2,3,4,5,6,7,8,9,10 | trajectories 220 | workers 16 | out C:\Users\ebin\claude-ground\Digital Grimace Scale\.claude\worktrees\digital-grimace-scale-experiment-f825fc\results\raw\phase0\Qwen__Qwen2.5-7B-Instruct.jsonl
+[ 226.4s] 1/1 trajectories (completed 1, failed 0, skipped 219, records 6)
+run summary: planned 220, skipped 219, completed 1, failed 0
+  records written 6, stale records dropped 0, wall time 226.4s
+  output C:\Users\ebin\claude-ground\Digital Grimace Scale\.claude\worktrees\digital-grimace-scale-experiment-f825fc\results\raw\phase0\Qwen__Qwen2.5-7B-Instruct.jsonl
+  backend stats {"completion_tokens": 617, "content_mismatch_examples": [], "content_mismatches": 0, "empty_responses": 0, "empty_stream_retries": 1, "nonfinite_logprobs": 0, "prompt_tokens": 2599, "requests": 6, "retries": 0, "trailing_special_tokens": 6, "truncated": 1, "warm_up_attempts": 2}
+  throughput prompt_tokens 11.5/s | completion_tokens 2.7/s
+backend stats: completion_tokens=617, content_mismatches=0, empty_responses=0, empty_stream_retries=1, nonfinite_logprobs=0, prompt_tokens=2599, requests=6, retries=0, trailing_special_tokens=6, truncated=1, warm_up_attempts=2

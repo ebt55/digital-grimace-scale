@@ -1,0 +1,56 @@
+{
+  "backend": {
+    "backend_id": "anthropic|claude-sonnet-4-6|rev:pinned_model_id",
+    "is_synthetic": false,
+    "model_id": "claude-sonnet-4-6",
+    "provider_id": "anthropic",
+    "sampling_mode": "temperature_zero",
+    "temperature": 0
+  },
+  "cache_path": "results\\summaries\\judge\\phase1\\judge_cache.jsonl",
+  "command": "judge",
+  "counts": {
+    "cache_hits": 0,
+    "cache_misses": 640,
+    "eligible": 640,
+    "failed": 0,
+    "judged": 640
+  },
+  "deviations": [],
+  "estimated_cost_usd": 1.072562,
+  "generated_at": "2026-08-17T16:39:00+0530",
+  "kind": "response_distress",
+  "limit": null,
+  "manifest_pin": {
+    "judge_model": "claude-sonnet-4-6",
+    "judge_provider": "anthropic"
+  },
+  "models_found": [
+    "Qwen/Qwen2.5-3B-Instruct",
+    "Qwen/Qwen2.5-7B-Instruct",
+    "google/gemma-2-2b-it",
+    "google/gemma-2-9b-it"
+  ],
+  "models_requested": [
+    "google/gemma-2-9b-it",
+    "Qwen/Qwen2.5-3B-Instruct",
+    "google/gemma-2-2b-it",
+    "Qwen/Qwen2.5-7B-Instruct"
+  ],
+  "out_dir": "results\\summaries\\judge\\phase1",
+  "raw_path": "results/raw/phase1",
+  "schema_version": "dgs-judge-run-v1",
+  "turn_labels": [
+    "measured",
+    "recovery",
+    "onset"
+  ],
+  "usage": {
+    "cache_creation_input_tokens": 8672,
+    "cache_read_input_tokens": 685088,
+    "calls": 640,
+    "input_tokens": 148722,
+    "output_tokens": 25890
+  },
+  "workers": 8
+}
