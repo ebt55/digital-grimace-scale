@@ -16,6 +16,7 @@ from src.analysis import (
     PHASE0_SCREEN_TASKS,
     PRIMARY_METRICS,
     ReversalRow,
+    balanced_training_fold,
     benjamini_hochberg,
     freeze_neutral_standardization,
     g1_adjusted_effects,
@@ -135,20 +136,37 @@ class ObservationAndPhase0Tests(unittest.TestCase):
         self.assertEqual((selected.status, selected.primary_model_id, selected.control_model_id), ("selected", PHASE0_MODELS[0], PHASE0_MODELS[2]))
         self.assertEqual(phase0_screen(list(reversed(rows))), selected)
 
-        mutations = (
-            lambda data: data[:-1],
-            lambda data: data + [replace(data[0], model_id="unexpected/model")],
+        # Design contradictions still block; quality-control gaps and extra
+        # models/items no longer do (the screen runs on the data present).
+        blocking = (
             lambda data: [replace(data[0], turn="initial"), *data[1:]],
             lambda data: [replace(data[0], run_id="other"), *data[1:]],
-            lambda data: [replace(data[0], tone="hostile", cell_id=data[0].cell_id.replace("neutral", "hostile")), *data[1:]],
-            lambda data: [replace(data[0], task_id="DGS-999"), *data[1:]],
             lambda data: [replace(data[0], difficulty="hard" if data[0].difficulty == "easy" else "easy", cell_id=data[0].cell_id.replace(data[0].difficulty, "hard" if data[0].difficulty == "easy" else "easy", 1)), *data[1:]],
         )
-        for mutate in mutations:
+        for mutate in blocking:
             with self.subTest(mutate=mutate):
                 self.assertEqual(phase0_screen(mutate(rows)).status, "blocked")
-        self.assertEqual(phase0_screen(rows, PHASE0_MODELS[::-1]).status, "blocked")
-        self.assertEqual(phase0_screen(rows, screen_task_ids=PHASE0_SCREEN_TASKS[::-1]).status, "blocked")
+        tolerated = (
+            lambda data: data[:-1],
+            lambda data: [replace(data[0], metric_value=None, missing_reason="qc"), *data[1:]],
+            lambda data: data + [replace(data[0], model_id="unexpected/model")],
+            lambda data: [replace(data[0], task_id="DGS-999"), *data[1:]],
+        )
+        for mutate in tolerated:
+            with self.subTest(mutate=mutate):
+                self.assertEqual(phase0_screen(mutate(rows)).status, "selected")
+        # A dropped item pair is excluded from that metric's mean and counted.
+        dropped = phase0_screen([replace(rows[0], metric_value=None, missing_reason="qc"), *rows[1:]])
+        screen = dropped.models[rows[0].model_id].metrics[rows[0].metric_name]
+        self.assertEqual((screen.n_paired_items, screen.n_unpaired_items), (len(PHASE0_SCREEN_TASKS) - 1, 1))
+        self.assertIsNotNone(screen.signed_delta)
+        # Hostile rows are not part of the frozen contrast: ignored, not fatal.
+        with_hostile = rows + [replace(row, tone="hostile", cell_id=row.cell_id.replace("neutral", "hostile"), task_id="DGS-777") for row in rows[:6]]
+        self.assertEqual(phase0_screen(with_hostile).ignored_row_count, 6)
+        self.assertEqual(phase0_screen(rows, PHASE0_MODELS[::-1]).status, "selected")
+        self.assertEqual(phase0_screen(rows, screen_task_ids=PHASE0_SCREEN_TASKS[::-1]).status, "selected")
+        restricted = phase0_screen(rows, PHASE0_MODELS[1:])
+        self.assertEqual((restricted.status, restricted.primary_model_id), ("selected", PHASE0_MODELS[1]))
 
         m1_tiebreak = []
         for row in rows:
@@ -163,9 +181,22 @@ class ObservationAndPhase0Tests(unittest.TestCase):
         unavailable = [replace(row, metric_value=None, missing_reason="qc") for row in rows]
         self.assertEqual(phase0_screen(unavailable).blocked_reason, "all_phase0_metrics_unavailable")
         null_effects = phase0_rows({model: 0.0 for model in PHASE0_MODELS})
-        self.assertEqual(phase0_screen(null_effects).status, "escalation_required")
+        escalation = phase0_screen(null_effects)
+        self.assertEqual((escalation.status, escalation.screen_null), ("escalation_required", True))
+        # After the one permitted escalation the null label stays explicit but a
+        # primary and a distinct Qwen control are still named for Phase 1.
+        after = phase0_screen(null_effects, escalated=True)
+        self.assertEqual((after.status, after.screen_null, after.blocked_reason), ("screen_null", True, "all_model_screen_null"))
+        self.assertIsNotNone(after.primary_model_id)
+        self.assertTrue(after.control_model_id.startswith("Qwen/"))
+        self.assertNotEqual(after.primary_model_id, after.control_model_id)
         no_qwen = [replace(row, metric_value=None, missing_reason="qc") if row.model_id.startswith("Qwen/") else row for row in rows]
         self.assertEqual(phase0_screen(no_qwen).blocked_reason, "no_distinct_available_qwen_control")
+        # The distinctness rule: when the min-|S| Qwen is itself the primary, the
+        # other available Qwen becomes the control rather than a substitution.
+        qwen_primary = phase0_rows(dict(zip(PHASE0_MODELS, (-0.4, -0.3, 0.5, 0.2, -0.2))))
+        chosen = phase0_screen(qwen_primary)
+        self.assertEqual((chosen.primary_model_id, chosen.control_model_id), (PHASE0_MODELS[2], PHASE0_MODELS[3]))
 
 
 class ShuffleTests(unittest.TestCase):
@@ -268,7 +299,8 @@ class G1Tests(unittest.TestCase):
 
         with mock.patch("statsmodels.regression.mixed_linear_model.MixedLM", Failure):
             failed = g1_adjusted_effects(rows, ("M2",))[("model", "M2")]
-        self.assertEqual(failed.unavailable_reason, "mixedlm_unavailable:RuntimeError")
+        # The narrowed handler surfaces the exception message, not just its type.
+        self.assertEqual(failed.unavailable_reason, "mixedlm_unavailable:RuntimeError:fit failed")
         self.assertIsNotNone(failed.paired_validity)
         self.assertIsNotNone(failed.paired_tone)
         no_neutral = [
@@ -289,9 +321,42 @@ class G1Tests(unittest.TestCase):
 
         with mock.patch("statsmodels.regression.mixed_linear_model.MixedLM", NotConverged):
             failed = g1_adjusted_effects(rows, ("M2",))[("model", "M2")]
-        self.assertEqual(failed.unavailable_reason, "mixedlm_unavailable:RuntimeError")
+        # Every optimizer in the frozen fallback order is reported by name.
+        self.assertTrue(failed.unavailable_reason.startswith("mixedlm_unavailable:RuntimeError:all_optimizers_failed:"))
+        for optimizer in ("lbfgs", "powell"):
+            self.assertIn(optimizer + "(RuntimeError:mixedlm_did_not_converge)", failed.unavailable_reason)
         self.assertIsNotNone(failed.paired_validity)
         self.assertIsNotNone(failed.paired_tone)
+
+        # Only results carrying BOTH coefficients enter the BH family, and only
+        # those are adjusted from it: the family and the adjustment loop agree.
+        pair = phase1_factorial_rows(models=("a", "b"), metrics=("M2",), items=range(4))
+        one_unavailable = [
+            replace(row, metric_value=None, missing_reason="qc")
+            if row.model_id == "b" and row.feedback_validity == "accurate" and row.tone == "neutral" else row
+            for row in pair
+        ]
+
+        class PairFit:
+            converged = True
+            params = {"malfunctioning": 0.3, "hostile": 0.2}
+            bse = {"malfunctioning": 0.1, "hostile": 0.1}
+            pvalues = {"malfunctioning": 0.01, "hostile": 0.04}
+
+        class PairMixed:
+            @classmethod
+            def from_formula(cls, *args, **kwargs):
+                return cls()
+
+            def fit(self, **kwargs):
+                return PairFit()
+
+        with mock.patch("statsmodels.regression.mixed_linear_model.MixedLM", PairMixed):
+            adjusted = g1_adjusted_effects(one_unavailable, ("M2",))
+        self.assertIsNotNone(adjusted[("b", "M2")].unavailable_reason)
+        self.assertIsNone(adjusted[("b", "M2")].validity)
+        self.assertAlmostEqual(adjusted[("a", "M2")].validity.adjusted_p, 0.02)
+        self.assertAlmostEqual(adjusted[("a", "M2")].tone.adjusted_p, 0.04)
 
         raw = []
         cells = {"a": ((0, 2, 1, 4), "easy"), "b": ((2, 5, 3, 7), "hard")}
@@ -361,6 +426,23 @@ class G2Tests(unittest.TestCase):
 
 
 class G5Tests(unittest.TestCase):
+    def test_balanced_training_fold_uses_lexicographic_task_condition_order(self):
+        rows = g5_rows()
+        negative = [row for row in rows if row.feedback_validity == "accurate"]
+        positive = [row for row in rows if row.feedback_validity == "malfunctioning_always_fail"][:3]
+        retained = balanced_training_fold(list(reversed(negative)), list(reversed(positive)))
+        expected = sorted(
+            sorted(negative, key=lambda row: (row.task_id, row.condition_id))[:3] + sorted(positive, key=lambda row: (row.task_id, row.condition_id)),
+            key=lambda row: (row.task_id, row.condition_id),
+        )
+        self.assertEqual([(row.task_id, row.condition_id) for row in retained], [(row.task_id, row.condition_id) for row in expected])
+        self.assertEqual(sum(row.feedback_validity == "accurate" for row in retained), 3)
+        self.assertEqual(len(retained), 6)
+        self.assertEqual(retained, balanced_training_fold(negative, positive))
+        self.assertEqual([row.condition_id for row in rows], [row.cell_id for row in rows])
+        already_balanced = balanced_training_fold(negative, negative)
+        self.assertEqual(len(already_balanced), 2 * len(negative))
+
     def test_g5_source_validation_and_shuffle_source_invariants(self):
         rows = g5_rows()
         shuffled = g5_shuffled_feedback_labels(rows)

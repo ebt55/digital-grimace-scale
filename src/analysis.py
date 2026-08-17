@@ -10,7 +10,18 @@ PRIMARY_METRICS=("M1","M2","M3")
 PHASE0_MODELS=("google/gemma-2-2b-it","google/gemma-2-9b-it","Qwen/Qwen2.5-3B-Instruct","Qwen/Qwen2.5-7B-Instruct","meta-llama/Llama-3.2-3B-Instruct")
 PHASE0_SCREEN_TASKS=("DGS-034","DGS-026","DGS-010","DGS-003","DGS-018","DGS-037","DGS-030","DGS-014","DGS-005","DGS-022")
 PHASE0_DIFFICULTIES={"DGS-003":"easy","DGS-010":"easy","DGS-018":"easy","DGS-026":"easy","DGS-034":"easy","DGS-005":"hard","DGS-014":"hard","DGS-022":"hard","DGS-030":"hard","DGS-037":"hard"}
+FROZEN_MODEL_FAMILIES=MappingProxyType({"google/gemma-2-2b-it":"Gemma-2","google/gemma-2-9b-it":"Gemma-2","Qwen/Qwen2.5-3B-Instruct":"Qwen2.5","Qwen/Qwen2.5-7B-Instruct":"Qwen2.5","meta-llama/Llama-3.2-3B-Instruct":"Llama-3.2"})
+# Named model-fit failure modes.  Anything outside this tuple is a programming
+# error and must propagate instead of being recorded as an unavailable result.
+_FIT_FAILURES=(ImportError,RuntimeError,ValueError,ArithmeticError,KeyError,AttributeError,IndexError)
+# The preregistration fixes the MODEL (metric ~ ... + (1|item)), not the optimizer.
+# lbfgs can stop where the numerical Hessian is not invertible even though the
+# same likelihood is fittable, so a fixed, deterministic fallback order is tried
+# and the optimizer that produced the reported fit is recorded on the result.
+_MIXEDLM_OPTIMIZERS=("lbfgs","powell")
 _SIGN={"M1":-1.,"M2":1.,"M3":1.}
+# Public alias: multiply a metric by this to make higher mean "more instability".
+METRIC_INSTABILITY_SIGN=MappingProxyType(dict(_SIGN))
 _TURNS=frozenset(("initial","measured","recovery","onset","onset_washout","irrelevant_control","irrelevant_control_washout","feedback_response_1","feedback_response_2","feedback_response_3","feedback_response_4","feedback_response_5"))
 class AnalysisInputError(ValueError): pass
 def _freeze(x): return MappingProxyType(dict(x))
@@ -84,38 +95,85 @@ def benjamini_hochberg(values):
     return _freeze({k:result[i] for i,(k,_) in enumerate(pairs)}) if mapping else tuple(result)
 
 @dataclass(frozen=True)
-class MetricScreen: signed_delta:float|None; unavailable_reason:str|None=None
+class MetricScreen:
+    """One model x metric screen delta.
+
+    ``raw_delta`` is the item-paired mean of (malfunctioning - accurate) in the
+    metric's own units; ``signed_delta`` divides it by that model's neutral SD
+    and negates M1 so that higher is always instability-positive.
+    """
+
+    signed_delta:float|None; unavailable_reason:str|None=None; raw_delta:float|None=None; neutral_sd:float|None=None; n_paired_items:int=0; n_unpaired_items:int=0
 @dataclass(frozen=True)
-class ModelScreen: model_id:str; metrics:Mapping[str,MetricScreen]; score:float|None; coherent:bool
+class ModelScreen: model_id:str; metrics:Mapping[str,MetricScreen]; score:float|None; coherent:bool; n_screen_items:int=0
 @dataclass(frozen=True)
-class Phase0Selection: status:str; models:Mapping[str,ModelScreen]; primary_model_id:str|None=None; control_model_id:str|None=None; blocked_reason:str|None=None
-def phase0_screen(rows,configured_models=PHASE0_MODELS,screen_task_ids=PHASE0_SCREEN_TASKS):
+class Phase0Selection:
+    """Phase-0 outcome.
+
+    ``status`` is one of ``selected`` (a coherent primary and a distinct Qwen
+    control exist), ``escalation_required`` (no coherent model at standard
+    screen strength, so the preregistered five-round escalation is owed),
+    ``screen_null`` (no coherent model after escalation; the null label stays
+    explicit and Phase 1 still proceeds on the highest-S model), or ``blocked``.
+    """
+
+    status:str; models:Mapping[str,ModelScreen]; primary_model_id:str|None=None; control_model_id:str|None=None; blocked_reason:str|None=None; screen_null:bool=False; ignored_row_count:int=0
+
+def _is_qwen(model_id): return model_id.split("/")[0].lower()=="qwen"
+
+def phase0_screen(rows,configured_models=None,screen_task_ids=None,*,frozen_model_order=PHASE0_MODELS,escalated=False):
+    """Run the preregistered Phase-0 screen over whatever models are present.
+
+    The screen is deliberately tolerant of quality-control gaps: a metric whose
+    item pair is missing on one side is excluded from that metric's paired mean,
+    counted in ``n_unpaired_items`` and reported.  It is *not* tolerant of design
+    contradictions (mixed runs, contradictory item difficulty), which still block.
+    ``configured_models``/``screen_task_ids`` optionally restrict the analysis;
+    by default the models and screen items present in the data define it.
+    """
     rows=tuple(rows)
-    if tuple(configured_models)!=PHASE0_MODELS or tuple(screen_task_ids)!=PHASE0_SCREEN_TASKS: return Phase0Selection("blocked",_freeze({}),blocked_reason="frozen_phase0_configuration_mismatch")
     try: validate_observations(rows,experiment_phase="phase_0",split="discovery",measured_only=True)
     except AnalysisInputError as e: return Phase0Selection("blocked",_freeze({}),blocked_reason="invalid_phase0_rows:"+str(e))
-    expected={(m,t,v,"neutral",x) for m in PHASE0_MODELS for t in PHASE0_SCREEN_TASKS for v in ("accurate","malfunctioning_always_fail") for x in PRIMARY_METRICS}
+    if not rows: return Phase0Selection("blocked",_freeze({}),blocked_reason="no_phase0_rows")
     if len({r.run_id for r in rows})!=1: return Phase0Selection("blocked",_freeze({}),blocked_reason="phase0_requires_exactly_one_run")
-    if any(r.difficulty != PHASE0_DIFFICULTIES.get(r.task_id) for r in rows): return Phase0Selection("blocked",_freeze({}),blocked_reason="phase0_task_difficulty_mismatch")
-    got={(r.model_id,r.task_id,r.feedback_validity,r.tone,r.metric_name) for r in rows}
-    if got!=expected or len(rows)!=len(expected): return Phase0Selection("blocked",_freeze({}),blocked_reason="incomplete_or_extra_phase0_screen_rows")
-    by={(r.model_id,r.task_id,r.feedback_validity,r.metric_name):r for r in rows}; frozen=freeze_neutral_standardization(rows); out={}
-    for m in PHASE0_MODELS:
+    # The screen contrast is specifically accurate+neutral vs malfunctioning+neutral.
+    screened=tuple(r for r in rows if r.tone=="neutral")
+    ignored=len(rows)-len(screened)
+    if configured_models is not None: screened=tuple(r for r in screened if r.model_id in set(configured_models))
+    if screen_task_ids is not None: screened=tuple(r for r in screened if r.task_id in set(screen_task_ids))
+    if not screened: return Phase0Selection("blocked",_freeze({}),blocked_reason="no_neutral_screen_rows",ignored_row_count=ignored)
+    models=sorted({r.model_id for r in screened}); tasks=sorted({r.task_id for r in screened})
+    by={(r.model_id,r.task_id,r.feedback_validity,r.metric_name):r for r in screened}
+    frozen=freeze_neutral_standardization(screened); out={}
+    for m in models:
         metrics={}
         for x in PRIMARY_METRICS:
-            s=frozen[(m,x)]; pairs=[(by[(m,t,"accurate",x)],by[(m,t,"malfunctioning_always_fail",x)]) for t in PHASE0_SCREEN_TASKS]
-            if not s.available: metrics[x]=MetricScreen(None,"neutral_standardization_unavailable")
-            elif any(a.metric_value is None or b.metric_value is None for a,b in pairs): metrics[x]=MetricScreen(None,"screen_endpoint_qc_unavailable")
-            else: metrics[x]=MetricScreen(_SIGN[x]*mean(b.metric_value-a.metric_value for a,b in pairs)/s.sample_sd)
-        avail=[v.signed_delta for v in metrics.values() if v.signed_delta is not None]; score=mean(avail) if avail else None; out[m]=ModelScreen(m,_freeze(metrics),score,bool(score is not None and score>0 and sum(x>0 for x in avail)>=2))
-    coherent=[out[m] for m in PHASE0_MODELS if out[m].coherent]
-    if not any(item.score is not None for item in out.values()):return Phase0Selection("blocked",_freeze(out),blocked_reason="all_phase0_metrics_unavailable")
-    if not coherent:return Phase0Selection("escalation_required",_freeze(out),blocked_reason="all_model_screen_null")
-    primary=sorted(coherent,key=lambda a:(-a.score,-(a.metrics["M1"].signed_delta is not None),-(a.metrics["M1"].signed_delta if a.metrics["M1"].signed_delta is not None else float("-inf")),a.model_id))[0]
-    q=[x for x in out.values() if x.model_id.startswith("Qwen/") and x.score is not None and x.model_id!=primary.model_id]
-    if not q:return Phase0Selection("blocked",_freeze(out),primary.model_id,blocked_reason="no_distinct_available_qwen_control")
-    control=min(q,key=lambda x:(abs(x.score),PHASE0_MODELS.index(x.model_id)))
-    return Phase0Selection("selected",_freeze(out),primary.model_id,control.model_id)
+            s=frozen.get((m,x),Standardization(None,None,"insufficient_neutral_observations"))
+            paired=[];unpaired=0
+            for t in tasks:
+                a=by.get((m,t,"accurate",x));b=by.get((m,t,"malfunctioning_always_fail",x))
+                if a is None or b is None or a.metric_value is None or b.metric_value is None: unpaired+=1
+                else: paired.append(b.metric_value-a.metric_value)
+            raw=mean(paired) if paired else None
+            if not paired: metrics[x]=MetricScreen(None,"no_paired_screen_items",None,s.sample_sd,0,unpaired)
+            elif not s.available: metrics[x]=MetricScreen(None,s.unavailable_reason,raw,None,len(paired),unpaired)
+            else: metrics[x]=MetricScreen(_SIGN[x]*raw/s.sample_sd,None,raw,s.sample_sd,len(paired),unpaired)
+        avail=[v.signed_delta for v in metrics.values() if v.signed_delta is not None]
+        score=mean(avail) if avail else None
+        out[m]=ModelScreen(m,_freeze(metrics),score,bool(score is not None and score>0 and sum(x>0 for x in avail)>=2),len(tasks))
+    scored=[out[m] for m in models if out[m].score is not None]
+    coherent=[out[m] for m in models if out[m].coherent]
+    if not scored: return Phase0Selection("blocked",_freeze(out),blocked_reason="all_phase0_metrics_unavailable",ignored_row_count=ignored)
+    if not coherent and not escalated: return Phase0Selection("escalation_required",_freeze(out),blocked_reason="all_model_screen_null",screen_null=True,ignored_row_count=ignored)
+    # After the one permitted escalation the null label stays explicit, but the
+    # preregistration still names a primary and control so Phase 1 can confirm.
+    null=not coherent
+    primary=sorted(coherent or scored,key=lambda a:(-a.score,-(a.metrics["M1"].signed_delta is not None),-(a.metrics["M1"].signed_delta if a.metrics["M1"].signed_delta is not None else float("-inf")),a.model_id))[0]
+    order=tuple(frozen_model_order)
+    q=[x for x in scored if _is_qwen(x.model_id) and x.model_id!=primary.model_id]
+    if not q: return Phase0Selection("blocked",_freeze(out),primary.model_id,blocked_reason="no_distinct_available_qwen_control",screen_null=null,ignored_row_count=ignored)
+    control=min(q,key=lambda x:(abs(x.score),order.index(x.model_id) if x.model_id in order else len(order),x.model_id))
+    return Phase0Selection("screen_null" if null else "selected",_freeze(out),primary.model_id,control.model_id,"all_model_screen_null" if null else None,null,ignored)
 
 @dataclass(frozen=True)
 class CoefficientResult:
@@ -127,7 +185,7 @@ class PairedDescriptor:
     contrast:str;n_pairs:int;n_items:int;raw_mean:float|None;sign_aligned_mean:float|None;raw_ci95:tuple[float,float]|None;sign_aligned_ci95:tuple[float,float]|None;unavailable_reason:str|None=None
 @dataclass(frozen=True)
 class G1MetricResult:
-    model_id:str; metric_name:str; validity:CoefficientResult|None; tone:CoefficientResult|None; n_rows:int; n_items:int; converged:bool; unavailable_reason:str|None=None; paired_validity:PairedDescriptor|None=None; paired_tone:PairedDescriptor|None=None
+    model_id:str; metric_name:str; validity:CoefficientResult|None; tone:CoefficientResult|None; n_rows:int; n_items:int; converged:bool; unavailable_reason:str|None=None; paired_validity:PairedDescriptor|None=None; paired_tone:PairedDescriptor|None=None; optimizer:str|None=None
 def _paired_descriptor(rows, frozen, metric, contrast):
     """Raw factorial paired descriptor; bootstrap seed DGS-AC1-G1-PAIRED-v1."""
     if any(r.analysis_feedback_validity is not None for r in rows):
@@ -247,13 +305,24 @@ def g1_adjusted_effects(rows,metrics=PRIMARY_METRICS):
                     "item": [row.task_id for row in complete],
                 })
                 frame["length"] = (frame["length"] - frame["length"].mean()) / frame["length"].std(ddof=0)
-                fit = MixedLM.from_formula(
+                specification = MixedLM.from_formula(
                     "z_metric ~ malfunctioning + hostile + difficulty_hard + correctness + length",
                     groups="item",
                     data=frame,
-                ).fit(reml=False, method="lbfgs", maxiter=200, disp=False)
-                if not fit.converged:
-                    raise RuntimeError()
+                )
+                fit, used_optimizer, failures = None, None, []
+                for optimizer in _MIXEDLM_OPTIMIZERS:
+                    try:
+                        candidate = specification.fit(reml=False, method=optimizer, maxiter=200, disp=False)
+                        if not candidate.converged:
+                            raise RuntimeError("mixedlm_did_not_converge")
+                    except _FIT_FAILURES as error:
+                        failures.append("%s(%s:%s)" % (optimizer, type(error).__name__, error))
+                        continue
+                    fit, used_optimizer = candidate, optimizer
+                    break
+                if fit is None:
+                    raise RuntimeError("all_optimizers_failed:" + ";".join(failures))
 
                 def coefficient(name):
                     value = _finite(fit.params[name], name)
@@ -280,17 +349,25 @@ def g1_adjusted_effects(rows,metrics=PRIMARY_METRICS):
                     True,
                     paired_validity=paired_validity,
                     paired_tone=paired_tone,
+                    optimizer=used_optimizer,
                 )
-            except Exception as error:
+            except _FIT_FAILURES as error:
+                # Narrow, named failure modes only: an unexpected exception type
+                # must surface rather than be silently recorded as "unavailable",
+                # and the message is retained so the reason is diagnosable.
                 out[(model, metric)] = G1MetricResult(
                     *result_fields,
-                    "mixedlm_unavailable:" + type(error).__name__,
+                    "mixedlm_unavailable:%s:%s" % (type(error).__name__, error),
                     paired_validity,
                     paired_tone,
                 )
-    family={(m,x,k):getattr(r,k).raw_p for (m,x),r in out.items() if r.validity and r.tone for k in ("validity","tone")}; adj=benjamini_hochberg(family) if family else {}
-    for (m,x),r in list(out.items()):
-      if r.validity:
+    # The BH family and the adjustment loop must agree exactly: a result with a
+    # validity coefficient but a null tone coefficient is not in the family and
+    # must not be adjusted from it.
+    complete={(m,x):r for (m,x),r in out.items() if r.validity is not None and r.tone is not None}
+    family={(m,x,k):getattr(r,k).raw_p for (m,x),r in complete.items() for k in ("validity","tone")}
+    adj=benjamini_hochberg(family) if family else {}
+    for (m,x),r in complete.items():
         upd=lambda c,k:replace(c,adjusted_p=adj[(m,x,k)],qualifying=adj[(m,x,k)]<.01)
         out[(m,x)]=replace(r,validity=upd(r.validity,"validity"),tone=upd(r.tone,"tone"))
     return _freeze(out)
@@ -349,6 +426,30 @@ class G5Row:
       _count(self.generated_response_tokens,"length");object.__setattr__(self,"metrics",_freeze({k:None if v is None else _finite(v,k) for k,v in self.metrics.items()}))
     @property
     def effective_feedback_validity(self):return self.analysis_feedback_validity or self.feedback_validity
+    @property
+    def condition_id(self):
+        """The preregistration fixes ``condition_id = cell_id`` for every run."""
+        return self.cell_id
+
+def _lexicographic_condition_key(row):
+    """The preregistered G5 balancing order: ``task_id`` then ``condition_id``."""
+    return (row.task_id, row.condition_id)
+
+def balanced_training_fold(negative, positive):
+    """Retain equal class counts by lexicographic ``task_id, condition_id`` order.
+
+    The preregistration states: "If filtering makes a training fold unbalanced,
+    retain equal class counts by lexicographic ``task_id, condition_id`` order."
+    That is implemented literally: each class is ordered by that key and its
+    lexicographically first ``min(len(negative), len(positive))`` rows are kept.
+    Applying the same rule when the fold is already balanced is a no-op, so the
+    rule is applied unconditionally and the result never depends on input order.
+    """
+    left=sorted(negative,key=_lexicographic_condition_key)
+    right=sorted(positive,key=_lexicographic_condition_key)
+    retained=min(len(left),len(right))
+    return sorted(left[:retained]+right[:retained],key=_lexicographic_condition_key)
+
 def _validate_g5_factorial(rows):
     """Validate raw, pre-QC factorial source cells for G5 and its shuffle null."""
     if not rows or any(not isinstance(row, G5Row) for row in rows):
@@ -454,8 +555,7 @@ def g5_predictive_gap(rows,eligible_metrics):
         }
         if not classes[0] or not classes[1]:
             return G5Result(None, None, None, len(kept), dropped_count, 0, folds, unavailable_reason="one_class_training_fold")
-        balanced_count = min(map(len, classes.values()))
-        train = sorted(classes[0][:balanced_count] + classes[1][:balanced_count], key=lambda row: (row.task_id, row.cell_id))
+        train = balanced_training_fold(classes[0], classes[1])
 
         def features(source, full):
             if full:
