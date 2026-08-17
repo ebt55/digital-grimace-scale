@@ -14,6 +14,9 @@ from .protocol import (
 )
 
 SCHEMA_VERSION = "dgs-generation-v1"
+# Unicode line separators are valid inside a JSON string but break str.splitlines-based readers.
+LINE_SEPARATORS = ("\u2028", "\u2029")  # LINE SEPARATOR, PARAGRAPH SEPARATOR
+FORBIDDEN_IN_LINE = ("\n", "\r") + LINE_SEPARATORS
 
 
 class RecordError(ValueError):
@@ -257,12 +260,30 @@ def verify_manifest_provenance(record: RawRecord | Mapping[str, Any], protocol: 
             and provenance.get("manifest_reference") == "manifest.json")
 
 
+def jsonl_lines(text: str) -> list[str]:
+    """Split JSONL on ``\\n`` only.
+
+    ``str.splitlines`` also breaks on U+2028/U+2029/U+0085 and friends, which are legal *inside*
+    a JSON string and do occur in real model output; splitting on them corrupts records.
+    """
+    if not isinstance(text, str):
+        raise RecordError("JSONL text must be a string")
+    return [line.rstrip("\r") for line in text.split("\n")]
+
+
 def compact_json(record: RawRecord | Mapping[str, Any], protocol: Protocol | None = None) -> str:
     checked = record if isinstance(record, RawRecord) else record_from_dict(record, protocol)
     if isinstance(checked, RawRecord):
         # Validate even dataclass instances assembled directly by callers.
         checked = record_from_dict(checked.to_dict(), protocol)
-    return json.dumps(checked.to_dict(), ensure_ascii=False, separators=(",", ":"), sort_keys=True, allow_nan=False)
+    line = json.dumps(checked.to_dict(), ensure_ascii=False, separators=(",", ":"), sort_keys=True, allow_nan=False)
+    # ensure_ascii=False emits raw U+2028/U+2029; escape them so every line stays one line for any
+    # reader. They can only occur inside string literals, so decoding -- and every hash -- is unchanged.
+    for character in LINE_SEPARATORS:
+        line = line.replace(character, "\\u%04x" % ord(character))
+    if any(character in line for character in FORBIDDEN_IN_LINE):
+        raise RecordError("serialized record must not contain a line break")
+    return line
 
 
 def record_from_json(line: str, protocol: Protocol | None = None) -> RawRecord:

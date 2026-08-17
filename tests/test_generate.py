@@ -6,7 +6,9 @@ import tempfile
 import threading
 import unittest
 
-from src.backend import SyntheticBackend
+from src.backend import GenerationResult, SyntheticBackend
+from src.extract import load_records
+from src.records import Token
 from src.generate import GenerateError, format_summary, run_jobs
 from src.protocol import deterministic_seed, discovery_tasks, load_protocol, render_r5_variant
 from src.records import record_from_json
@@ -14,6 +16,7 @@ from src.runner import (PlannedJob, plan_r5_jobs, plan_style_smoke_jobs, r5_task
                         run_single_turn_trajectory)
 
 MODEL = "Qwen/Qwen2.5-3B-Instruct"
+SEPARATOR = "\u2028"  # U+2028 LINE SEPARATOR, present in real Phase-0 responses
 REVISION = "synthetic"
 
 
@@ -38,6 +41,16 @@ class CountingBackend:
         if request.seed in self._fail_seeds:
             raise RuntimeError("simulated backend failure")
         return self._inner.generate(request)
+
+
+class SeparatorBackend(CountingBackend):
+    """Emits a raw U+2028 inside the reasoning, as real gemma-2 Phase-0 responses do."""
+
+    def generate(self, request):
+        result = super().generate(request)
+        head = Token("Synthetic\u2028deterministic reasoning.\nAnswer: ", -0.01, (("x", -0.01),))
+        tokens = (head,) + result.tokens[1:]
+        return GenerationResult("".join(token.text for token in tokens), tokens)
 
 
 class GenerateTests(unittest.TestCase):
@@ -105,6 +118,31 @@ class GenerateTests(unittest.TestCase):
             rerun = [record for record in records
                      if (record.task_id, record.cell_id, record.sample_index) == (victim.task_id, victim.cell_id, victim.sample_index)]
             self.assertEqual(len(rerun), turns)
+
+    def test_unicode_line_separator_survives_write_resume_and_load(self):
+        """U+2028 inside response text must not tear a record apart on resume or extraction."""
+        jobs = self.jobs[:1]
+        turns = self.turns[jobs[0].cell_id.split("__")[1]]
+        with tempfile.TemporaryDirectory() as directory:
+            out = Path(directory) / "records.jsonl"
+            summary = self.run_plan(out, SeparatorBackend(), jobs=jobs, samples=(0, 1), max_workers=2)
+            self.assertEqual((summary.completed, summary.records_written), (2, 2 * turns))
+            text = out.read_text(encoding="utf-8")
+            self.assertNotIn(SEPARATOR, text)  # escaped on the way out
+            self.assertIn("\\u2028", text)
+            self.assertEqual(len(text.splitlines()), 2 * turns)  # safe even for a naive reader
+            records = self.read(out)
+            self.assertEqual(len(records), 2 * turns)
+            self.assertTrue(all(SEPARATOR in record.response_text for record in records))
+
+            backend = SeparatorBackend()
+            resumed = self.run_plan(out, backend, jobs=jobs, samples=(0, 1), max_workers=2)
+            self.assertEqual((resumed.skipped, resumed.completed, resumed.records_dropped), (2, 0, 0))
+            self.assertEqual(backend.calls, 0)
+
+            loaded = load_records([out], protocol=self.protocol)
+            self.assertEqual(len(loaded), 2 * turns)
+            self.assertTrue(all(SEPARATOR in record.response_text for record in loaded))
 
     def test_one_failing_trajectory_is_isolated_in_the_sidecar(self):
         target = self.jobs[0]

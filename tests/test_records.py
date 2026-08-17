@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import copy
+import json
 import unittest
 
 from src.protocol import canonical_prompt_sha256, deterministic_seed, load_protocol, manifest_semantic_hash, response_id
-from src.records import RecordError, compact_json, record_from_dict, record_from_json, verify_manifest_provenance
+from src.records import (FORBIDDEN_IN_LINE, RecordError, compact_json, jsonl_lines,
+    record_from_dict, record_from_json, verify_manifest_provenance)
 
 
 class RecordTests(unittest.TestCase):
@@ -40,6 +42,35 @@ class RecordTests(unittest.TestCase):
             for alternative in token["top_logprobs"]:
                 alternative["logprob"] = 0.0
         self.assertEqual(record_from_dict(zero, self.protocol).tokens[0].logprob, 0.0)
+
+    def test_unicode_line_separators_never_split_a_stored_record(self):
+        """Real Phase-0 responses contain raw U+2028; str.splitlines would tear the JSONL line."""
+        separator = "\u2028"
+        value = self.record()
+        value["response_text"] = "reason" + separator + "still reasoning\nAnswer: D"
+        value["tokens"][0]["text"] = "reason" + separator + "still reasoning\nAnswer:"
+        line = compact_json(value, self.protocol)
+        for character in FORBIDDEN_IN_LINE:
+            self.assertNotIn(character, line)
+        self.assertEqual(len(line.splitlines()), 1)
+        self.assertEqual(len(jsonl_lines(line)), 1)
+        self.assertIn("\\u2028", line)
+        restored = record_from_json(line, self.protocol)
+        self.assertEqual(restored.response_text, value["response_text"])
+        self.assertIn(separator, restored.response_text)
+        self.assertIn(separator, restored.tokens[0].text)
+        self.assertEqual(restored.to_dict(), record_from_dict(value, self.protocol).to_dict())
+
+        # a line from the old writer keeps the raw separator; it must still decode as one record
+        legacy = json.dumps(record_from_dict(value, self.protocol).to_dict(), ensure_ascii=False,
+                            separators=(",", ":"), sort_keys=True)
+        self.assertIn(separator, legacy)
+        self.assertGreater(len(legacy.splitlines()), 1)  # the bug being fixed
+        self.assertEqual(len(jsonl_lines(legacy)), 1)
+        self.assertEqual(record_from_json(legacy, self.protocol).response_text, value["response_text"])
+        self.assertEqual(jsonl_lines("a\r\nb\nc"), ["a", "b", "c"])
+        with self.assertRaises(RecordError):
+            jsonl_lines(None)
 
     def test_immutability_schema_and_strict_values(self):
         value = self.record(); record = record_from_dict(value, self.protocol)

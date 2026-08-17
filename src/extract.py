@@ -29,7 +29,7 @@ from .metrics import (
     partial_entropy, repeated_4gram_rate, tier_b_metrics,
 )
 from .protocol import Protocol, load_protocol
-from .records import RawRecord, RecordError, record_from_json
+from .records import RawRecord, RecordError, jsonl_lines, record_from_json
 
 
 class ExtractError(ValueError):
@@ -200,7 +200,8 @@ def load_records(
                 raise ExtractError("cannot read raw file: %s" % path) from error
             issues.append(LoadIssue(str(path), 0, "cannot read file: %s" % error))
             continue
-        for number, line in enumerate(text.splitlines(), 1):
+        # split on "\n" only: U+2028/U+2029 occur inside real response text and are legal in JSON strings
+        for number, line in enumerate(jsonl_lines(text), 1):
             if not line.strip():
                 continue
             try:
@@ -459,7 +460,7 @@ def read_metric_rows(path: str | Path) -> tuple[MetricRow, ...]:
     """Read back a committed ``metric_rows.csv`` so figures never touch raw data."""
     path = Path(path)
     if path.suffix == ".jsonl":
-        rows = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
+        rows = [json.loads(line) for line in jsonl_lines(path.read_text(encoding="utf-8")) if line.strip()]
         return tuple(MetricRow(**row) for row in rows)
     with path.open("r", encoding="utf-8", newline="") as handle:
         return tuple(

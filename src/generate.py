@@ -20,7 +20,7 @@ from typing import Any, Callable, Iterable, Mapping, Sequence
 
 from .backend import GenerationBackend, SyntheticBackend
 from .protocol import Protocol, Task, load_protocol, response_id as canonical_response_id
-from .records import RecordError, compact_json, record_from_json
+from .records import RecordError, compact_json, jsonl_lines, record_from_json
 from .runner import (PlannedJob, R5_VARIANTS, RUN_KINDS, RunnerError, expected_turn_labels,
     plan_phase0_jobs, plan_phase1_jobs, plan_phase1_model_jobs, plan_r5_jobs, plan_style_smoke_jobs,
     r5_task, run_single_turn_trajectory, run_trajectory)
@@ -118,7 +118,7 @@ def _rewrite_atomic(path: Path, lines: Sequence[str]) -> None:
 def _scan(path: Path, expected: Mapping[TrajectoryKey, frozenset[str]], protocol: Protocol) -> tuple[set[TrajectoryKey], list[str], int]:
     """Return complete trajectory keys, the lines worth keeping, and how many stored records were dropped."""
     try:
-        stored = path.read_text(encoding="utf-8").splitlines()
+        stored = jsonl_lines(path.read_text(encoding="utf-8"))
     except OSError as exc:
         raise GenerateError("cannot read existing output for resume: %s" % exc) from exc
     parsed: list[tuple[str, TrajectoryKey | None, str, str]] = []
@@ -196,7 +196,7 @@ def run_jobs(jobs: Iterable[PlannedJob], *, backend: GenerationBackend | None = 
             if dropped:
                 _rewrite_atomic(out_path, kept)
         else:
-            dropped = len([line for line in out_path.read_text(encoding="utf-8").splitlines() if line.strip()])
+            dropped = len([line for line in jsonl_lines(out_path.read_text(encoding="utf-8")) if line.strip()])
             _rewrite_atomic(out_path, ())
     if failures_path.exists():
         try: failures_path.unlink()  # the sidecar always describes this invocation only
