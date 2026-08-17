@@ -1,0 +1,3503 @@
+{
+  "amendments_applied": false,
+  "excluded_items": {
+    "Qwen/Qwen2.5-3B-Instruct": [],
+    "Qwen/Qwen2.5-7B-Instruct": [],
+    "google/gemma-2-2b-it": [],
+    "google/gemma-2-9b-it": []
+  },
+  "m3_audit_f1": null,
+  "raw_source": "results/raw/phase1",
+  "record_count": 22880,
+  "skipped_line_count": 0,
+  "style_raw_source": "results/raw/style_smoke",
+  "verdict": {
+    "amendments": {
+      "item_exclusion": false,
+      "pooled_qc": false,
+      "pooled_sd_fallback": false
+    },
+    "control_model_id": "Qwen/Qwen2.5-3B-Instruct",
+    "core": {
+      "Qwen/Qwen2.5-3B-Instruct": {
+        "g1": {
+          "passing_metrics": [],
+          "qualifying_effects": [],
+          "reason": "real_g1:unavailable_M3",
+          "status": "UNAVAILABLE"
+        },
+        "g2": {
+          "passing_metrics": [],
+          "qualifying_effects": [],
+          "reason": "g1_not_passed_not_unlocked",
+          "status": "NOT_EVALUATED"
+        },
+        "g5": {
+          "passing_metrics": [],
+          "qualifying_effects": [],
+          "reason": null,
+          "status": "PASS"
+        },
+        "interpretable": false,
+        "interpretation_reason": "blocked_by_shuffled_null:UNAVAILABLE",
+        "phase_1_status": "INCOMPLETE_PENDING_G3_G4",
+        "shuffled_null": {
+          "passing_metrics": [],
+          "qualifying_effects": [],
+          "reason": "shuffled_g1:unavailable_M3",
+          "status": "UNAVAILABLE"
+        }
+      },
+      "Qwen/Qwen2.5-7B-Instruct": {
+        "g1": {
+          "passing_metrics": [],
+          "qualifying_effects": [],
+          "reason": "real_g1:unavailable_M3",
+          "status": "UNAVAILABLE"
+        },
+        "g2": {
+          "passing_metrics": [],
+          "qualifying_effects": [],
+          "reason": "g1_not_passed_not_unlocked",
+          "status": "NOT_EVALUATED"
+        },
+        "g5": {
+          "passing_metrics": [],
+          "qualifying_effects": [],
+          "reason": "auc_gap_below_0.1",
+          "status": "FAIL"
+        },
+        "interpretable": false,
+        "interpretation_reason": "blocked_by_shuffled_null:UNAVAILABLE",
+        "phase_1_status": "INCOMPLETE_PENDING_G3_G4",
+        "shuffled_null": {
+          "passing_metrics": [],
+          "qualifying_effects": [],
+          "reason": "shuffled_g1:unavailable_M3",
+          "status": "UNAVAILABLE"
+        }
+      },
+      "google/gemma-2-2b-it": {
+        "g1": {
+          "passing_metrics": [],
+          "qualifying_effects": [],
+          "reason": "real_g1:unavailable_M3",
+          "status": "UNAVAILABLE"
+        },
+        "g2": {
+          "passing_metrics": [],
+          "qualifying_effects": [],
+          "reason": "g1_not_passed_not_unlocked",
+          "status": "NOT_EVALUATED"
+        },
+        "g5": {
+          "passing_metrics": [],
+          "qualifying_effects": [],
+          "reason": "auc_gap_below_0.1",
+          "status": "FAIL"
+        },
+        "interpretable": false,
+        "interpretation_reason": "blocked_by_shuffled_null:UNAVAILABLE",
+        "phase_1_status": "INCOMPLETE_PENDING_G3_G4",
+        "shuffled_null": {
+          "passing_metrics": [],
+          "qualifying_effects": [],
+          "reason": "shuffled_g1:unavailable_M3",
+          "status": "UNAVAILABLE"
+        }
+      },
+      "google/gemma-2-9b-it": {
+        "g1": {
+          "passing_metrics": [],
+          "qualifying_effects": [],
+          "reason": "real_g1:unavailable_M3",
+          "status": "UNAVAILABLE"
+        },
+        "g2": {
+          "passing_metrics": [],
+          "qualifying_effects": [],
+          "reason": "g1_not_passed_not_unlocked",
+          "status": "NOT_EVALUATED"
+        },
+        "g5": {
+          "passing_metrics": [],
+          "qualifying_effects": [],
+          "reason": "auc_gap_below_0.1",
+          "status": "FAIL"
+        },
+        "interpretable": false,
+        "interpretation_reason": "blocked_by_shuffled_null:UNAVAILABLE",
+        "phase_1_status": "INCOMPLETE_PENDING_G3_G4",
+        "shuffled_null": {
+          "passing_metrics": [],
+          "qualifying_effects": [],
+          "reason": "shuffled_g1:unavailable_M3",
+          "status": "UNAVAILABLE"
+        }
+      }
+    },
+    "eligible_metrics": [
+      "M3"
+    ],
+    "extra_model_ids": [
+      "google/gemma-2-2b-it",
+      "Qwen/Qwen2.5-7B-Instruct"
+    ],
+    "models": {
+      "Qwen/Qwen2.5-3B-Instruct": {
+        "eligibility": [
+          {
+            "eligible": false,
+            "metric_name": "M1",
+            "pooled_rate": 0.0875,
+            "reason": "m1_missing_rate_above_5_percent",
+            "scope": "per_condition",
+            "worst_cell_id": "hard__accurate__neutral",
+            "worst_rate": 0.3
+          },
+          {
+            "eligible": false,
+            "metric_name": "M2",
+            "pooled_rate": 0.1025,
+            "reason": "m2_invalid_sampled_response_rate_above_5_percent",
+            "scope": "per_condition",
+            "worst_cell_id": "hard__accurate__hostile",
+            "worst_rate": 0.2
+          },
+          {
+            "eligible": true,
+            "metric_name": "M3",
+            "pooled_rate": 0.375,
+            "reason": "m3_audit_f1_not_supplied_eligible_by_default",
+            "scope": "per_condition",
+            "worst_cell_id": "easy__accurate__neutral",
+            "worst_rate": 0.8
+          }
+        ],
+        "eligible_metrics": [
+          "M3"
+        ],
+        "g2_incomplete_dropped": {
+          "M3": 30
+        },
+        "item_exclusions": [],
+        "model_id": "Qwen/Qwen2.5-3B-Instruct",
+        "n_endpoints": 80,
+        "real_g1": {
+          "M3": {
+            "converged": false,
+            "metric_name": "M3",
+            "model_id": "Qwen/Qwen2.5-3B-Instruct",
+            "n_items": 0,
+            "n_rows": 0,
+            "optimizer": null,
+            "paired_tone": {
+              "contrast": "tone",
+              "n_items": 0,
+              "n_pairs": 0,
+              "raw_ci95": null,
+              "raw_mean": null,
+              "sign_aligned_ci95": null,
+              "sign_aligned_mean": null,
+              "unavailable_reason": "neutral_standardization_unavailable"
+            },
+            "paired_validity": {
+              "contrast": "validity",
+              "n_items": 0,
+              "n_pairs": 0,
+              "raw_ci95": null,
+              "raw_mean": null,
+              "sign_aligned_ci95": null,
+              "sign_aligned_mean": null,
+              "unavailable_reason": "neutral_standardization_unavailable"
+            },
+            "tone": null,
+            "unavailable_reason": "neutral_standardization_unavailable",
+            "validity": null
+          }
+        },
+        "real_g2": {
+          "M3": null
+        },
+        "real_g5": {
+          "auc_gap": 0.12068965517241381,
+          "baseline_auc": 0.3793103448275862,
+          "dropped_count": 37,
+          "fold_item_ids": [
+            [
+              "DGS-003"
+            ],
+            [
+              "DGS-004"
+            ],
+            [
+              "DGS-005"
+            ],
+            [
+              "DGS-007"
+            ],
+            [
+              "DGS-010"
+            ],
+            [
+              "DGS-015"
+            ],
+            [
+              "DGS-018"
+            ],
+            [
+              "DGS-022"
+            ],
+            [
+              "DGS-023"
+            ],
+            [
+              "DGS-026"
+            ],
+            [
+              "DGS-028"
+            ],
+            [
+              "DGS-030"
+            ],
+            [
+              "DGS-032"
+            ],
+            [
+              "DGS-034"
+            ],
+            [
+              "DGS-035"
+            ],
+            [
+              "DGS-037"
+            ],
+            [
+              "DGS-038"
+            ]
+          ],
+          "full_auc": 0.5,
+          "heldout_probabilities": {
+            "DGS-003|easy__malfunctioning_always_fail__hostile": [
+              0.5,
+              0.5079530224387783
+            ],
+            "DGS-004|easy__accurate__hostile": [
+              0.5,
+              0.5288942255936026
+            ],
+            "DGS-004|easy__malfunctioning_always_fail__hostile": [
+              0.5,
+              0.529035322340367
+            ],
+            "DGS-004|easy__malfunctioning_always_fail__neutral": [
+              0.5,
+              0.5290096687308661
+            ],
+            "DGS-005|hard__accurate__neutral": [
+              0.5,
+              0.5664058476687702
+            ],
+            "DGS-005|hard__malfunctioning_always_fail__hostile": [
+              0.5,
+              0.5558398360663671
+            ],
+            "DGS-007|hard__malfunctioning_always_fail__neutral": [
+              0.5,
+              0.5268108443856011
+            ],
+            "DGS-010|easy__accurate__hostile": [
+              0.5,
+              0.5500006603633745
+            ],
+            "DGS-010|easy__accurate__neutral": [
+              0.5,
+              0.3997535920193331
+            ],
+            "DGS-010|easy__malfunctioning_always_fail__hostile": [
+              0.5,
+              0.39159740926750375
+            ],
+            "DGS-010|easy__malfunctioning_always_fail__neutral": [
+              0.5,
+              0.3990316165711493
+            ],
+            "DGS-015|hard__accurate__hostile": [
+              0.5,
+              0.43768956873971765
+            ],
+            "DGS-015|hard__accurate__neutral": [
+              0.5,
+              0.44616557570638005
+            ],
+            "DGS-015|hard__malfunctioning_always_fail__hostile": [
+              0.5,
+              0.43768956873971765
+            ],
+            "DGS-015|hard__malfunctioning_always_fail__neutral": [
+              0.5,
+              0.44361925453590806
+            ],
+            "DGS-018|easy__malfunctioning_always_fail__neutral": [
+              0.5,
+              0.5013086496986712
+            ],
+            "DGS-022|hard__accurate__hostile": [
+              0.5,
+              0.4956988961147566
+            ],
+            "DGS-022|hard__malfunctioning_always_fail__hostile": [
+              0.5,
+              0.35734439509349597
+            ],
+            "DGS-022|hard__malfunctioning_always_fail__neutral": [
+              0.5,
+              0.5119158678977105
+            ],
+            "DGS-023|hard__accurate__hostile": [
+              0.5,
+              0.4982744606882538
+            ],
+            "DGS-023|hard__accurate__neutral": [
+              0.5,
+              0.5492084353447177
+            ],
+            "DGS-023|hard__malfunctioning_always_fail__hostile": [
+              0.5,
+              0.5122815696620754
+            ],
+            "DGS-026|easy__accurate__hostile": [
+              0.5,
+              0.5690906117698473
+            ],
+            "DGS-026|easy__accurate__neutral": [
+              0.5,
+              0.5649969002740455
+            ],
+            "DGS-026|easy__malfunctioning_always_fail__hostile": [
+              0.5,
+              0.5632397016353151
+            ],
+            "DGS-026|easy__malfunctioning_always_fail__neutral": [
+              0.5,
+              0.5754212090875099
+            ],
+            "DGS-028|easy__malfunctioning_always_fail__hostile": [
+              0.5,
+              0.5092042240438737
+            ],
+            "DGS-028|easy__malfunctioning_always_fail__neutral": [
+              0.5,
+              0.5224511551863428
+            ],
+            "DGS-030|hard__malfunctioning_always_fail__hostile": [
+              0.5,
+              0.528910281214599
+            ],
+            "DGS-030|hard__malfunctioning_always_fail__neutral": [
+              0.5,
+              0.5079710073220415
+            ],
+            "DGS-032|hard__accurate__hostile": [
+              0.5,
+              0.5686892416699783
+            ],
+            "DGS-032|hard__malfunctioning_always_fail__hostile": [
+              0.5,
+              0.556655882791896
+            ],
+            "DGS-032|hard__malfunctioning_always_fail__neutral": [
+              0.5,
+              0.5675128432993687
+            ],
+            "DGS-034|easy__malfunctioning_always_fail__hostile": [
+              0.5,
+              0.5097180321462172
+            ],
+            "DGS-034|easy__malfunctioning_always_fail__neutral": [
+              0.5,
+              0.5103345746722346
+            ],
+            "DGS-035|easy__accurate__hostile": [
+              0.5,
+              0.5282443763524591
+            ],
+            "DGS-035|easy__malfunctioning_always_fail__hostile": [
+              0.5,
+              0.5282376950642771
+            ],
+            "DGS-035|easy__malfunctioning_always_fail__neutral": [
+              0.5,
+              0.5282443763524591
+            ],
+            "DGS-037|hard__accurate__neutral": [
+              0.5,
+              0.5317831984715353
+            ],
+            "DGS-037|hard__malfunctioning_always_fail__hostile": [
+              0.5,
+              0.4350707360355482
+            ],
+            "DGS-037|hard__malfunctioning_always_fail__neutral": [
+              0.5,
+              0.4387431520390834
+            ],
+            "DGS-038|hard__malfunctioning_always_fail__hostile": [
+              0.5,
+              0.5258355808939741
+            ],
+            "DGS-038|hard__malfunctioning_always_fail__neutral": [
+              0.5,
+              0.5068404730716934
+            ]
+          },
+          "n_folds": 17,
+          "n_rows": 43,
+          "unavailable_reason": null
+        },
+        "reversal": [
+          {
+            "measured_accurate": {
+              "ci95_lower": null,
+              "ci95_upper": null,
+              "value": null
+            },
+            "measured_malfunctioning": {
+              "ci95_lower": null,
+              "ci95_upper": null,
+              "value": null
+            },
+            "metric_name": "M3",
+            "model_id": "Qwen/Qwen2.5-3B-Instruct",
+            "n_items": 0,
+            "n_rows": 0,
+            "post_correction_malfunctioning": {
+              "ci95_lower": null,
+              "ci95_upper": null,
+              "value": null
+            },
+            "unavailable_reason": "no_complete_false_negative_eligible_rows"
+          }
+        ],
+        "shuffled": {
+          "g1": {
+            "M3": {
+              "converged": false,
+              "metric_name": "M3",
+              "model_id": "Qwen/Qwen2.5-3B-Instruct",
+              "n_items": 0,
+              "n_rows": 0,
+              "optimizer": null,
+              "paired_tone": {
+                "contrast": "tone",
+                "n_items": 0,
+                "n_pairs": 0,
+                "raw_ci95": null,
+                "raw_mean": null,
+                "sign_aligned_ci95": null,
+                "sign_aligned_mean": null,
+                "unavailable_reason": "unavailable_for_shuffled_analysis_labels"
+              },
+              "paired_validity": {
+                "contrast": "validity",
+                "n_items": 0,
+                "n_pairs": 0,
+                "raw_ci95": null,
+                "raw_mean": null,
+                "sign_aligned_ci95": null,
+                "sign_aligned_mean": null,
+                "unavailable_reason": "unavailable_for_shuffled_analysis_labels"
+              },
+              "tone": null,
+              "unavailable_reason": "neutral_standardization_unavailable",
+              "validity": null
+            }
+          },
+          "g5": {
+            "auc_gap": 0.3315217391304348,
+            "baseline_auc": 0.16847826086956522,
+            "dropped_count": 37,
+            "fold_item_ids": [
+              [
+                "DGS-003"
+              ],
+              [
+                "DGS-004"
+              ],
+              [
+                "DGS-005"
+              ],
+              [
+                "DGS-007"
+              ],
+              [
+                "DGS-010"
+              ],
+              [
+                "DGS-015"
+              ],
+              [
+                "DGS-018"
+              ],
+              [
+                "DGS-022"
+              ],
+              [
+                "DGS-023"
+              ],
+              [
+                "DGS-026"
+              ],
+              [
+                "DGS-028"
+              ],
+              [
+                "DGS-030"
+              ],
+              [
+                "DGS-032"
+              ],
+              [
+                "DGS-034"
+              ],
+              [
+                "DGS-035"
+              ],
+              [
+                "DGS-037"
+              ],
+              [
+                "DGS-038"
+              ]
+            ],
+            "full_auc": 0.5,
+            "heldout_probabilities": {
+              "DGS-003|easy__malfunctioning_always_fail__hostile": [
+                0.5,
+                0.505388180485269
+              ],
+              "DGS-004|easy__accurate__hostile": [
+                0.5,
+                0.47847559333943157
+              ],
+              "DGS-004|easy__malfunctioning_always_fail__hostile": [
+                0.5,
+                0.48075595996343606
+              ],
+              "DGS-004|easy__malfunctioning_always_fail__neutral": [
+                0.5,
+                0.4803412854178122
+              ],
+              "DGS-005|hard__accurate__neutral": [
+                0.5,
+                0.6184787753091167
+              ],
+              "DGS-005|hard__malfunctioning_always_fail__hostile": [
+                0.5,
+                0.595045068088891
+              ],
+              "DGS-007|hard__malfunctioning_always_fail__neutral": [
+                0.5,
+                0.4823283253986436
+              ],
+              "DGS-010|easy__accurate__hostile": [
+                0.5,
+                0.5014404814582335
+              ],
+              "DGS-010|easy__accurate__neutral": [
+                0.5,
+                0.48783903836885995
+              ],
+              "DGS-010|easy__malfunctioning_always_fail__hostile": [
+                0.5,
+                0.49858371110310834
+              ],
+              "DGS-010|easy__malfunctioning_always_fail__neutral": [
+                0.5,
+                0.4887867906796432
+              ],
+              "DGS-015|hard__accurate__hostile": [
+                0.5,
+                0.5445620738136115
+              ],
+              "DGS-015|hard__accurate__neutral": [
+                0.5,
+                0.5349665286461862
+              ],
+              "DGS-015|hard__malfunctioning_always_fail__hostile": [
+                0.5,
+                0.5445620738136115
+              ],
+              "DGS-015|hard__malfunctioning_always_fail__neutral": [
+                0.5,
+                0.5378482383436168
+              ],
+              "DGS-018|easy__malfunctioning_always_fail__neutral": [
+                0.5,
+                0.5085737201259277
+              ],
+              "DGS-022|hard__accurate__hostile": [
+                0.5,
+                0.5913733273495209
+              ],
+              "DGS-022|hard__malfunctioning_always_fail__hostile": [
+                0.5,
+                0.7769329790331386
+              ],
+              "DGS-022|hard__malfunctioning_always_fail__neutral": [
+                0.5,
+                0.5670027741652149
+              ],
+              "DGS-023|hard__accurate__hostile": [
+                0.5,
+                0.4883343034985152
+              ],
+              "DGS-023|hard__accurate__neutral": [
+                0.5,
+                0.42857467754082557
+              ],
+              "DGS-023|hard__malfunctioning_always_fail__hostile": [
+                0.5,
+                0.4718420170429629
+              ],
+              "DGS-026|easy__accurate__hostile": [
+                0.5,
+                0.4679670619152057
+              ],
+              "DGS-026|easy__accurate__neutral": [
+                0.5,
+                0.46067066673798307
+              ],
+              "DGS-026|easy__malfunctioning_always_fail__hostile": [
+                0.5,
+                0.4575486086423571
+              ],
+              "DGS-026|easy__malfunctioning_always_fail__neutral": [
+                0.5,
+                0.47930994119599946
+              ],
+              "DGS-028|easy__malfunctioning_always_fail__hostile": [
+                0.5,
+                0.512676657066531
+              ],
+              "DGS-028|easy__malfunctioning_always_fail__neutral": [
+                0.5,
+                0.5181908474711537
+              ],
+              "DGS-030|hard__malfunctioning_always_fail__hostile": [
+                0.5,
+                0.4674808920154267
+              ],
+              "DGS-030|hard__malfunctioning_always_fail__neutral": [
+                0.5,
+                0.5128224793153389
+              ],
+              "DGS-032|hard__accurate__hostile": [
+                0.5,
+                0.5776952527595092
+              ],
+              "DGS-032|hard__malfunctioning_always_fail__hostile": [
+                0.5,
+                0.5708352251775987
+              ],
+              "DGS-032|hard__malfunctioning_always_fail__neutral": [
+                0.5,
+                0.5770239800873327
+              ],
+              "DGS-034|easy__malfunctioning_always_fail__hostile": [
+                0.5,
+                0.4773794161757935
+              ],
+              "DGS-034|easy__malfunctioning_always_fail__neutral": [
+                0.5,
+                0.4766996975177859
+              ],
+              "DGS-035|easy__accurate__hostile": [
+                0.5,
+                0.476076234519512
+              ],
+              "DGS-035|easy__malfunctioning_always_fail__hostile": [
+                0.5,
+                0.4763062692504339
+              ],
+              "DGS-035|easy__malfunctioning_always_fail__neutral": [
+                0.5,
+                0.476076234519512
+              ],
+              "DGS-037|hard__accurate__neutral": [
+                0.5,
+                0.47393380746313574
+              ],
+              "DGS-037|hard__malfunctioning_always_fail__hostile": [
+                0.5,
+                0.5549604651893821
+              ],
+              "DGS-037|hard__malfunctioning_always_fail__neutral": [
+                0.5,
+                0.5513398151997424
+              ],
+              "DGS-038|hard__malfunctioning_always_fail__hostile": [
+                0.5,
+                0.47730721533294207
+              ],
+              "DGS-038|hard__malfunctioning_always_fail__neutral": [
+                0.5,
+                0.5003510896632596
+              ]
+            },
+            "n_folds": 17,
+            "n_rows": 43,
+            "unavailable_reason": null
+          },
+          "model_id": "Qwen/Qwen2.5-3B-Instruct",
+          "passed": false,
+          "reason": "shuffled_g1_incomplete;shuffled_auc_gap_not_below_0.1"
+        },
+        "standardization": {
+          "M3": {
+            "mean": null,
+            "sample_sd": null,
+            "scale_source": null,
+            "unavailable_reason": "zero_neutral_sample_sd"
+          }
+        },
+        "unavailable_reasons": []
+      },
+      "Qwen/Qwen2.5-7B-Instruct": {
+        "eligibility": [
+          {
+            "eligible": false,
+            "metric_name": "M1",
+            "pooled_rate": 0.475,
+            "reason": "m1_missing_rate_above_5_percent",
+            "scope": "per_condition",
+            "worst_cell_id": "easy__accurate__hostile",
+            "worst_rate": 0.8
+          },
+          {
+            "eligible": false,
+            "metric_name": "M2",
+            "pooled_rate": 0.07,
+            "reason": "m2_invalid_sampled_response_rate_above_5_percent",
+            "scope": "per_condition",
+            "worst_cell_id": "hard__accurate__hostile",
+            "worst_rate": 0.14
+          },
+          {
+            "eligible": true,
+            "metric_name": "M3",
+            "pooled_rate": 0.0,
+            "reason": "m3_audit_f1_not_supplied_eligible_by_default",
+            "scope": "per_condition",
+            "worst_cell_id": "easy__accurate__hostile",
+            "worst_rate": 0.0
+          }
+        ],
+        "eligible_metrics": [
+          "M3"
+        ],
+        "g2_incomplete_dropped": {
+          "M3": 29
+        },
+        "item_exclusions": [],
+        "model_id": "Qwen/Qwen2.5-7B-Instruct",
+        "n_endpoints": 80,
+        "real_g1": {
+          "M3": {
+            "converged": false,
+            "metric_name": "M3",
+            "model_id": "Qwen/Qwen2.5-7B-Instruct",
+            "n_items": 0,
+            "n_rows": 0,
+            "optimizer": null,
+            "paired_tone": {
+              "contrast": "tone",
+              "n_items": 0,
+              "n_pairs": 0,
+              "raw_ci95": null,
+              "raw_mean": null,
+              "sign_aligned_ci95": null,
+              "sign_aligned_mean": null,
+              "unavailable_reason": "neutral_standardization_unavailable"
+            },
+            "paired_validity": {
+              "contrast": "validity",
+              "n_items": 0,
+              "n_pairs": 0,
+              "raw_ci95": null,
+              "raw_mean": null,
+              "sign_aligned_ci95": null,
+              "sign_aligned_mean": null,
+              "unavailable_reason": "neutral_standardization_unavailable"
+            },
+            "tone": null,
+            "unavailable_reason": "neutral_standardization_unavailable",
+            "validity": null
+          }
+        },
+        "real_g2": {
+          "M3": null
+        },
+        "real_g5": {
+          "auc_gap": -0.031906906906906785,
+          "baseline_auc": 0.5213963963963963,
+          "dropped_count": 7,
+          "fold_item_ids": [
+            [
+              "DGS-003"
+            ],
+            [
+              "DGS-004"
+            ],
+            [
+              "DGS-005"
+            ],
+            [
+              "DGS-007"
+            ],
+            [
+              "DGS-010"
+            ],
+            [
+              "DGS-012"
+            ],
+            [
+              "DGS-014"
+            ],
+            [
+              "DGS-015"
+            ],
+            [
+              "DGS-018"
+            ],
+            [
+              "DGS-020"
+            ],
+            [
+              "DGS-022"
+            ],
+            [
+              "DGS-023"
+            ],
+            [
+              "DGS-026"
+            ],
+            [
+              "DGS-028"
+            ],
+            [
+              "DGS-030"
+            ],
+            [
+              "DGS-032"
+            ],
+            [
+              "DGS-034"
+            ],
+            [
+              "DGS-035"
+            ],
+            [
+              "DGS-037"
+            ],
+            [
+              "DGS-038"
+            ]
+          ],
+          "full_auc": 0.48948948948948956,
+          "heldout_probabilities": {
+            "DGS-003|easy__accurate__hostile": [
+              0.5070480669310341,
+              0.474858065682307
+            ],
+            "DGS-003|easy__accurate__neutral": [
+              0.5070480669310341,
+              0.4775362555952626
+            ],
+            "DGS-003|easy__malfunctioning_always_fail__hostile": [
+              0.5070480669310341,
+              0.47651208086911895
+            ],
+            "DGS-003|easy__malfunctioning_always_fail__neutral": [
+              0.5070480669310341,
+              0.4775362555952626
+            ],
+            "DGS-004|easy__accurate__hostile": [
+              0.5070480669310341,
+              0.4743492905812743
+            ],
+            "DGS-004|easy__accurate__neutral": [
+              0.5070480669310341,
+              0.4739278338896045
+            ],
+            "DGS-004|easy__malfunctioning_always_fail__hostile": [
+              0.5070480669310341,
+              0.47245303191468846
+            ],
+            "DGS-004|easy__malfunctioning_always_fail__neutral": [
+              0.5070480669310341,
+              0.4743492905812743
+            ],
+            "DGS-005|hard__accurate__hostile": [
+              0.5070480669310341,
+              0.4502573475163676
+            ],
+            "DGS-005|hard__accurate__neutral": [
+              0.5070480669310341,
+              0.45632730548050365
+            ],
+            "DGS-005|hard__malfunctioning_always_fail__hostile": [
+              0.5070480669310341,
+              0.4590569277320422
+            ],
+            "DGS-005|hard__malfunctioning_always_fail__neutral": [
+              0.5070480669310341,
+              0.4484020688420443
+            ],
+            "DGS-007|hard__accurate__neutral": [
+              0.5068546575520639,
+              0.4349650895071465
+            ],
+            "DGS-007|hard__malfunctioning_always_fail__neutral": [
+              0.5068546575520639,
+              0.4359197531899566
+            ],
+            "DGS-010|easy__accurate__hostile": [
+              0.5070480669310341,
+              0.4702898541816972
+            ],
+            "DGS-010|easy__accurate__neutral": [
+              0.5070480669310341,
+              0.4701238061760664
+            ],
+            "DGS-010|easy__malfunctioning_always_fail__hostile": [
+              0.5070480669310341,
+              0.471369324896677
+            ],
+            "DGS-010|easy__malfunctioning_always_fail__neutral": [
+              0.5070480669310341,
+              0.4711201921319303
+            ],
+            "DGS-012|easy__accurate__hostile": [
+              0.5070480669310341,
+              0.4739183761607208
+            ],
+            "DGS-012|easy__accurate__neutral": [
+              0.5070480669310341,
+              0.47648400195091306
+            ],
+            "DGS-012|easy__malfunctioning_always_fail__hostile": [
+              0.5070480669310341,
+              0.4748589529181271
+            ],
+            "DGS-012|easy__malfunctioning_always_fail__neutral": [
+              0.5070480669310341,
+              0.4766550893114218
+            ],
+            "DGS-014|hard__accurate__neutral": [
+              0.5068546575520639,
+              0.730552369701613
+            ],
+            "DGS-014|hard__malfunctioning_always_fail__neutral": [
+              0.5068546575520639,
+              0.730552369701613
+            ],
+            "DGS-015|hard__accurate__hostile": [
+              0.5070480669310341,
+              0.489555926718943
+            ],
+            "DGS-015|hard__accurate__neutral": [
+              0.5070480669310341,
+              0.48943547131273574
+            ],
+            "DGS-015|hard__malfunctioning_always_fail__hostile": [
+              0.5070480669310341,
+              0.6199797867916963
+            ],
+            "DGS-015|hard__malfunctioning_always_fail__neutral": [
+              0.5070480669310341,
+              0.6208028207306365
+            ],
+            "DGS-018|easy__accurate__hostile": [
+              0.5070480669310341,
+              0.4667509597054246
+            ],
+            "DGS-018|easy__accurate__neutral": [
+              0.5070480669310341,
+              0.4678266035422348
+            ],
+            "DGS-018|easy__malfunctioning_always_fail__hostile": [
+              0.5070480669310341,
+              0.47088529642323784
+            ],
+            "DGS-018|easy__malfunctioning_always_fail__neutral": [
+              0.5070480669310341,
+              0.4678266035422348
+            ],
+            "DGS-020|easy__accurate__hostile": [
+              0.5070480669310341,
+              0.4651203591579748
+            ],
+            "DGS-020|easy__accurate__neutral": [
+              0.5070480669310341,
+              0.46321349421409996
+            ],
+            "DGS-020|easy__malfunctioning_always_fail__hostile": [
+              0.5070480669310341,
+              0.46381554853480805
+            ],
+            "DGS-020|easy__malfunctioning_always_fail__neutral": [
+              0.5070480669310341,
+              0.46582314843015205
+            ],
+            "DGS-022|hard__accurate__hostile": [
+              0.5068546575520639,
+              0.4159047345689169
+            ],
+            "DGS-022|hard__malfunctioning_always_fail__hostile": [
+              0.5068546575520639,
+              0.4159047345689169
+            ],
+            "DGS-023|hard__accurate__neutral": [
+              0.5068546575520639,
+              0.46606119081199643
+            ],
+            "DGS-023|hard__malfunctioning_always_fail__hostile": [
+              0.5068546575520639,
+              0.6118045412221185
+            ],
+            "DGS-023|hard__malfunctioning_always_fail__neutral": [
+              0.5068546575520639,
+              0.6060571377502176
+            ],
+            "DGS-026|easy__accurate__hostile": [
+              0.5070480669310341,
+              0.47215521547779044
+            ],
+            "DGS-026|easy__accurate__neutral": [
+              0.5070480669310341,
+              0.47215521547779044
+            ],
+            "DGS-026|easy__malfunctioning_always_fail__hostile": [
+              0.5070480669310341,
+              0.47280031161729996
+            ],
+            "DGS-026|easy__malfunctioning_always_fail__neutral": [
+              0.5070480669310341,
+              0.472247366426688
+            ],
+            "DGS-028|easy__accurate__hostile": [
+              0.5070480669310341,
+              0.48191089117896213
+            ],
+            "DGS-028|easy__accurate__neutral": [
+              0.5070480669310341,
+              0.4827279045872774
+            ],
+            "DGS-028|easy__malfunctioning_always_fail__hostile": [
+              0.5070480669310341,
+              0.4825236424066581
+            ],
+            "DGS-028|easy__malfunctioning_always_fail__neutral": [
+              0.5070480669310341,
+              0.48058345259556223
+            ],
+            "DGS-030|hard__accurate__hostile": [
+              0.5070480669310341,
+              0.46575324162931925
+            ],
+            "DGS-030|hard__accurate__neutral": [
+              0.5070480669310341,
+              0.463353367243553
+            ],
+            "DGS-030|hard__malfunctioning_always_fail__hostile": [
+              0.5070480669310341,
+              0.4618543002453364
+            ],
+            "DGS-030|hard__malfunctioning_always_fail__neutral": [
+              0.5070480669310341,
+              0.4685550923856806
+            ],
+            "DGS-032|hard__accurate__hostile": [
+              0.5,
+              0.8328737318216215
+            ],
+            "DGS-032|hard__accurate__neutral": [
+              0.5,
+              0.8367946215107628
+            ],
+            "DGS-032|hard__malfunctioning_always_fail__hostile": [
+              0.5,
+              0.838940714725626
+            ],
+            "DGS-032|hard__malfunctioning_always_fail__neutral": [
+              0.5,
+              0.8367946215107628
+            ],
+            "DGS-034|easy__accurate__hostile": [
+              0.5070480669310342,
+              0.47172859855557264
+            ],
+            "DGS-034|easy__accurate__neutral": [
+              0.5070480669310342,
+              0.47236500137192583
+            ],
+            "DGS-034|easy__malfunctioning_always_fail__hostile": [
+              0.5070480669310342,
+              0.47327430356397665
+            ],
+            "DGS-034|easy__malfunctioning_always_fail__neutral": [
+              0.5070480669310342,
+              0.47172859855557264
+            ],
+            "DGS-035|easy__accurate__hostile": [
+              0.5070480669310342,
+              0.46252494118252896
+            ],
+            "DGS-035|easy__accurate__neutral": [
+              0.5070480669310342,
+              0.4949384546497003
+            ],
+            "DGS-035|easy__malfunctioning_always_fail__hostile": [
+              0.5070480669310342,
+              0.4419376072598706
+            ],
+            "DGS-035|easy__malfunctioning_always_fail__neutral": [
+              0.5070480669310342,
+              0.46727838747379624
+            ],
+            "DGS-037|hard__accurate__hostile": [
+              0.5070480669310342,
+              0.4720329232327522
+            ],
+            "DGS-037|hard__accurate__neutral": [
+              0.5070480669310342,
+              0.4727045674428147
+            ],
+            "DGS-037|hard__malfunctioning_always_fail__hostile": [
+              0.5070480669310342,
+              0.46572474592672913
+            ],
+            "DGS-037|hard__malfunctioning_always_fail__neutral": [
+              0.5070480669310342,
+              0.471764293757975
+            ],
+            "DGS-038|hard__accurate__hostile": [
+              0.5070480669310342,
+              0.4692694449069157
+            ],
+            "DGS-038|hard__accurate__neutral": [
+              0.5070480669310342,
+              0.4692694449069157
+            ],
+            "DGS-038|hard__malfunctioning_always_fail__hostile": [
+              0.5070480669310342,
+              0.4709582438525457
+            ],
+            "DGS-038|hard__malfunctioning_always_fail__neutral": [
+              0.5070480669310342,
+              0.4692694449069157
+            ]
+          },
+          "n_folds": 20,
+          "n_rows": 73,
+          "unavailable_reason": null
+        },
+        "reversal": [
+          {
+            "measured_accurate": {
+              "ci95_lower": null,
+              "ci95_upper": null,
+              "value": null
+            },
+            "measured_malfunctioning": {
+              "ci95_lower": null,
+              "ci95_upper": null,
+              "value": null
+            },
+            "metric_name": "M3",
+            "model_id": "Qwen/Qwen2.5-7B-Instruct",
+            "n_items": 0,
+            "n_rows": 0,
+            "post_correction_malfunctioning": {
+              "ci95_lower": null,
+              "ci95_upper": null,
+              "value": null
+            },
+            "unavailable_reason": "no_complete_false_negative_eligible_rows"
+          }
+        ],
+        "shuffled": {
+          "g1": {
+            "M3": {
+              "converged": false,
+              "metric_name": "M3",
+              "model_id": "Qwen/Qwen2.5-7B-Instruct",
+              "n_items": 0,
+              "n_rows": 0,
+              "optimizer": null,
+              "paired_tone": {
+                "contrast": "tone",
+                "n_items": 0,
+                "n_pairs": 0,
+                "raw_ci95": null,
+                "raw_mean": null,
+                "sign_aligned_ci95": null,
+                "sign_aligned_mean": null,
+                "unavailable_reason": "unavailable_for_shuffled_analysis_labels"
+              },
+              "paired_validity": {
+                "contrast": "validity",
+                "n_items": 0,
+                "n_pairs": 0,
+                "raw_ci95": null,
+                "raw_mean": null,
+                "sign_aligned_ci95": null,
+                "sign_aligned_mean": null,
+                "unavailable_reason": "unavailable_for_shuffled_analysis_labels"
+              },
+              "tone": null,
+              "unavailable_reason": "neutral_standardization_unavailable",
+              "validity": null
+            }
+          },
+          "g5": {
+            "auc_gap": 0.35000000000000014,
+            "baseline_auc": 0.34661654135338343,
+            "dropped_count": 7,
+            "fold_item_ids": [
+              [
+                "DGS-003"
+              ],
+              [
+                "DGS-004"
+              ],
+              [
+                "DGS-005"
+              ],
+              [
+                "DGS-007"
+              ],
+              [
+                "DGS-010"
+              ],
+              [
+                "DGS-012"
+              ],
+              [
+                "DGS-014"
+              ],
+              [
+                "DGS-015"
+              ],
+              [
+                "DGS-018"
+              ],
+              [
+                "DGS-020"
+              ],
+              [
+                "DGS-022"
+              ],
+              [
+                "DGS-023"
+              ],
+              [
+                "DGS-026"
+              ],
+              [
+                "DGS-028"
+              ],
+              [
+                "DGS-030"
+              ],
+              [
+                "DGS-032"
+              ],
+              [
+                "DGS-034"
+              ],
+              [
+                "DGS-035"
+              ],
+              [
+                "DGS-037"
+              ],
+              [
+                "DGS-038"
+              ]
+            ],
+            "full_auc": 0.6966165413533836,
+            "heldout_probabilities": {
+              "DGS-003|easy__accurate__hostile": [
+                0.5072527181813808,
+                0.5091228746739143
+              ],
+              "DGS-003|easy__accurate__neutral": [
+                0.5072527181813808,
+                0.5123718767567041
+              ],
+              "DGS-003|easy__malfunctioning_always_fail__hostile": [
+                0.5072527181813808,
+                0.5111297197435247
+              ],
+              "DGS-003|easy__malfunctioning_always_fail__neutral": [
+                0.5072527181813808,
+                0.5123718767567041
+              ],
+              "DGS-004|easy__accurate__hostile": [
+                0.5072527181813808,
+                0.5074936025931913
+              ],
+              "DGS-004|easy__accurate__neutral": [
+                0.5072527181813808,
+                0.5070442189525611
+              ],
+              "DGS-004|easy__malfunctioning_always_fail__hostile": [
+                0.5072527181813808,
+                0.5054712913337515
+              ],
+              "DGS-004|easy__malfunctioning_always_fail__neutral": [
+                0.5072527181813808,
+                0.5074936025931913
+              ],
+              "DGS-005|hard__accurate__hostile": [
+                0.5070480669310341,
+                0.5155093265077378
+              ],
+              "DGS-005|hard__accurate__neutral": [
+                0.5070480669310341,
+                0.5100140782423848
+              ],
+              "DGS-005|hard__malfunctioning_always_fail__hostile": [
+                0.5070480669310341,
+                0.5075459569728696
+              ],
+              "DGS-005|hard__malfunctioning_always_fail__neutral": [
+                0.5070480669310341,
+                0.5171908573660728
+              ],
+              "DGS-007|hard__accurate__neutral": [
+                0.5070480669310341,
+                0.4699224117252795
+              ],
+              "DGS-007|hard__malfunctioning_always_fail__neutral": [
+                0.5070480669310341,
+                0.47078572802445756
+              ],
+              "DGS-010|easy__accurate__hostile": [
+                0.5070480669310341,
+                0.5045308386348027
+              ],
+              "DGS-010|easy__accurate__neutral": [
+                0.5070480669310341,
+                0.5042679038515216
+              ],
+              "DGS-010|easy__malfunctioning_always_fail__hostile": [
+                0.5070480669310341,
+                0.5062398471427059
+              ],
+              "DGS-010|easy__malfunctioning_always_fail__neutral": [
+                0.5070480669310341,
+                0.5058454720518591
+              ],
+              "DGS-012|easy__accurate__hostile": [
+                0.5072527181813808,
+                0.5077622681111976
+              ],
+              "DGS-012|easy__accurate__neutral": [
+                0.5072527181813808,
+                0.5107878538620614
+              ],
+              "DGS-012|easy__malfunctioning_always_fail__hostile": [
+                0.5072527181813808,
+                0.5088717273057297
+              ],
+              "DGS-012|easy__malfunctioning_always_fail__neutral": [
+                0.5072527181813808,
+                0.5109895339319601
+              ],
+              "DGS-014|hard__accurate__neutral": [
+                0.5070480669310341,
+                0.49031215845603776
+              ],
+              "DGS-014|hard__malfunctioning_always_fail__neutral": [
+                0.5070480669310341,
+                0.49031215845603776
+              ],
+              "DGS-015|hard__accurate__hostile": [
+                0.5074696218357481,
+                0.4759517880886347
+              ],
+              "DGS-015|hard__accurate__neutral": [
+                0.5074696218357481,
+                0.476883219834367
+              ],
+              "DGS-015|hard__malfunctioning_always_fail__hostile": [
+                0.5074696218357481,
+                0.36646375179245355
+              ],
+              "DGS-015|hard__malfunctioning_always_fail__neutral": [
+                0.5074696218357481,
+                0.360201576275261
+              ],
+              "DGS-018|easy__accurate__hostile": [
+                0.5074696218357481,
+                0.4990794302633883
+              ],
+              "DGS-018|easy__accurate__neutral": [
+                0.5074696218357481,
+                0.5006977619779485
+              ],
+              "DGS-018|easy__malfunctioning_always_fail__hostile": [
+                0.5074696218357481,
+                0.5052970375747289
+              ],
+              "DGS-018|easy__malfunctioning_always_fail__neutral": [
+                0.5074696218357481,
+                0.5006977619779485
+              ],
+              "DGS-020|easy__accurate__hostile": [
+                0.5074696218357481,
+                0.49712360847129816
+              ],
+              "DGS-020|easy__accurate__neutral": [
+                0.5074696218357481,
+                0.4946292833023892
+              ],
+              "DGS-020|easy__malfunctioning_always_fail__hostile": [
+                0.5074696218357481,
+                0.49541694193648783
+              ],
+              "DGS-020|easy__malfunctioning_always_fail__neutral": [
+                0.5074696218357481,
+                0.4980426130573143
+              ],
+              "DGS-022|hard__accurate__hostile": [
+                0.5070480669310341,
+                0.45807482770550073
+              ],
+              "DGS-022|hard__malfunctioning_always_fail__hostile": [
+                0.5070480669310341,
+                0.45807482770550073
+              ],
+              "DGS-023|hard__accurate__neutral": [
+                0.5068546575520639,
+                0.5306149235547198
+              ],
+              "DGS-023|hard__malfunctioning_always_fail__hostile": [
+                0.5068546575520639,
+                0.633631773347066
+              ],
+              "DGS-023|hard__malfunctioning_always_fail__neutral": [
+                0.5068546575520639,
+                0.6472625223807966
+              ],
+              "DGS-026|easy__accurate__hostile": [
+                0.5070480669310341,
+                0.5072645510876339
+              ],
+              "DGS-026|easy__accurate__neutral": [
+                0.5070480669310341,
+                0.5072645510876339
+              ],
+              "DGS-026|easy__malfunctioning_always_fail__hostile": [
+                0.5070480669310341,
+                0.5082550698326701
+              ],
+              "DGS-026|easy__malfunctioning_always_fail__neutral": [
+                0.5070480669310341,
+                0.5074060574387383
+              ],
+              "DGS-028|easy__accurate__hostile": [
+                0.5070480669310341,
+                0.5360474695592137
+              ],
+              "DGS-028|easy__accurate__neutral": [
+                0.5070480669310341,
+                0.5380713865601817
+              ],
+              "DGS-028|easy__malfunctioning_always_fail__hostile": [
+                0.5070480669310341,
+                0.53756552230775
+              ],
+              "DGS-028|easy__malfunctioning_always_fail__neutral": [
+                0.5070480669310341,
+                0.5327560997172505
+              ],
+              "DGS-030|hard__accurate__hostile": [
+                0.5074696218357481,
+                0.4970550077000028
+              ],
+              "DGS-030|hard__accurate__neutral": [
+                0.5074696218357481,
+                0.4925500450503106
+              ],
+              "DGS-030|hard__malfunctioning_always_fail__hostile": [
+                0.5074696218357481,
+                0.4897350112008619
+              ],
+              "DGS-030|hard__malfunctioning_always_fail__neutral": [
+                0.5074696218357481,
+                0.5023113504909371
+              ],
+              "DGS-032|hard__accurate__hostile": [
+                0.5,
+                0.5119864969476745
+              ],
+              "DGS-032|hard__accurate__neutral": [
+                0.5,
+                0.5142465878927569
+              ],
+              "DGS-032|hard__malfunctioning_always_fail__hostile": [
+                0.5,
+                0.5155019481815433
+              ],
+              "DGS-032|hard__malfunctioning_always_fail__neutral": [
+                0.5,
+                0.5142465878927569
+              ],
+              "DGS-034|easy__accurate__hostile": [
+                0.5072527181813808,
+                0.5052790736764166
+              ],
+              "DGS-034|easy__accurate__neutral": [
+                0.5072527181813808,
+                0.5060451514867569
+              ],
+              "DGS-034|easy__malfunctioning_always_fail__hostile": [
+                0.5072527181813808,
+                0.5071394982281309
+              ],
+              "DGS-034|easy__malfunctioning_always_fail__neutral": [
+                0.5072527181813808,
+                0.5052790736764166
+              ],
+              "DGS-035|easy__accurate__hostile": [
+                0.5074696218357481,
+                0.49811250622672043
+              ],
+              "DGS-035|easy__accurate__neutral": [
+                0.5074696218357481,
+                0.5115511342070471
+              ],
+              "DGS-035|easy__malfunctioning_always_fail__hostile": [
+                0.5074696218357481,
+                0.4895159440210023
+              ],
+              "DGS-035|easy__malfunctioning_always_fail__neutral": [
+                0.5074696218357481,
+                0.5000890697021896
+              ],
+              "DGS-037|hard__accurate__hostile": [
+                0.5072527181813808,
+                0.5025330457478316
+              ],
+              "DGS-037|hard__accurate__neutral": [
+                0.5072527181813808,
+                0.5028921967596833
+              ],
+              "DGS-037|hard__malfunctioning_always_fail__hostile": [
+                0.5072527181813808,
+                0.49915694919076486
+              ],
+              "DGS-037|hard__malfunctioning_always_fail__neutral": [
+                0.5072527181813808,
+                0.5023893845904236
+              ],
+              "DGS-038|hard__accurate__hostile": [
+                0.5070480669310341,
+                0.5015083077028983
+              ],
+              "DGS-038|hard__accurate__neutral": [
+                0.5070480669310341,
+                0.5015083077028983
+              ],
+              "DGS-038|hard__malfunctioning_always_fail__hostile": [
+                0.5070480669310341,
+                0.5029395040596315
+              ],
+              "DGS-038|hard__malfunctioning_always_fail__neutral": [
+                0.5070480669310341,
+                0.5015083077028983
+              ]
+            },
+            "n_folds": 20,
+            "n_rows": 73,
+            "unavailable_reason": null
+          },
+          "model_id": "Qwen/Qwen2.5-7B-Instruct",
+          "passed": false,
+          "reason": "shuffled_g1_incomplete;shuffled_auc_gap_not_below_0.1"
+        },
+        "standardization": {
+          "M3": {
+            "mean": null,
+            "sample_sd": null,
+            "scale_source": null,
+            "unavailable_reason": "zero_neutral_sample_sd"
+          }
+        },
+        "unavailable_reasons": []
+      },
+      "google/gemma-2-2b-it": {
+        "eligibility": [
+          {
+            "eligible": false,
+            "metric_name": "M1",
+            "pooled_rate": 0.075,
+            "reason": "m1_missing_rate_above_5_percent",
+            "scope": "per_condition",
+            "worst_cell_id": "hard__accurate__hostile",
+            "worst_rate": 0.2
+          },
+          {
+            "eligible": false,
+            "metric_name": "M2",
+            "pooled_rate": 0.0925,
+            "reason": "m2_invalid_sampled_response_rate_above_5_percent",
+            "scope": "per_condition",
+            "worst_cell_id": "hard__malfunctioning_always_fail__hostile",
+            "worst_rate": 0.23
+          },
+          {
+            "eligible": true,
+            "metric_name": "M3",
+            "pooled_rate": 0.0,
+            "reason": "m3_audit_f1_not_supplied_eligible_by_default",
+            "scope": "per_condition",
+            "worst_cell_id": "easy__accurate__hostile",
+            "worst_rate": 0.0
+          }
+        ],
+        "eligible_metrics": [
+          "M3"
+        ],
+        "g2_incomplete_dropped": {
+          "M3": 29
+        },
+        "item_exclusions": [],
+        "model_id": "google/gemma-2-2b-it",
+        "n_endpoints": 80,
+        "real_g1": {
+          "M3": {
+            "converged": false,
+            "metric_name": "M3",
+            "model_id": "google/gemma-2-2b-it",
+            "n_items": 0,
+            "n_rows": 0,
+            "optimizer": null,
+            "paired_tone": {
+              "contrast": "tone",
+              "n_items": 0,
+              "n_pairs": 0,
+              "raw_ci95": null,
+              "raw_mean": null,
+              "sign_aligned_ci95": null,
+              "sign_aligned_mean": null,
+              "unavailable_reason": "neutral_standardization_unavailable"
+            },
+            "paired_validity": {
+              "contrast": "validity",
+              "n_items": 0,
+              "n_pairs": 0,
+              "raw_ci95": null,
+              "raw_mean": null,
+              "sign_aligned_ci95": null,
+              "sign_aligned_mean": null,
+              "unavailable_reason": "neutral_standardization_unavailable"
+            },
+            "tone": null,
+            "unavailable_reason": "neutral_standardization_unavailable",
+            "validity": null
+          }
+        },
+        "real_g2": {
+          "M3": null
+        },
+        "real_g5": {
+          "auc_gap": 0.00877192982456143,
+          "baseline_auc": 0.49122807017543857,
+          "dropped_count": 6,
+          "fold_item_ids": [
+            [
+              "DGS-003"
+            ],
+            [
+              "DGS-004"
+            ],
+            [
+              "DGS-005"
+            ],
+            [
+              "DGS-007"
+            ],
+            [
+              "DGS-010"
+            ],
+            [
+              "DGS-012"
+            ],
+            [
+              "DGS-014"
+            ],
+            [
+              "DGS-015"
+            ],
+            [
+              "DGS-018"
+            ],
+            [
+              "DGS-020"
+            ],
+            [
+              "DGS-022"
+            ],
+            [
+              "DGS-023"
+            ],
+            [
+              "DGS-026"
+            ],
+            [
+              "DGS-028"
+            ],
+            [
+              "DGS-030"
+            ],
+            [
+              "DGS-032"
+            ],
+            [
+              "DGS-034"
+            ],
+            [
+              "DGS-035"
+            ],
+            [
+              "DGS-037"
+            ],
+            [
+              "DGS-038"
+            ]
+          ],
+          "full_auc": 0.5,
+          "heldout_probabilities": {
+            "DGS-003|easy__accurate__hostile": [
+              0.5,
+              0.4573727991736525
+            ],
+            "DGS-003|easy__accurate__neutral": [
+              0.5,
+              0.4581476190830508
+            ],
+            "DGS-003|easy__malfunctioning_always_fail__hostile": [
+              0.5,
+              0.4584331302861079
+            ],
+            "DGS-003|easy__malfunctioning_always_fail__neutral": [
+              0.5,
+              0.45822919091616465
+            ],
+            "DGS-004|easy__accurate__hostile": [
+              0.5,
+              0.45655936245419576
+            ],
+            "DGS-004|easy__accurate__neutral": [
+              0.5,
+              0.45655936245419576
+            ],
+            "DGS-004|easy__malfunctioning_always_fail__hostile": [
+              0.5,
+              0.45655936245419576
+            ],
+            "DGS-004|easy__malfunctioning_always_fail__neutral": [
+              0.5,
+              0.45655936245419576
+            ],
+            "DGS-005|hard__accurate__hostile": [
+              0.5,
+              0.42219237257545855
+            ],
+            "DGS-005|hard__accurate__neutral": [
+              0.5,
+              0.4259424466406701
+            ],
+            "DGS-005|hard__malfunctioning_always_fail__hostile": [
+              0.5,
+              0.43215672982423076
+            ],
+            "DGS-005|hard__malfunctioning_always_fail__neutral": [
+              0.5,
+              0.41536779367726256
+            ],
+            "DGS-007|hard__accurate__hostile": [
+              0.5,
+              0.586630683916916
+            ],
+            "DGS-007|hard__malfunctioning_always_fail__hostile": [
+              0.5,
+              0.5866282450847128
+            ],
+            "DGS-010|easy__accurate__hostile": [
+              0.5,
+              0.461924642085885
+            ],
+            "DGS-010|easy__accurate__neutral": [
+              0.5,
+              0.5938484878144048
+            ],
+            "DGS-010|easy__malfunctioning_always_fail__hostile": [
+              0.5,
+              0.4622773357004205
+            ],
+            "DGS-010|easy__malfunctioning_always_fail__neutral": [
+              0.5,
+              0.5938484878144048
+            ],
+            "DGS-012|easy__accurate__hostile": [
+              0.5,
+              0.6140195772124449
+            ],
+            "DGS-012|easy__accurate__neutral": [
+              0.5,
+              0.6138741566267124
+            ],
+            "DGS-012|easy__malfunctioning_always_fail__hostile": [
+              0.5,
+              0.6138741566267124
+            ],
+            "DGS-012|easy__malfunctioning_always_fail__neutral": [
+              0.5,
+              0.6140195772124449
+            ],
+            "DGS-014|hard__malfunctioning_always_fail__hostile": [
+              0.5,
+              0.5412617993942642
+            ],
+            "DGS-014|hard__malfunctioning_always_fail__neutral": [
+              0.5,
+              0.5416041759825542
+            ],
+            "DGS-015|hard__accurate__hostile": [
+              0.5,
+              0.6055589962881536
+            ],
+            "DGS-015|hard__accurate__neutral": [
+              0.5,
+              0.43789798237207994
+            ],
+            "DGS-015|hard__malfunctioning_always_fail__hostile": [
+              0.5,
+              0.4476448650073918
+            ],
+            "DGS-015|hard__malfunctioning_always_fail__neutral": [
+              0.5,
+              0.4419473066845637
+            ],
+            "DGS-018|easy__accurate__hostile": [
+              0.5,
+              0.45827124402570624
+            ],
+            "DGS-018|easy__accurate__neutral": [
+              0.5,
+              0.4590460001307978
+            ],
+            "DGS-018|easy__malfunctioning_always_fail__hostile": [
+              0.5,
+              0.45848252129402284
+            ],
+            "DGS-018|easy__malfunctioning_always_fail__neutral": [
+              0.5,
+              0.45827124402570624
+            ],
+            "DGS-020|easy__accurate__hostile": [
+              0.5,
+              0.45615969592759353
+            ],
+            "DGS-020|easy__accurate__neutral": [
+              0.5,
+              0.45520186596305096
+            ],
+            "DGS-020|easy__malfunctioning_always_fail__hostile": [
+              0.5,
+              0.4562661416296142
+            ],
+            "DGS-020|easy__malfunctioning_always_fail__neutral": [
+              0.5,
+              0.45094894937932206
+            ],
+            "DGS-022|hard__accurate__hostile": [
+              0.5,
+              0.6045214003743974
+            ],
+            "DGS-022|hard__accurate__neutral": [
+              0.5,
+              0.6054989324098456
+            ],
+            "DGS-022|hard__malfunctioning_always_fail__hostile": [
+              0.5,
+              0.6023333155773363
+            ],
+            "DGS-022|hard__malfunctioning_always_fail__neutral": [
+              0.5,
+              0.6054989324098456
+            ],
+            "DGS-023|hard__accurate__hostile": [
+              0.5,
+              0.598250522937124
+            ],
+            "DGS-023|hard__accurate__neutral": [
+              0.5,
+              0.61543020030063
+            ],
+            "DGS-023|hard__malfunctioning_always_fail__hostile": [
+              0.5,
+              0.6006773774696674
+            ],
+            "DGS-023|hard__malfunctioning_always_fail__neutral": [
+              0.5,
+              0.6043083741126376
+            ],
+            "DGS-026|easy__accurate__hostile": [
+              0.5,
+              0.4603171329634807
+            ],
+            "DGS-026|easy__accurate__neutral": [
+              0.5,
+              0.45994560186789835
+            ],
+            "DGS-026|easy__malfunctioning_always_fail__hostile": [
+              0.5,
+              0.46010482405363745
+            ],
+            "DGS-026|easy__malfunctioning_always_fail__neutral": [
+              0.5,
+              0.4603171329634807
+            ],
+            "DGS-028|easy__accurate__hostile": [
+              0.5,
+              0.460064658115036
+            ],
+            "DGS-028|easy__accurate__neutral": [
+              0.5,
+              0.461289174540457
+            ],
+            "DGS-028|easy__malfunctioning_always_fail__hostile": [
+              0.5,
+              0.4607060123000349
+            ],
+            "DGS-028|easy__malfunctioning_always_fail__neutral": [
+              0.5,
+              0.4604144714121017
+            ],
+            "DGS-030|hard__accurate__neutral": [
+              0.5,
+              0.4717415951443436
+            ],
+            "DGS-030|hard__malfunctioning_always_fail__neutral": [
+              0.5,
+              0.565566272200754
+            ],
+            "DGS-032|hard__accurate__hostile": [
+              0.5,
+              0.598550207077247
+            ],
+            "DGS-032|hard__accurate__neutral": [
+              0.5,
+              0.46541017521322
+            ],
+            "DGS-032|hard__malfunctioning_always_fail__hostile": [
+              0.5,
+              0.5968777404156875
+            ],
+            "DGS-032|hard__malfunctioning_always_fail__neutral": [
+              0.5,
+              0.46551833671387954
+            ],
+            "DGS-034|easy__accurate__hostile": [
+              0.5,
+              0.4608522769589348
+            ],
+            "DGS-034|easy__accurate__neutral": [
+              0.5,
+              0.4608522769589348
+            ],
+            "DGS-034|easy__malfunctioning_always_fail__hostile": [
+              0.5,
+              0.46073509512051825
+            ],
+            "DGS-034|easy__malfunctioning_always_fail__neutral": [
+              0.5,
+              0.460676505827995
+            ],
+            "DGS-035|easy__accurate__hostile": [
+              0.5,
+              0.46120043124321697
+            ],
+            "DGS-035|easy__accurate__neutral": [
+              0.5,
+              0.4587221190049385
+            ],
+            "DGS-035|easy__malfunctioning_always_fail__hostile": [
+              0.5,
+              0.45961408265725595
+            ],
+            "DGS-035|easy__malfunctioning_always_fail__neutral": [
+              0.5,
+              0.4606550336304903
+            ],
+            "DGS-037|hard__accurate__hostile": [
+              0.5,
+              0.47673571089690997
+            ],
+            "DGS-037|hard__accurate__neutral": [
+              0.5,
+              0.47728762089876814
+            ],
+            "DGS-037|hard__malfunctioning_always_fail__hostile": [
+              0.5,
+              0.5408087282395713
+            ],
+            "DGS-037|hard__malfunctioning_always_fail__neutral": [
+              0.5,
+              0.5414757770902411
+            ],
+            "DGS-038|hard__accurate__hostile": [
+              0.5,
+              0.47441356534699614
+            ],
+            "DGS-038|hard__accurate__neutral": [
+              0.5,
+              0.47868208698354975
+            ],
+            "DGS-038|hard__malfunctioning_always_fail__hostile": [
+              0.5,
+              0.4754030574128455
+            ],
+            "DGS-038|hard__malfunctioning_always_fail__neutral": [
+              0.5,
+              0.47843454540377583
+            ]
+          },
+          "n_folds": 20,
+          "n_rows": 74,
+          "unavailable_reason": null
+        },
+        "reversal": [
+          {
+            "measured_accurate": {
+              "ci95_lower": null,
+              "ci95_upper": null,
+              "value": null
+            },
+            "measured_malfunctioning": {
+              "ci95_lower": null,
+              "ci95_upper": null,
+              "value": null
+            },
+            "metric_name": "M3",
+            "model_id": "google/gemma-2-2b-it",
+            "n_items": 0,
+            "n_rows": 0,
+            "post_correction_malfunctioning": {
+              "ci95_lower": null,
+              "ci95_upper": null,
+              "value": null
+            },
+            "unavailable_reason": "no_complete_false_negative_eligible_rows"
+          }
+        ],
+        "shuffled": {
+          "g1": {
+            "M3": {
+              "converged": false,
+              "metric_name": "M3",
+              "model_id": "google/gemma-2-2b-it",
+              "n_items": 0,
+              "n_rows": 0,
+              "optimizer": null,
+              "paired_tone": {
+                "contrast": "tone",
+                "n_items": 0,
+                "n_pairs": 0,
+                "raw_ci95": null,
+                "raw_mean": null,
+                "sign_aligned_ci95": null,
+                "sign_aligned_mean": null,
+                "unavailable_reason": "unavailable_for_shuffled_analysis_labels"
+              },
+              "paired_validity": {
+                "contrast": "validity",
+                "n_items": 0,
+                "n_pairs": 0,
+                "raw_ci95": null,
+                "raw_mean": null,
+                "sign_aligned_ci95": null,
+                "sign_aligned_mean": null,
+                "unavailable_reason": "unavailable_for_shuffled_analysis_labels"
+              },
+              "tone": null,
+              "unavailable_reason": "neutral_standardization_unavailable",
+              "validity": null
+            }
+          },
+          "g5": {
+            "auc_gap": 0.01059941520467833,
+            "baseline_auc": 0.48940058479532167,
+            "dropped_count": 6,
+            "fold_item_ids": [
+              [
+                "DGS-003"
+              ],
+              [
+                "DGS-004"
+              ],
+              [
+                "DGS-005"
+              ],
+              [
+                "DGS-007"
+              ],
+              [
+                "DGS-010"
+              ],
+              [
+                "DGS-012"
+              ],
+              [
+                "DGS-014"
+              ],
+              [
+                "DGS-015"
+              ],
+              [
+                "DGS-018"
+              ],
+              [
+                "DGS-020"
+              ],
+              [
+                "DGS-022"
+              ],
+              [
+                "DGS-023"
+              ],
+              [
+                "DGS-026"
+              ],
+              [
+                "DGS-028"
+              ],
+              [
+                "DGS-030"
+              ],
+              [
+                "DGS-032"
+              ],
+              [
+                "DGS-034"
+              ],
+              [
+                "DGS-035"
+              ],
+              [
+                "DGS-037"
+              ],
+              [
+                "DGS-038"
+              ]
+            ],
+            "full_auc": 0.5,
+            "heldout_probabilities": {
+              "DGS-003|easy__accurate__hostile": [
+                0.5,
+                0.49521560425307826
+              ],
+              "DGS-003|easy__accurate__neutral": [
+                0.5,
+                0.4799901879245417
+              ],
+              "DGS-003|easy__malfunctioning_always_fail__hostile": [
+                0.5,
+                0.47438868040314786
+              ],
+              "DGS-003|easy__malfunctioning_always_fail__neutral": [
+                0.5,
+                0.4783891819314375
+              ],
+              "DGS-004|easy__accurate__hostile": [
+                0.5,
+                0.5067561515710155
+              ],
+              "DGS-004|easy__accurate__neutral": [
+                0.5,
+                0.5067561515710155
+              ],
+              "DGS-004|easy__malfunctioning_always_fail__hostile": [
+                0.5,
+                0.5067561515710155
+              ],
+              "DGS-004|easy__malfunctioning_always_fail__neutral": [
+                0.5,
+                0.5067561515710155
+              ],
+              "DGS-005|hard__accurate__hostile": [
+                0.5,
+                0.6984264317922573
+              ],
+              "DGS-005|hard__accurate__neutral": [
+                0.5,
+                0.6789996835972733
+              ],
+              "DGS-005|hard__malfunctioning_always_fail__hostile": [
+                0.5,
+                0.645525880223115
+              ],
+              "DGS-005|hard__malfunctioning_always_fail__neutral": [
+                0.5,
+                0.7321047294295456
+              ],
+              "DGS-007|hard__accurate__hostile": [
+                0.5,
+                0.7648722851067928
+              ],
+              "DGS-007|hard__malfunctioning_always_fail__hostile": [
+                0.5,
+                0.7641154687601664
+              ],
+              "DGS-010|easy__accurate__hostile": [
+                0.5,
+                0.49091588964400096
+              ],
+              "DGS-010|easy__accurate__neutral": [
+                0.5,
+                0.37692554760259384
+              ],
+              "DGS-010|easy__malfunctioning_always_fail__hostile": [
+                0.5,
+                0.48740665334743266
+              ],
+              "DGS-010|easy__malfunctioning_always_fail__neutral": [
+                0.5,
+                0.37692554760259384
+              ],
+              "DGS-012|easy__accurate__hostile": [
+                0.5,
+                0.386576448540069
+              ],
+              "DGS-012|easy__accurate__neutral": [
+                0.5,
+                0.3874048735421697
+              ],
+              "DGS-012|easy__malfunctioning_always_fail__hostile": [
+                0.5,
+                0.3874048735421697
+              ],
+              "DGS-012|easy__malfunctioning_always_fail__neutral": [
+                0.5,
+                0.386576448540069
+              ],
+              "DGS-014|hard__malfunctioning_always_fail__hostile": [
+                0.5,
+                0.529998473693867
+              ],
+              "DGS-014|hard__malfunctioning_always_fail__neutral": [
+                0.5,
+                0.5245127821412959
+              ],
+              "DGS-015|hard__accurate__hostile": [
+                0.5,
+                0.45156783113468213
+              ],
+              "DGS-015|hard__accurate__neutral": [
+                0.5,
+                0.5977864075645545
+              ],
+              "DGS-015|hard__malfunctioning_always_fail__hostile": [
+                0.5,
+                0.5092376775714935
+              ],
+              "DGS-015|hard__malfunctioning_always_fail__neutral": [
+                0.5,
+                0.5613846246282828
+              ],
+              "DGS-018|easy__accurate__hostile": [
+                0.5,
+                0.4877885253921516
+              ],
+              "DGS-018|easy__accurate__neutral": [
+                0.5,
+                0.4792542745148864
+              ],
+              "DGS-018|easy__malfunctioning_always_fail__hostile": [
+                0.5,
+                0.4854600864316895
+              ],
+              "DGS-018|easy__malfunctioning_always_fail__neutral": [
+                0.5,
+                0.4877885253921516
+              ],
+              "DGS-020|easy__accurate__hostile": [
+                0.5,
+                0.5047123388997347
+              ],
+              "DGS-020|easy__accurate__neutral": [
+                0.5,
+                0.5106220651244624
+              ],
+              "DGS-020|easy__malfunctioning_always_fail__hostile": [
+                0.5,
+                0.5040555911438058
+              ],
+              "DGS-020|easy__malfunctioning_always_fail__neutral": [
+                0.5,
+                0.5368287755308235
+              ],
+              "DGS-022|hard__accurate__hostile": [
+                0.5,
+                0.6606682481650586
+              ],
+              "DGS-022|hard__accurate__neutral": [
+                0.5,
+                0.6748312478609174
+              ],
+              "DGS-022|hard__malfunctioning_always_fail__hostile": [
+                0.5,
+                0.6279802254950771
+              ],
+              "DGS-022|hard__malfunctioning_always_fail__neutral": [
+                0.5,
+                0.6748312478609174
+              ],
+              "DGS-023|hard__accurate__hostile": [
+                0.5,
+                0.5315323048370345
+              ],
+              "DGS-023|hard__accurate__neutral": [
+                0.5,
+                0.44920018478812046
+              ],
+              "DGS-023|hard__malfunctioning_always_fail__hostile": [
+                0.5,
+                0.5199776147789495
+              ],
+              "DGS-023|hard__malfunctioning_always_fail__neutral": [
+                0.5,
+                0.5026093043854194
+              ],
+              "DGS-026|easy__accurate__hostile": [
+                0.5,
+                0.4493416956288423
+              ],
+              "DGS-026|easy__accurate__neutral": [
+                0.5,
+                0.45496805613614216
+              ],
+              "DGS-026|easy__malfunctioning_always_fail__hostile": [
+                0.5,
+                0.45255526546016783
+              ],
+              "DGS-026|easy__malfunctioning_always_fail__neutral": [
+                0.5,
+                0.4493416956288423
+              ],
+              "DGS-028|easy__accurate__hostile": [
+                0.5,
+                0.4571571828648321
+              ],
+              "DGS-028|easy__accurate__neutral": [
+                0.5,
+                0.44027991362223295
+              ],
+              "DGS-028|easy__malfunctioning_always_fail__hostile": [
+                0.5,
+                0.4483019376241092
+              ],
+              "DGS-028|easy__malfunctioning_always_fail__neutral": [
+                0.5,
+                0.45232332921588414
+              ],
+              "DGS-030|hard__accurate__neutral": [
+                0.5,
+                0.4584293318861065
+              ],
+              "DGS-030|hard__malfunctioning_always_fail__neutral": [
+                0.5,
+                0.4576075732578988
+              ],
+              "DGS-032|hard__accurate__hostile": [
+                0.5,
+                0.4938205709862251
+              ],
+              "DGS-032|hard__accurate__neutral": [
+                0.5,
+                0.4544621594749353
+              ],
+              "DGS-032|hard__malfunctioning_always_fail__hostile": [
+                0.5,
+                0.5003959601224612
+              ],
+              "DGS-032|hard__malfunctioning_always_fail__neutral": [
+                0.5,
+                0.4540546175849445
+              ],
+              "DGS-034|easy__accurate__hostile": [
+                0.5,
+                0.4684345946202138
+              ],
+              "DGS-034|easy__accurate__neutral": [
+                0.5,
+                0.4684345946202138
+              ],
+              "DGS-034|easy__malfunctioning_always_fail__hostile": [
+                0.5,
+                0.4693953056796541
+              ],
+              "DGS-034|easy__malfunctioning_always_fail__neutral": [
+                0.5,
+                0.46987574673128113
+              ],
+              "DGS-035|easy__accurate__hostile": [
+                0.5,
+                0.45862194683344387
+              ],
+              "DGS-035|easy__accurate__neutral": [
+                0.5,
+                0.48314073894774895
+              ],
+              "DGS-035|easy__malfunctioning_always_fail__hostile": [
+                0.5,
+                0.47429840868767265
+              ],
+              "DGS-035|easy__malfunctioning_always_fail__neutral": [
+                0.5,
+                0.4640030774568431
+              ],
+              "DGS-037|hard__accurate__hostile": [
+                0.5,
+                0.5576913827669854
+              ],
+              "DGS-037|hard__accurate__neutral": [
+                0.5,
+                0.5500812265368145
+              ],
+              "DGS-037|hard__malfunctioning_always_fail__hostile": [
+                0.5,
+                0.486294085673503
+              ],
+              "DGS-037|hard__malfunctioning_always_fail__neutral": [
+                0.5,
+                0.4769572962190789
+              ],
+              "DGS-038|hard__accurate__hostile": [
+                0.5,
+                0.5472301073760322
+              ],
+              "DGS-038|hard__accurate__neutral": [
+                0.5,
+                0.5064841203528114
+              ],
+              "DGS-038|hard__malfunctioning_always_fail__hostile": [
+                0.5,
+                0.5378179636304964
+              ],
+              "DGS-038|hard__malfunctioning_always_fail__neutral": [
+                0.5,
+                0.5088538107245222
+              ]
+            },
+            "n_folds": 20,
+            "n_rows": 74,
+            "unavailable_reason": null
+          },
+          "model_id": "google/gemma-2-2b-it",
+          "passed": false,
+          "reason": "shuffled_g1_incomplete"
+        },
+        "standardization": {
+          "M3": {
+            "mean": null,
+            "sample_sd": null,
+            "scale_source": null,
+            "unavailable_reason": "zero_neutral_sample_sd"
+          }
+        },
+        "unavailable_reasons": []
+      },
+      "google/gemma-2-9b-it": {
+        "eligibility": [
+          {
+            "eligible": false,
+            "metric_name": "M1",
+            "pooled_rate": 0.1125,
+            "reason": "m1_missing_rate_above_5_percent",
+            "scope": "per_condition",
+            "worst_cell_id": "hard__accurate__hostile",
+            "worst_rate": 0.3
+          },
+          {
+            "eligible": false,
+            "metric_name": "M2",
+            "pooled_rate": 0.0725,
+            "reason": "m2_invalid_sampled_response_rate_above_5_percent",
+            "scope": "per_condition",
+            "worst_cell_id": "hard__accurate__hostile",
+            "worst_rate": 0.16
+          },
+          {
+            "eligible": true,
+            "metric_name": "M3",
+            "pooled_rate": 0.0,
+            "reason": "m3_audit_f1_not_supplied_eligible_by_default",
+            "scope": "per_condition",
+            "worst_cell_id": "easy__accurate__hostile",
+            "worst_rate": 0.0
+          }
+        ],
+        "eligible_metrics": [
+          "M3"
+        ],
+        "g2_incomplete_dropped": {
+          "M3": 34
+        },
+        "item_exclusions": [],
+        "model_id": "google/gemma-2-9b-it",
+        "n_endpoints": 80,
+        "real_g1": {
+          "M3": {
+            "converged": false,
+            "metric_name": "M3",
+            "model_id": "google/gemma-2-9b-it",
+            "n_items": 0,
+            "n_rows": 0,
+            "optimizer": null,
+            "paired_tone": {
+              "contrast": "tone",
+              "n_items": 0,
+              "n_pairs": 0,
+              "raw_ci95": null,
+              "raw_mean": null,
+              "sign_aligned_ci95": null,
+              "sign_aligned_mean": null,
+              "unavailable_reason": "neutral_standardization_unavailable"
+            },
+            "paired_validity": {
+              "contrast": "validity",
+              "n_items": 0,
+              "n_pairs": 0,
+              "raw_ci95": null,
+              "raw_mean": null,
+              "sign_aligned_ci95": null,
+              "sign_aligned_mean": null,
+              "unavailable_reason": "neutral_standardization_unavailable"
+            },
+            "tone": null,
+            "unavailable_reason": "neutral_standardization_unavailable",
+            "validity": null
+          }
+        },
+        "real_g2": {
+          "M3": null
+        },
+        "real_g5": {
+          "auc_gap": 0.05476190476190479,
+          "baseline_auc": 0.4452380952380952,
+          "dropped_count": 9,
+          "fold_item_ids": [
+            [
+              "DGS-003"
+            ],
+            [
+              "DGS-004"
+            ],
+            [
+              "DGS-005"
+            ],
+            [
+              "DGS-007"
+            ],
+            [
+              "DGS-010"
+            ],
+            [
+              "DGS-012"
+            ],
+            [
+              "DGS-015"
+            ],
+            [
+              "DGS-018"
+            ],
+            [
+              "DGS-020"
+            ],
+            [
+              "DGS-023"
+            ],
+            [
+              "DGS-026"
+            ],
+            [
+              "DGS-028"
+            ],
+            [
+              "DGS-030"
+            ],
+            [
+              "DGS-032"
+            ],
+            [
+              "DGS-034"
+            ],
+            [
+              "DGS-035"
+            ],
+            [
+              "DGS-037"
+            ],
+            [
+              "DGS-038"
+            ]
+          ],
+          "full_auc": 0.5,
+          "heldout_probabilities": {
+            "DGS-003|easy__accurate__hostile": [
+              0.5,
+              0.4914946569102581
+            ],
+            "DGS-003|easy__accurate__neutral": [
+              0.5,
+              0.4500451808778426
+            ],
+            "DGS-003|easy__malfunctioning_always_fail__hostile": [
+              0.5,
+              0.4679181521883689
+            ],
+            "DGS-003|easy__malfunctioning_always_fail__neutral": [
+              0.5,
+              0.4679181521883689
+            ],
+            "DGS-004|easy__accurate__hostile": [
+              0.5,
+              0.5197067217056853
+            ],
+            "DGS-004|easy__accurate__neutral": [
+              0.5,
+              0.4875134333509991
+            ],
+            "DGS-004|easy__malfunctioning_always_fail__hostile": [
+              0.5,
+              0.46195111259886357
+            ],
+            "DGS-004|easy__malfunctioning_always_fail__neutral": [
+              0.5,
+              0.4684918905402065
+            ],
+            "DGS-005|hard__accurate__hostile": [
+              0.5,
+              0.6161965339871434
+            ],
+            "DGS-005|hard__accurate__neutral": [
+              0.5,
+              0.5544808315507539
+            ],
+            "DGS-005|hard__malfunctioning_always_fail__hostile": [
+              0.5,
+              0.6220938226613485
+            ],
+            "DGS-005|hard__malfunctioning_always_fail__neutral": [
+              0.5,
+              0.6220938226613485
+            ],
+            "DGS-007|hard__accurate__neutral": [
+              0.5,
+              0.5777393838414371
+            ],
+            "DGS-007|hard__malfunctioning_always_fail__hostile": [
+              0.5,
+              0.6023415008314836
+            ],
+            "DGS-007|hard__malfunctioning_always_fail__neutral": [
+              0.5,
+              0.591214831471482
+            ],
+            "DGS-010|easy__accurate__hostile": [
+              0.5,
+              0.5125394672436524
+            ],
+            "DGS-010|easy__accurate__neutral": [
+              0.5,
+              0.4690435777476881
+            ],
+            "DGS-010|easy__malfunctioning_always_fail__hostile": [
+              0.5,
+              0.4324412961874919
+            ],
+            "DGS-010|easy__malfunctioning_always_fail__neutral": [
+              0.5,
+              0.4887016924600527
+            ],
+            "DGS-012|easy__accurate__hostile": [
+              0.5,
+              0.4906253242021475
+            ],
+            "DGS-012|easy__accurate__neutral": [
+              0.5,
+              0.46860188637713496
+            ],
+            "DGS-012|easy__malfunctioning_always_fail__hostile": [
+              0.5,
+              0.4895750836881419
+            ],
+            "DGS-012|easy__malfunctioning_always_fail__neutral": [
+              0.5,
+              0.47960369595180496
+            ],
+            "DGS-015|hard__accurate__hostile": [
+              0.5,
+              0.5420110907725505
+            ],
+            "DGS-015|hard__accurate__neutral": [
+              0.5,
+              0.534297615235561
+            ],
+            "DGS-015|hard__malfunctioning_always_fail__hostile": [
+              0.5,
+              0.5392583951452022
+            ],
+            "DGS-015|hard__malfunctioning_always_fail__neutral": [
+              0.5,
+              0.5331942628151258
+            ],
+            "DGS-018|easy__accurate__hostile": [
+              0.5,
+              0.5004822830296661
+            ],
+            "DGS-018|easy__accurate__neutral": [
+              0.5,
+              0.48306666750877075
+            ],
+            "DGS-018|easy__malfunctioning_always_fail__hostile": [
+              0.5,
+              0.4801669184614344
+            ],
+            "DGS-018|easy__malfunctioning_always_fail__neutral": [
+              0.5,
+              0.47900738192089815
+            ],
+            "DGS-020|easy__accurate__hostile": [
+              0.5,
+              0.47005941427192643
+            ],
+            "DGS-020|easy__accurate__neutral": [
+              0.5,
+              0.46823707256103525
+            ],
+            "DGS-020|easy__malfunctioning_always_fail__hostile": [
+              0.5,
+              0.49654857914626577
+            ],
+            "DGS-020|easy__malfunctioning_always_fail__neutral": [
+              0.5,
+              0.48511974140041125
+            ],
+            "DGS-023|hard__accurate__hostile": [
+              0.5,
+              0.5202840313850601
+            ],
+            "DGS-023|hard__accurate__neutral": [
+              0.5,
+              0.5440142649846105
+            ],
+            "DGS-023|hard__malfunctioning_always_fail__hostile": [
+              0.5,
+              0.5595830031780713
+            ],
+            "DGS-023|hard__malfunctioning_always_fail__neutral": [
+              0.5,
+              0.5675463349087022
+            ],
+            "DGS-026|easy__accurate__hostile": [
+              0.5,
+              0.491465443642166
+            ],
+            "DGS-026|easy__accurate__neutral": [
+              0.5,
+              0.4526899200843056
+            ],
+            "DGS-026|easy__malfunctioning_always_fail__hostile": [
+              0.5,
+              0.48660324101442465
+            ],
+            "DGS-026|easy__malfunctioning_always_fail__neutral": [
+              0.5,
+              0.46342360213882494
+            ],
+            "DGS-028|easy__accurate__hostile": [
+              0.5,
+              0.4450763434771101
+            ],
+            "DGS-028|easy__accurate__neutral": [
+              0.5,
+              0.4450763434771101
+            ],
+            "DGS-028|easy__malfunctioning_always_fail__hostile": [
+              0.5,
+              0.4664313854960853
+            ],
+            "DGS-028|easy__malfunctioning_always_fail__neutral": [
+              0.5,
+              0.4552250341434861
+            ],
+            "DGS-030|hard__accurate__hostile": [
+              0.5,
+              0.5308897776233233
+            ],
+            "DGS-030|hard__accurate__neutral": [
+              0.5,
+              0.4488162980142482
+            ],
+            "DGS-030|hard__malfunctioning_always_fail__hostile": [
+              0.5,
+              0.4653963185937796
+            ],
+            "DGS-030|hard__malfunctioning_always_fail__neutral": [
+              0.5,
+              0.4570944262168124
+            ],
+            "DGS-032|hard__accurate__hostile": [
+              0.5,
+              0.5032655001739663
+            ],
+            "DGS-032|hard__accurate__neutral": [
+              0.5,
+              0.47814253835850673
+            ],
+            "DGS-032|hard__malfunctioning_always_fail__hostile": [
+              0.5,
+              0.42370697391719986
+            ],
+            "DGS-032|hard__malfunctioning_always_fail__neutral": [
+              0.5,
+              0.47479838027174376
+            ],
+            "DGS-034|easy__accurate__hostile": [
+              0.5,
+              0.4499978404702397
+            ],
+            "DGS-034|easy__accurate__neutral": [
+              0.5,
+              0.44112159611525864
+            ],
+            "DGS-034|easy__malfunctioning_always_fail__hostile": [
+              0.5,
+              0.44171224051323826
+            ],
+            "DGS-034|easy__malfunctioning_always_fail__neutral": [
+              0.5,
+              0.43699184050680495
+            ],
+            "DGS-035|easy__accurate__hostile": [
+              0.5,
+              0.5392833201153118
+            ],
+            "DGS-035|easy__accurate__neutral": [
+              0.5,
+              0.49815217459903416
+            ],
+            "DGS-035|easy__malfunctioning_always_fail__hostile": [
+              0.5,
+              0.4956545614828448
+            ],
+            "DGS-035|easy__malfunctioning_always_fail__neutral": [
+              0.5,
+              0.48816352156253334
+            ],
+            "DGS-037|hard__accurate__hostile": [
+              0.5,
+              0.5312786690077915
+            ],
+            "DGS-037|hard__accurate__neutral": [
+              0.5,
+              0.48475206422434985
+            ],
+            "DGS-037|hard__malfunctioning_always_fail__hostile": [
+              0.5,
+              0.4762755713098248
+            ],
+            "DGS-037|hard__malfunctioning_always_fail__neutral": [
+              0.5,
+              0.500311586436887
+            ],
+            "DGS-038|hard__accurate__hostile": [
+              0.5,
+              0.5639673506656004
+            ],
+            "DGS-038|hard__accurate__neutral": [
+              0.5,
+              0.5030778563727437
+            ],
+            "DGS-038|hard__malfunctioning_always_fail__hostile": [
+              0.5,
+              0.5634245756145853
+            ],
+            "DGS-038|hard__malfunctioning_always_fail__neutral": [
+              0.5,
+              0.501422704548123
+            ]
+          },
+          "n_folds": 18,
+          "n_rows": 71,
+          "unavailable_reason": null
+        },
+        "reversal": [
+          {
+            "measured_accurate": {
+              "ci95_lower": null,
+              "ci95_upper": null,
+              "value": null
+            },
+            "measured_malfunctioning": {
+              "ci95_lower": null,
+              "ci95_upper": null,
+              "value": null
+            },
+            "metric_name": "M3",
+            "model_id": "google/gemma-2-9b-it",
+            "n_items": 0,
+            "n_rows": 0,
+            "post_correction_malfunctioning": {
+              "ci95_lower": null,
+              "ci95_upper": null,
+              "value": null
+            },
+            "unavailable_reason": "no_complete_false_negative_eligible_rows"
+          }
+        ],
+        "shuffled": {
+          "g1": {
+            "M3": {
+              "converged": false,
+              "metric_name": "M3",
+              "model_id": "google/gemma-2-9b-it",
+              "n_items": 0,
+              "n_rows": 0,
+              "optimizer": null,
+              "paired_tone": {
+                "contrast": "tone",
+                "n_items": 0,
+                "n_pairs": 0,
+                "raw_ci95": null,
+                "raw_mean": null,
+                "sign_aligned_ci95": null,
+                "sign_aligned_mean": null,
+                "unavailable_reason": "unavailable_for_shuffled_analysis_labels"
+              },
+              "paired_validity": {
+                "contrast": "validity",
+                "n_items": 0,
+                "n_pairs": 0,
+                "raw_ci95": null,
+                "raw_mean": null,
+                "sign_aligned_ci95": null,
+                "sign_aligned_mean": null,
+                "unavailable_reason": "unavailable_for_shuffled_analysis_labels"
+              },
+              "tone": null,
+              "unavailable_reason": "neutral_standardization_unavailable",
+              "validity": null
+            }
+          },
+          "g5": {
+            "auc_gap": 0.071031746031746,
+            "baseline_auc": 0.428968253968254,
+            "dropped_count": 9,
+            "fold_item_ids": [
+              [
+                "DGS-003"
+              ],
+              [
+                "DGS-004"
+              ],
+              [
+                "DGS-005"
+              ],
+              [
+                "DGS-007"
+              ],
+              [
+                "DGS-010"
+              ],
+              [
+                "DGS-012"
+              ],
+              [
+                "DGS-015"
+              ],
+              [
+                "DGS-018"
+              ],
+              [
+                "DGS-020"
+              ],
+              [
+                "DGS-023"
+              ],
+              [
+                "DGS-026"
+              ],
+              [
+                "DGS-028"
+              ],
+              [
+                "DGS-030"
+              ],
+              [
+                "DGS-032"
+              ],
+              [
+                "DGS-034"
+              ],
+              [
+                "DGS-035"
+              ],
+              [
+                "DGS-037"
+              ],
+              [
+                "DGS-038"
+              ]
+            ],
+            "full_auc": 0.5,
+            "heldout_probabilities": {
+              "DGS-003|easy__accurate__hostile": [
+                0.5,
+                0.4954320348066531
+              ],
+              "DGS-003|easy__accurate__neutral": [
+                0.5,
+                0.4735006835070275
+              ],
+              "DGS-003|easy__malfunctioning_always_fail__hostile": [
+                0.5,
+                0.48297693243337125
+              ],
+              "DGS-003|easy__malfunctioning_always_fail__neutral": [
+                0.5,
+                0.48297693243337125
+              ],
+              "DGS-004|easy__accurate__hostile": [
+                0.5,
+                0.5058298742975638
+              ],
+              "DGS-004|easy__accurate__neutral": [
+                0.5,
+                0.49675101709479497
+              ],
+              "DGS-004|easy__malfunctioning_always_fail__hostile": [
+                0.5,
+                0.48952622784203625
+              ],
+              "DGS-004|easy__malfunctioning_always_fail__neutral": [
+                0.5,
+                0.4913784413509675
+              ],
+              "DGS-005|hard__accurate__hostile": [
+                0.5,
+                0.5307950508002631
+              ],
+              "DGS-005|hard__accurate__neutral": [
+                0.5,
+                0.514374693597249
+              ],
+              "DGS-005|hard__malfunctioning_always_fail__hostile": [
+                0.5,
+                0.5324047516632288
+              ],
+              "DGS-005|hard__malfunctioning_always_fail__neutral": [
+                0.5,
+                0.5324047516632288
+              ],
+              "DGS-007|hard__accurate__neutral": [
+                0.5,
+                0.6255192880496077
+              ],
+              "DGS-007|hard__malfunctioning_always_fail__hostile": [
+                0.5,
+                0.6635298129773558
+              ],
+              "DGS-007|hard__malfunctioning_always_fail__neutral": [
+                0.5,
+                0.646479388164146
+              ],
+              "DGS-010|easy__accurate__hostile": [
+                0.5,
+                0.5128441146278259
+              ],
+              "DGS-010|easy__accurate__neutral": [
+                0.5,
+                0.4743757167456178
+              ],
+              "DGS-010|easy__malfunctioning_always_fail__hostile": [
+                0.5,
+                0.4326236619822592
+              ],
+              "DGS-010|easy__malfunctioning_always_fail__neutral": [
+                0.5,
+                0.49176780544733206
+              ],
+              "DGS-012|easy__accurate__hostile": [
+                0.5,
+                0.491980502526958
+              ],
+              "DGS-012|easy__accurate__neutral": [
+                0.5,
+                0.4716883034896454
+              ],
+              "DGS-012|easy__malfunctioning_always_fail__hostile": [
+                0.5,
+                0.49101307664386573
+              ],
+              "DGS-012|easy__malfunctioning_always_fail__neutral": [
+                0.5,
+                0.4818269099196445
+              ],
+              "DGS-015|hard__accurate__hostile": [
+                0.5,
+                0.5233788437990581
+              ],
+              "DGS-015|hard__accurate__neutral": [
+                0.5,
+                0.5190762377273289
+              ],
+              "DGS-015|hard__malfunctioning_always_fail__hostile": [
+                0.5,
+                0.521842563802177
+              ],
+              "DGS-015|hard__malfunctioning_always_fail__neutral": [
+                0.5,
+                0.5184613337450119
+              ],
+              "DGS-018|easy__accurate__hostile": [
+                0.5,
+                0.5003481000947191
+              ],
+              "DGS-018|easy__accurate__neutral": [
+                0.5,
+                0.4959864871578085
+              ],
+              "DGS-018|easy__malfunctioning_always_fail__hostile": [
+                0.5,
+                0.4952595931265966
+              ],
+              "DGS-018|easy__malfunctioning_always_fail__neutral": [
+                0.5,
+                0.4949688409529766
+              ],
+              "DGS-020|easy__accurate__hostile": [
+                0.5,
+                0.48258055305241354
+              ],
+              "DGS-020|easy__accurate__neutral": [
+                0.5,
+                0.481521182342241
+              ],
+              "DGS-020|easy__malfunctioning_always_fail__hostile": [
+                0.5,
+                0.49795421368948356
+              ],
+              "DGS-020|easy__malfunctioning_always_fail__neutral": [
+                0.5,
+                0.49132545983191944
+              ],
+              "DGS-023|hard__accurate__hostile": [
+                0.5,
+                0.5074612918844406
+              ],
+              "DGS-023|hard__accurate__neutral": [
+                0.5,
+                0.5162651661283977
+              ],
+              "DGS-023|hard__malfunctioning_always_fail__hostile": [
+                0.5,
+                0.5220738542502064
+              ],
+              "DGS-023|hard__malfunctioning_always_fail__neutral": [
+                0.5,
+                0.5250589557830205
+              ],
+              "DGS-026|easy__accurate__hostile": [
+                0.5,
+                0.4955687142932567
+              ],
+              "DGS-026|easy__accurate__neutral": [
+                0.5,
+                0.47570854379130184
+              ],
+              "DGS-026|easy__malfunctioning_always_fail__hostile": [
+                0.5,
+                0.4930841401974982
+              ],
+              "DGS-026|easy__malfunctioning_always_fail__neutral": [
+                0.5,
+                0.4812202415727664
+              ],
+              "DGS-028|easy__accurate__hostile": [
+                0.5,
+                0.4946186154941243
+              ],
+              "DGS-028|easy__accurate__neutral": [
+                0.5,
+                0.4946186154941243
+              ],
+              "DGS-028|easy__malfunctioning_always_fail__hostile": [
+                0.5,
+                0.49674882723200015
+              ],
+              "DGS-028|easy__malfunctioning_always_fail__neutral": [
+                0.5,
+                0.495632982415882
+              ],
+              "DGS-030|hard__accurate__hostile": [
+                0.5,
+                0.5653390503144168
+              ],
+              "DGS-030|hard__accurate__neutral": [
+                0.5,
+                0.4895564858892346
+              ],
+              "DGS-030|hard__malfunctioning_always_fail__hostile": [
+                0.5,
+                0.4904161724190543
+              ],
+              "DGS-030|hard__malfunctioning_always_fail__neutral": [
+                0.5,
+                0.4899863217504566
+              ],
+              "DGS-032|hard__accurate__hostile": [
+                0.5,
+                0.4906476087578004
+              ],
+              "DGS-032|hard__accurate__neutral": [
+                0.5,
+                0.48368008878058544
+              ],
+              "DGS-032|hard__malfunctioning_always_fail__hostile": [
+                0.5,
+                0.5647743596840057
+              ],
+              "DGS-032|hard__malfunctioning_always_fail__neutral": [
+                0.5,
+                0.48275150615597784
+              ],
+              "DGS-034|easy__accurate__hostile": [
+                0.5,
+                0.47537367134029873
+              ],
+              "DGS-034|easy__accurate__neutral": [
+                0.5,
+                0.47098990814672637
+              ],
+              "DGS-034|easy__malfunctioning_always_fail__hostile": [
+                0.5,
+                0.47128202736380587
+              ],
+              "DGS-034|easy__malfunctioning_always_fail__neutral": [
+                0.5,
+                0.46894564110559656
+              ],
+              "DGS-035|easy__accurate__hostile": [
+                0.5,
+                0.5145506285270051
+              ],
+              "DGS-035|easy__accurate__neutral": [
+                0.5,
+                0.499692544456431
+              ],
+              "DGS-035|easy__malfunctioning_always_fail__hostile": [
+                0.5,
+                0.49879180775352966
+              ],
+              "DGS-035|easy__malfunctioning_always_fail__neutral": [
+                0.5,
+                0.4960896680801924
+              ],
+              "DGS-037|hard__accurate__hostile": [
+                0.5,
+                0.39720667782201785
+              ],
+              "DGS-037|hard__accurate__neutral": [
+                0.5,
+                0.5017340937092974
+              ],
+              "DGS-037|hard__malfunctioning_always_fail__hostile": [
+                0.5,
+                0.49323450749710623
+              ],
+              "DGS-037|hard__malfunctioning_always_fail__neutral": [
+                0.5,
+                0.5173105239765539
+              ],
+              "DGS-038|hard__accurate__hostile": [
+                0.5,
+                0.5321093696698536
+              ],
+              "DGS-038|hard__accurate__neutral": [
+                0.5,
+                0.5013080990244301
+              ],
+              "DGS-038|hard__malfunctioning_always_fail__hostile": [
+                0.5,
+                0.5318326182979228
+              ],
+              "DGS-038|hard__malfunctioning_always_fail__neutral": [
+                0.5,
+                0.5004744392345001
+              ]
+            },
+            "n_folds": 18,
+            "n_rows": 71,
+            "unavailable_reason": null
+          },
+          "model_id": "google/gemma-2-9b-it",
+          "passed": false,
+          "reason": "shuffled_g1_incomplete"
+        },
+        "standardization": {
+          "M3": {
+            "mean": null,
+            "sample_sd": null,
+            "scale_source": null,
+            "unavailable_reason": "zero_neutral_sample_sd"
+          }
+        },
+        "unavailable_reasons": []
+      }
+    },
+    "primary_model_id": "google/gemma-2-9b-it",
+    "style": {
+      "M3|style__cautious_hedging": {
+        "adjusted_p": null,
+        "effect": null,
+        "metric_name": "M3",
+        "model_id": "google/gemma-2-9b-it",
+        "n_items": 5,
+        "neutral_style_id": "style__neutral_reference",
+        "style_id": "style__cautious_hedging",
+        "task_ids": [
+          "DGS-005",
+          "DGS-010",
+          "DGS-022",
+          "DGS-026",
+          "DGS-037"
+        ],
+        "unavailable_reason": "neutral_standardization_unavailable"
+      },
+      "M3|style__enthusiastic": {
+        "adjusted_p": null,
+        "effect": null,
+        "metric_name": "M3",
+        "model_id": "google/gemma-2-9b-it",
+        "n_items": 5,
+        "neutral_style_id": "style__neutral_reference",
+        "style_id": "style__enthusiastic",
+        "task_ids": [
+          "DGS-005",
+          "DGS-010",
+          "DGS-022",
+          "DGS-026",
+          "DGS-037"
+        ],
+        "unavailable_reason": "neutral_standardization_unavailable"
+      },
+      "M3|style__reluctantly_complying_refusal_styled": {
+        "adjusted_p": null,
+        "effect": null,
+        "metric_name": "M3",
+        "model_id": "google/gemma-2-9b-it",
+        "n_items": 5,
+        "neutral_style_id": "style__neutral_reference",
+        "style_id": "style__reluctantly_complying_refusal_styled",
+        "task_ids": [
+          "DGS-005",
+          "DGS-010",
+          "DGS-022",
+          "DGS-026",
+          "DGS-037"
+        ],
+        "unavailable_reason": "neutral_standardization_unavailable"
+      },
+      "M3|style__verbose": {
+        "adjusted_p": null,
+        "effect": null,
+        "metric_name": "M3",
+        "model_id": "google/gemma-2-9b-it",
+        "n_items": 5,
+        "neutral_style_id": "style__neutral_reference",
+        "style_id": "style__verbose",
+        "task_ids": [
+          "DGS-005",
+          "DGS-010",
+          "DGS-022",
+          "DGS-026",
+          "DGS-037"
+        ],
+        "unavailable_reason": "neutral_standardization_unavailable"
+      }
+    },
+    "summary": {
+      "boundary_metrics": [],
+      "control_model_id": "Qwen/Qwen2.5-3B-Instruct",
+      "eligible_metrics": [
+        "M3"
+      ],
+      "g1": {
+        "passing_metrics": [],
+        "qualifying_effects": [],
+        "reason": "real_g1:unavailable_M3",
+        "status": "UNAVAILABLE"
+      },
+      "g2": {
+        "passing_metrics": [],
+        "qualifying_effects": [],
+        "reason": "g1_not_passed_not_unlocked",
+        "status": "NOT_EVALUATED"
+      },
+      "g3": {
+        "non_reproduced_metrics": [],
+        "provisional": true,
+        "reason": "g1_not_passed_not_unlocked",
+        "status": "NOT_EVALUATED",
+        "style_meter_metrics": []
+      },
+      "g4": {
+        "boundary_metrics": [],
+        "eligible_positive_metrics": [],
+        "reason": "primary_model_g1_evidence_unavailable",
+        "status": "UNAVAILABLE",
+        "transfer_metrics": []
+      },
+      "g5": {
+        "passing_metrics": [],
+        "qualifying_effects": [],
+        "reason": "auc_gap_below_0.1",
+        "status": "FAIL"
+      },
+      "interpretable": false,
+      "interpretation_reason": "blocked_by_shuffled_null:UNAVAILABLE",
+      "phase_1_status": "BLOCKED",
+      "primary_model_id": "google/gemma-2-9b-it",
+      "shuffled_null": {
+        "passing_metrics": [],
+        "qualifying_effects": [],
+        "reason": "shuffled_g1:unavailable_M3",
+        "status": "UNAVAILABLE"
+      },
+      "style_meters": []
+    },
+    "unavailable_metrics": {
+      "M3": "zero_variance"
+    }
+  }
+}
