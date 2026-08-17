@@ -186,6 +186,9 @@
         "eligible_metrics": [
           "M2"
         ],
+        "g2_incomplete_dropped": {
+          "M2": 19
+        },
         "item_exclusions": [
           {
             "baseline_cell_id": "hard__accurate__neutral",
@@ -269,15 +272,18 @@
         },
         "real_g2": {
           "M2": {
-            "induction": null,
+            "induction": 0.0,
             "metric_name": "M2",
             "model_id": "Qwen/Qwen2.5-3B-Instruct",
-            "n_items": 16,
-            "n_rows": 30,
-            "recovery": null,
-            "recovery_ci95": null,
+            "n_items": 8,
+            "n_rows": 11,
+            "recovery": -0.2958142606618038,
+            "recovery_ci95": [
+              -0.5916285213236075,
+              -0.09038769075777338
+            ],
             "recovery_to_induction": null,
-            "unavailable_reason": "required_reversal_endpoint_missing"
+            "unavailable_reason": null
           }
         },
         "real_g5": {
@@ -869,6 +875,9 @@
         "eligible_metrics": [
           "M2"
         ],
+        "g2_incomplete_dropped": {
+          "M2": 6
+        },
         "item_exclusions": [
           {
             "baseline_cell_id": "hard__accurate__neutral",
@@ -952,15 +961,18 @@
         },
         "real_g2": {
           "M2": {
-            "induction": null,
+            "induction": 0.16076001853170055,
             "metric_name": "M2",
             "model_id": "Qwen/Qwen2.5-7B-Instruct",
-            "n_items": 15,
-            "n_rows": 29,
-            "recovery": null,
-            "recovery_ci95": null,
-            "recovery_to_induction": null,
-            "unavailable_reason": "required_reversal_endpoint_missing"
+            "n_items": 12,
+            "n_rows": 23,
+            "recovery": -0.32152003706340104,
+            "recovery_ci95": [
+              -0.748499690179822,
+              0.0
+            ],
+            "recovery_to_induction": -1.9999999999999996,
+            "unavailable_reason": null
           }
         },
         "real_g5": {
@@ -1694,6 +1706,9 @@
         "eligible_metrics": [
           "M2"
         ],
+        "g2_incomplete_dropped": {
+          "M2": 17
+        },
         "item_exclusions": [
           {
             "baseline_cell_id": "hard__accurate__neutral",
@@ -1785,15 +1800,18 @@
         },
         "real_g2": {
           "M2": {
-            "induction": null,
+            "induction": 0.507810532112056,
             "metric_name": "M2",
             "model_id": "google/gemma-2-2b-it",
-            "n_items": 15,
-            "n_rows": 29,
-            "recovery": null,
-            "recovery_ci95": null,
-            "recovery_to_induction": null,
-            "unavailable_reason": "required_reversal_endpoint_missing"
+            "n_items": 9,
+            "n_rows": 12,
+            "recovery": 0.056423392456895094,
+            "recovery_ci95": [
+              -0.47395649663791906,
+              0.4688783913167977
+            ],
+            "recovery_to_induction": 0.11111111111111109,
+            "unavailable_reason": null
           }
         },
         "real_g5": {
@@ -2441,6 +2459,9 @@
         "eligible_metrics": [
           "M2"
         ],
+        "g2_incomplete_dropped": {
+          "M2": 10
+        },
         "item_exclusions": [
           {
             "baseline_cell_id": "hard__accurate__neutral",
@@ -2524,15 +2545,18 @@
         },
         "real_g2": {
           "M2": {
-            "induction": null,
+            "induction": -0.36964804356760816,
             "metric_name": "M2",
             "model_id": "google/gemma-2-9b-it",
-            "n_items": 17,
-            "n_rows": 34,
-            "recovery": null,
-            "recovery_ci95": null,
-            "recovery_to_induction": null,
-            "unavailable_reason": "required_reversal_endpoint_missing"
+            "n_items": 15,
+            "n_rows": 24,
+            "recovery": 0.0821440096816906,
+            "recovery_ci95": [
+              -0.19714562323605775,
+              0.3520457557786743
+            ],
+            "recovery_to_induction": -0.22222222222222193,
+            "unavailable_reason": null
           }
         },
         "real_g5": {

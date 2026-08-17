@@ -24,10 +24,13 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from src.extract import LoadIssue, build_metric_rows, iter_records, write_summaries  # noqa: E402
+from src.extract import (  # noqa: E402
+    LoadIssue, build_metric_rows, iter_records, write_jsonl, write_summaries, write_table,
+)
 from src.gates import BLOCKED  # noqa: E402
 from src.pipeline import (  # noqa: E402
-    AMENDED_RULES, FROZEN_RULES, PipelineError, excluded_task_ids, render_phase1_markdown, run_phase1_gates,
+    AMENDED_RULES, FROZEN_RULES, PipelineError, excluded_task_ids, exploratory_cell_summary,
+    exploratory_contrasts, render_exploratory_markdown, render_phase1_markdown, run_phase1_gates,
 )
 from src.protocol import load_protocol  # noqa: E402
 
@@ -106,6 +109,19 @@ def main(argv=None) -> int:
     (out / "gates.json").write_text(
         json.dumps(payload, indent=2, sort_keys=True, ensure_ascii=False) + "\n", encoding="utf-8", newline="\n")
     (out / "gates.md").write_text(render_phase1_markdown(verdict), encoding="utf-8", newline="\n")
+    # EXPLORATORY appendix: no QC exclusion, no confirmatory status.
+    appendix = out / "exploratory"
+    summary = exploratory_cell_summary(rows)
+    contrasts = exploratory_contrasts(rows)
+    written["exploratory_cells_csv"] = write_table(
+        appendix / "cell_endpoint_summary.csv", tuple(summary[0]) if summary else ("model_id",), summary)
+    written["exploratory_cells_jsonl"] = write_jsonl(appendix / "cell_endpoint_summary.jsonl", summary)
+    written["exploratory_contrasts_csv"] = write_table(
+        appendix / "paired_contrasts.csv", tuple(contrasts[0]) if contrasts else ("model_id",), contrasts)
+    written["exploratory_md"] = appendix / "appendix.md"
+    appendix.mkdir(parents=True, exist_ok=True)
+    written["exploratory_md"].write_text(
+        render_exploratory_markdown(summary, contrasts), encoding="utf-8", newline="\n")
     for path in list(written.values()) + [out / "gates.json", out / "gates.md"]:
         print("wrote %s" % path)
     summary = verdict.summary

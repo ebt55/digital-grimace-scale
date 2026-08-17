@@ -64,14 +64,20 @@ Gate reasons: G1 `no_adjusted_p_below_0.01`; G2 `g1_not_passed_not_unlocked`; G3
 | `Qwen/Qwen2.5-7B-Instruct` | M2 | validity | 0.2173 | [-0.110, 0.544] | 0.57021 | 0.2173 | no |
 | `Qwen/Qwen2.5-7B-Instruct` | M2 | tone | 0.0570 | [-0.270, 0.384] | 0.84749 | 0.0570 | no |
 
-## G2 reversal (false-negative-eligible subset, item-clustered bootstrap)
+## G2 reversal (false-negative-eligible subset, complete cases, item-clustered bootstrap)
 
-| model | metric | items | induction | recovery | recovery/induction | recovery 95% CI |
-| --- | --- | ---: | ---: | ---: | ---: | --- |
-| `google/gemma-2-9b-it` | M2 | - | - | - | - | unavailable (`required_reversal_endpoint_missing`) |
-| `Qwen/Qwen2.5-3B-Instruct` | M2 | - | - | - | - | unavailable (`required_reversal_endpoint_missing`) |
-| `google/gemma-2-2b-it` | M2 | - | - | - | - | unavailable (`required_reversal_endpoint_missing`) |
-| `Qwen/Qwen2.5-7B-Instruct` | M2 | - | - | - | - | unavailable (`required_reversal_endpoint_missing`) |
+| model | metric | items | dropped (incomplete triple) | induction | recovery | recovery/induction | recovery 95% CI |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | --- |
+| `google/gemma-2-9b-it` | M2 | 15 | 10 | -0.3696 | 0.0821 | -0.222 | [-0.197, 0.352] |
+| `Qwen/Qwen2.5-3B-Instruct` | M2 | 8 | 19 | 0.0000 | -0.2958 | n/a | [-0.592, -0.090] |
+| `google/gemma-2-2b-it` | M2 | 9 | 17 | 0.5078 | 0.0564 | 0.111 | [-0.474, 0.469] |
+| `Qwen/Qwen2.5-7B-Instruct` | M2 | 12 | 6 | 0.1608 | -0.3215 | -2.000 | [-0.748, 0.000] |
+
+An eligible item-cell whose measured-accurate, measured-malfunctioning or
+recovery endpoint is quality-control missing cannot support a within-item
+contrast, so it is excluded from this metric's estimate and counted above.
+M2 is missing whenever any of its ten resamples returns an invalid final
+answer, which is why the dropped counts are large here.
 
 ## G5 classifier and shuffled-label null
 
@@ -81,6 +87,13 @@ Gate reasons: G1 `no_adjusted_p_below_0.01`; G2 `g1_not_passed_not_unlocked`; G3
 | `Qwen/Qwen2.5-3B-Instruct` | 0.472 | 0.621 | -0.149 | -0.146 | pass |
 | `google/gemma-2-2b-it` | 0.531 | 0.515 | 0.016 | -0.174 | pass |
 | `Qwen/Qwen2.5-7B-Instruct` | 0.514 | 0.522 | -0.007 | 0.126 | FAIL (`shuffled_auc_gap_not_below_0.1`) |
+
+**Read the primary model's G5 gap with care.** The gap is 0.263 only because the
+baseline (correctness + length) AUC is 0.271 -- below the 0.5 of a coin flip, i.e.
+the baseline features predict the condition *backwards* out of fold -- while the full
+model reaches 0.534, itself barely above chance. The preregistered rule is a gap of
+at least .1 and is applied unchanged, but a gap produced by a sub-chance baseline is
+not evidence that the primary metrics carry condition information.
 
 ## G3 style smoke (five frozen items, sign-aligned, BH within the G3 family)
 

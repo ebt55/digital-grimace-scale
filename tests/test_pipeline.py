@@ -724,6 +724,84 @@ class AmendmentA3Tests(unittest.TestCase):
         self.assertEqual(result.amended_selection.models[QWEN_7B].metrics["M2"].scale_source, "neutral")
 
 
+class AmendmentA4Tests(unittest.TestCase):
+    """A4: the frozen 5% QC bars, pooled across cells instead of within each cell."""
+
+    def _cells(self, *, items=20, per_row=None):
+        """The real discovery design: 20 items, each in the 4 cells of its own
+        difficulty, so all 8 cells hold 10 items and the model has 80 endpoints."""
+        per_row = per_row or {}
+        tasks = [task for task in PROTOCOL.matched_tasks if task.split == "discovery"][:items]
+        rows = []
+        for task in tasks:
+            for validity in ("accurate", "malfunctioning_always_fail"):
+                for tone in ("neutral", "hostile"):
+                    values = dict(
+                        phase="phase_1", run_id=RUN_ID, model_id=GEMMA_9B, task_id=task.task_id,
+                        difficulty=task.difficulty, domain=task.domain,
+                        cell_id="%s__%s__%s" % (task.difficulty, validity, tone),
+                        feedback_validity=validity, tone=tone,
+                    )
+                    values.update(per_row.get((task.task_id, validity, tone), {}))
+                    rows.append(_row(**values))
+        return rows
+
+    def test_one_invalid_greedy_in_a_ten_item_cell_survives_only_under_a4(self):
+        first = self._cells()[0]
+        rows = self._cells(per_row={
+            (first.task_id, "accurate", "neutral"): {"m1": None, "m1_missing_reason": "m1_invalid_final_answer"},
+        })
+        self.assertEqual(len(rows), 80)
+        amended = {item.metric_name: item for item in metric_eligibility(rows, GEMMA_9B)}
+        frozen = {item.metric_name: item for item in metric_eligibility(rows, GEMMA_9B, amendments=FROZEN_RULES)}
+        # One invalid answer in a 10-item cell is 10% of that cell but 1.25% of the model.
+        self.assertAlmostEqual(frozen["M1"].worst_rate, 0.10)
+        self.assertAlmostEqual(amended["M1"].pooled_rate, 1 / 80)
+        self.assertFalse(frozen["M1"].eligible)
+        self.assertEqual(frozen["M1"].scope, "per_condition")
+        self.assertTrue(amended["M1"].eligible)
+        self.assertEqual(amended["M1"].scope, "pooled")
+        # The per-cell rate is still computed and reported under A4.
+        self.assertAlmostEqual(amended["M1"].worst_rate, 0.10)
+        self.assertEqual(amended["M1"].worst_cell_id, first.difficulty + "__accurate__neutral")
+
+    def test_a_genuinely_bad_metric_is_excluded_under_both_rule_sets(self):
+        broken = {
+            (task.task_id, validity, tone): {"m1": None, "m1_missing_reason": "m1_invalid_final_answer"}
+            for task in [item for item in PROTOCOL.matched_tasks if item.split == "discovery"][:5]
+            for validity in ("accurate",) for tone in ("neutral", "hostile")
+        }
+        rows = self._cells(per_row=broken)
+        for rules, label in ((AMENDED_RULES, "amended"), (FROZEN_RULES, "frozen")):
+            with self.subTest(rules=label):
+                result = {item.metric_name: item for item in metric_eligibility(rows, GEMMA_9B, amendments=rules)}
+                self.assertFalse(result["M1"].eligible)
+                self.assertEqual(result["M1"].reason, "m1_missing_rate_above_5_percent")
+        self.assertAlmostEqual(
+            metric_eligibility(rows, GEMMA_9B)[0].pooled_rate, 10 / 80)
+
+    def test_pooled_m2_bar_uses_the_frozen_k_of_ten(self):
+        first = self._cells()[0]
+        one_bad = self._cells(per_row={(first.task_id, "accurate", "neutral"): {"resample_valid_count": 9}})
+        amended = {item.metric_name: item for item in metric_eligibility(one_bad, GEMMA_9B)}
+        frozen = {item.metric_name: item for item in metric_eligibility(one_bad, GEMMA_9B, amendments=FROZEN_RULES)}
+        self.assertAlmostEqual(amended["M2"].pooled_rate, 1 / 800)
+        self.assertTrue(amended["M2"].eligible)
+        self.assertAlmostEqual(frozen["M2"].worst_rate, 1 / 100)
+        self.assertTrue(frozen["M2"].eligible)  # 1% is under the per-cell bar too
+        # 4 of 10 invalid stays under A2's 5-of-10 item-exclusion threshold, so
+        # the items survive and A4 judges them: 20 x 4 = 80 of 800 = 10%.
+        many_bad = self._cells(per_row={
+            (task.task_id, "accurate", "neutral"): {"resample_valid_count": 6}
+            for task in [item for item in PROTOCOL.matched_tasks if item.split == "discovery"]
+        })
+        pooled = {item.metric_name: item for item in metric_eligibility(many_bad, GEMMA_9B)}
+        self.assertEqual(excluded_task_ids(many_bad, GEMMA_9B), frozenset())
+        self.assertAlmostEqual(pooled["M2"].pooled_rate, 80 / 800)
+        self.assertFalse(pooled["M2"].eligible)
+        self.assertEqual(pooled["M2"].reason, "m2_invalid_sampled_response_rate_above_5_percent")
+
+
 class EligibilityTests(unittest.TestCase):
     def _measured(self, **overrides):
         rows = []

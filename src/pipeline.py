@@ -56,16 +56,21 @@ class Amendments:
     ensemble is mostly invalid -- a treatment-blind instrument-compliance check
     that never looks at a treatment cell.  ``pooled_sd_fallback`` (A3) rescales
     a metric by the model's pooled discovery factorial SD when its neutral SD is
-    exactly zero.  Both are strict extensions: with a healthy baseline and a
-    nonzero neutral SD they change nothing.  Phase 2 must apply them identically.
+    exactly zero.  ``pooled_qc`` (A4) evaluates the frozen 5% M1/M2 exclusion
+    bars pooled across the model's discovery factorial cells rather than within
+    each cell separately: with only 10 discovery items per cell the per-cell bar
+    is zero-tolerance, because a single invalid greedy answer is already 10%.
+    All three are strict extensions of the frozen rules -- with clean data none
+    of them changes anything -- and Phase 2 must apply them identically.
     """
 
     item_exclusion: bool = True
     pooled_sd_fallback: bool = True
+    pooled_qc: bool = True
 
 
-FROZEN_RULES = Amendments(item_exclusion=False, pooled_sd_fallback=False)
-AMENDED_RULES = Amendments(item_exclusion=True, pooled_sd_fallback=True)
+FROZEN_RULES = Amendments(item_exclusion=False, pooled_sd_fallback=False, pooled_qc=False)
+AMENDED_RULES = Amendments(item_exclusion=True, pooled_sd_fallback=True, pooled_qc=True)
 
 
 class PipelineError(ValueError):
@@ -273,28 +278,45 @@ def build_g5_rows(rows, model_id, *, metrics=PRIMARY_METRICS, amendments=AMENDED
 
 @dataclass(frozen=True)
 class MetricEligibility:
+    """One metric's confirmatory QC verdict, with both the per-cell and pooled rates."""
+
     metric_name: str
     eligible: bool
     reason: str | None
     worst_cell_id: str | None
     worst_rate: float | None
+    pooled_rate: float | None = None
+    scope: str = "per_condition"
+
+
+def _qc_counts(group, metric):
+    """(required, bad) for one cell: greedy trials for M1/M3, k=10 resamples for M2."""
+    if metric == "M2":
+        required = REQUIRED_RESAMPLES * len(group)
+        return required, required - sum(row.resample_valid_count for row in group)
+    return len(group), sum(1 for row in group if row.metric(metric)[0] is None)
 
 
 def metric_eligibility(rows, model_id, *, m3_audit_f1=None, phase="phase_1", split="discovery", amendments=AMENDED_RULES):
     """Apply the preregistered confirmatory exclusion rules to one model.
 
-    M1 is excluded if more than 5% of required greedy trials are missing in any
-    confirmatory condition; M2 if more than 5% of required sampled responses are
-    invalid or absent (k stays frozen at 10); M3 only if a human audit reports
-    F1 below .7 -- which cannot be computed offline, so M3 stays eligible unless
-    an audit F1 is supplied.  Amendment A2's item exclusion is applied first, so
-    these rates describe the items that actually enter the analysis.
+    M1 is excluded if more than 5% of required greedy trials are missing; M2 if
+    more than 5% of required sampled responses are invalid or absent (k stays
+    frozen at 10); M3 only if a human audit reports F1 below .7 -- which cannot
+    be computed offline, so M3 stays eligible unless an audit F1 is supplied.
+
+    Amendment A2's item exclusion is applied first, so these rates describe the
+    items that actually enter the analysis.  Amendment A4 then decides on the
+    rate POOLED across the model's discovery factorial cells rather than the
+    worst single cell; the per-cell rates are still computed and reported, and
+    the QC table keeps its per-condition breakdown either way.
     """
     excluded = excluded_task_ids(rows, model_id, amendments, phase=phase, split=split)
     selected = _measured_factorial(rows, model_id, phase=phase, split=split, excluded=excluded)
+    scope = "pooled" if amendments.pooled_qc else "per_condition"
     if not selected:
         return tuple(
-            MetricEligibility(metric, False, "no_confirmatory_rows", None, None)
+            MetricEligibility(metric, False, "no_confirmatory_rows", None, None, None, scope)
             for metric in PRIMARY_METRICS
         )
     by_cell: dict[str, list[MetricRow]] = {}
@@ -302,28 +324,28 @@ def metric_eligibility(rows, model_id, *, m3_audit_f1=None, phase="phase_1", spl
         by_cell.setdefault(row.cell_id, []).append(row)
     out = []
     for metric in PRIMARY_METRICS:
-        worst_cell, worst_rate = None, None
+        worst_cell, worst_rate, total_required, total_bad = None, None, 0, 0
         for cell_id in sorted(by_cell):
-            group = by_cell[cell_id]
-            if metric == "M2":
-                required = 10 * len(group)
-                rate = (required - sum(row.resample_valid_count for row in group)) / required
-            else:
-                rate = sum(1 for row in group if row.metric(metric)[0] is None) / len(group)
+            required, bad = _qc_counts(by_cell[cell_id], metric)
+            total_required += required
+            total_bad += bad
+            rate = bad / required if required else 0.0
             if worst_rate is None or rate > worst_rate:
                 worst_cell, worst_rate = cell_id, rate
+        pooled_rate = total_bad / total_required if total_required else 0.0
         if metric == "M3":
             failed = m3_audit_f1 is not None and m3_audit_f1 < M3_AUDIT_F1_FLOOR
             reason = "m3_parser_audit_f1_below_0.7" if failed else (
                 None if m3_audit_f1 is not None else "m3_audit_f1_not_supplied_eligible_by_default"
             )
-            out.append(MetricEligibility(metric, not failed, reason, worst_cell, worst_rate))
+            out.append(MetricEligibility(metric, not failed, reason, worst_cell, worst_rate, pooled_rate, scope))
             continue
-        excluded = worst_rate is not None and worst_rate > QC_EXCLUSION_RATE
+        decisive = pooled_rate if amendments.pooled_qc else worst_rate
+        over = decisive is not None and decisive > QC_EXCLUSION_RATE
         out.append(MetricEligibility(
-            metric, not excluded,
-            ("m1_missing_rate_above_5_percent" if metric == "M1" else "m2_invalid_sampled_response_rate_above_5_percent") if excluded else None,
-            worst_cell, worst_rate,
+            metric, not over,
+            ("m1_missing_rate_above_5_percent" if metric == "M1" else "m2_invalid_sampled_response_rate_above_5_percent") if over else None,
+            worst_cell, worst_rate, pooled_rate, scope,
         ))
     return tuple(out)
 
@@ -800,6 +822,24 @@ def _bootstrap_estimate(by_item, index, seed_text):
     return Estimate(point, quantile(0.025), quantile(0.975))
 
 
+def complete_reversal_rows(reversal_rows):
+    """Keep only false-negative-eligible rows whose three endpoints all exist.
+
+    ``analysis.g2_reversal`` voids a metric outright if any supplied eligible row
+    has a missing endpoint.  That is too strict for M2, whose frozen
+    all-ten-valid rule leaves the metric missing on a large minority of
+    endpoints: the preregistration's standing treatment of quality-control gaps
+    is to exclude the observation from that metric's estimate, count it and
+    report it -- not to void the estimand.  Complete-case selection therefore
+    happens here, in the glue, and the dropped count is reported alongside.
+    """
+    return tuple(
+        row for row in reversal_rows
+        if row.false_negative_history_eligible
+        and None not in (row.measured_accurate, row.measured_malfunctioning, row.post_correction_malfunctioning)
+    )
+
+
 def reversal_profile(reversal_rows, model_id, metric):
     """Item-clustered bootstrap means of the three reversal endpoints (sign-aligned)."""
     sign = METRIC_INSTABILITY_SIGN[metric]
@@ -830,6 +870,224 @@ def reversal_profile(reversal_rows, model_id, metric):
 
 
 # --------------------------------------------------------------------------
+# Exploratory descriptive appendix
+# --------------------------------------------------------------------------
+#
+# EXPLORATORY ONLY.  Nothing below applies a quality-control exclusion, enters a
+# gate, or carries confirmatory status.  It exists so the write-up can describe
+# what the data show beyond the preregistered gate, on every endpoint and every
+# cell, including the ones the frozen rules exclude.
+
+EXPLORATORY_ENDPOINTS = ("measured", "recovery", "onset", "onset_washout")
+EXPLORATORY_METRICS = ("m1", "m2", "entropy_mean", "length_tokens", "accuracy", "non_answer_rate")
+
+
+def _descriptive(row, name):
+    """Raw, unstandardised value for the descriptive appendix; None if absent."""
+    if name == "accuracy":
+        return None if not row.greedy_answer_valid else float(bool(row.greedy_answer_correct))
+    if name == "non_answer_rate":
+        return 0.0 if row.greedy_answer_valid else 1.0
+    if name == "resample_invalid_rate":
+        return (REQUIRED_RESAMPLES - row.resample_valid_count) / REQUIRED_RESAMPLES
+    value = getattr(row, "m3_rate" if name == "m3" else name, None)
+    return None if value is None else float(value)
+
+
+def _mean_of(values):
+    present = [value for value in values if value is not None]
+    return (mean(present) if present else None), len(present)
+
+
+def exploratory_cell_summary(rows, *, phase="phase_1", split="discovery"):
+    """Per model x cell x endpoint means and item counts, with no exclusions."""
+    selected = [
+        row for row in rows
+        if row.phase == phase and row.split == split and row.turn_label in EXPLORATORY_ENDPOINTS
+    ]
+    grouped: dict[tuple, list] = {}
+    for row in selected:
+        grouped.setdefault((row.model_id, row.cell_id, row.turn_label), []).append(row)
+    out = []
+    for key in sorted(grouped):
+        group = grouped[key]
+        record = {
+            "model_id": key[0], "cell_id": key[1], "turn_label": key[2],
+            "cell_kind": group[0].cell_kind,
+            "difficulty": group[0].difficulty, "feedback_validity": group[0].feedback_validity,
+            "tone": group[0].tone, "n_items": len({row.task_id for row in group}),
+            "n_endpoints": len(group),
+        }
+        for name in ("m1", "m2", "entropy_mean", "length_tokens", "accuracy", "non_answer_rate", "resample_invalid_rate"):
+            value, count = _mean_of([_descriptive(row, name) for row in group])
+            record["mean_" + name] = value
+            record["n_" + name] = count
+        # Item-bootstrap CIs for the two columns the exploratory figure plots, so
+        # the figure regenerates from this committed table alone.
+        for name in ("m1", "non_answer_rate"):
+            pairs = [(row.task_id, _descriptive(row, name)) for row in group if _descriptive(row, name) is not None]
+            estimate, _, _ = _item_bootstrap(pairs, "DGS-AC1-EXPLORATORY-CELL-v1|%s|%s|%s|%s" % (key + (name,)))
+            record["ci95_lower_" + name] = estimate.ci95_lower
+            record["ci95_upper_" + name] = estimate.ci95_upper
+        out.append(record)
+    return tuple(out)
+
+
+def _item_bootstrap(pairs, seed_text):
+    """Item-clustered bootstrap over (item, difference) pairs; 2,000 resamples."""
+    by_item: dict[str, list[float]] = {}
+    for item, value in pairs:
+        by_item.setdefault(item, []).append(value)
+    if not by_item:
+        return Estimate(None, None, None), 0, 0
+    point = mean(value for values in by_item.values() for value in values)
+    if len(by_item) < 2:
+        return Estimate(point, None, None), len(by_item), len(pairs)
+    items = sorted(by_item)
+    rng = random.Random(int.from_bytes(hashlib.sha256(seed_text.encode()).digest()[:8], "big"))
+    draws = []
+    for _ in range(BOOTSTRAP_SAMPLES):
+        sampled = [rng.choice(items) for _ in items]
+        draws.append(mean(value for item in sampled for value in by_item[item]))
+    draws.sort()
+
+    def quantile(probability):
+        position = (len(draws) - 1) * probability
+        lower, upper = math.floor(position), math.ceil(position)
+        return draws[lower] + (draws[upper] - draws[lower]) * (position - lower)
+
+    return Estimate(point, quantile(0.025), quantile(0.975)), len(by_item), len(pairs)
+
+
+_CONTRASTS = (
+    # (name, left endpoint selector, right endpoint selector, stratum key)
+    ("validity_malfunctioning_minus_accurate", "validity", "tone_difficulty"),
+    ("tone_hostile_minus_neutral", "tone", "validity_difficulty"),
+    ("recovery_minus_measured", "recovery", "cell"),
+    ("onset_minus_measured", "onset", "cell"),
+    ("washout_minus_onset", "washout", "cell"),
+)
+
+
+def _contrast_pairs(rows, model_id, contrast, metric):
+    """Item-paired differences for one contrast, keyed by stratum."""
+    by_key = {}
+    for row in rows:
+        if row.model_id != model_id or row.cell_kind != "factorial":
+            continue
+        by_key[(row.task_id, row.cell_id, row.turn_label)] = row
+    strata: dict[str, list[tuple[str, float]]] = {}
+    for (task_id, cell_id, turn_label), row in sorted(by_key.items()):
+        difficulty, validity, tone = cell_id.split("__")
+        if contrast == "validity":
+            if validity != "malfunctioning_always_fail" or turn_label != "measured":
+                continue
+            other = by_key.get((task_id, "%s__accurate__%s" % (difficulty, tone), "measured"))
+            stratum = "%s|%s" % (difficulty, tone)
+        elif contrast == "tone":
+            if tone != "hostile" or turn_label != "measured":
+                continue
+            other = by_key.get((task_id, "%s__%s__neutral" % (difficulty, validity), "measured"))
+            stratum = "%s|%s" % (difficulty, validity)
+        elif contrast == "recovery":
+            if turn_label != "recovery":
+                continue
+            other = by_key.get((task_id, cell_id, "measured"))
+            stratum = cell_id
+        elif contrast == "onset":
+            if turn_label != "onset":
+                continue
+            other = by_key.get((task_id, cell_id, "measured"))
+            stratum = cell_id
+        else:
+            if turn_label != "onset_washout":
+                continue
+            other = by_key.get((task_id, cell_id, "onset"))
+            stratum = cell_id
+        if other is None:
+            continue
+        left, right = _descriptive(row, metric), _descriptive(other, metric)
+        if left is None or right is None:
+            continue
+        strata.setdefault(stratum, []).append((task_id, left - right))
+    return strata
+
+
+def exploratory_contrasts(rows, *, metrics=("m1", "m2", "accuracy", "non_answer_rate")):
+    """Paired item-level contrasts with 2,000-resample item-bootstrap 95% CIs."""
+    factorial = [row for row in rows if row.phase == "phase_1" and row.split == "discovery"]
+    out = []
+    for model_id in sorted({row.model_id for row in factorial}):
+        for name, contrast, _ in _CONTRASTS:
+            for metric in metrics:
+                strata = _contrast_pairs(factorial, model_id, contrast, metric)
+                for stratum in sorted(strata):
+                    estimate, n_items, n_pairs = _item_bootstrap(
+                        strata[stratum], "DGS-AC1-EXPLORATORY-v1|%s|%s|%s|%s" % (model_id, name, metric, stratum))
+                    out.append({
+                        "model_id": model_id, "contrast": name, "metric": metric, "stratum": stratum,
+                        "n_items": n_items, "n_pairs": n_pairs, "mean_difference": estimate.value,
+                        "ci95_lower": estimate.ci95_lower, "ci95_upper": estimate.ci95_upper,
+                    })
+    return tuple(out)
+
+
+def render_exploratory_markdown(summary, contrasts) -> str:
+    """The descriptive appendix, labelled so it can never be read as a gate."""
+    lines = [
+        "# EXPLORATORY descriptive appendix - Phase 1 discovery",
+        "",
+        "**EXPLORATORY - no quality-control exclusion, no confirmatory status.**",
+        "No amendment, QC bar or gate is applied here: every endpoint and every cell",
+        "present in the raw data is described, including those the frozen rules exclude.",
+        "Values are raw, not standardised. Nothing in this appendix supports a",
+        "preregistered claim; it exists to describe what the data show beyond the gate.",
+        "",
+        "Conventions: `accuracy` is over greedy answers that parsed (invalid answers are",
+        "not scored as wrong, they are absent); `non_answer_rate` is 1 - parsed, over all",
+        "endpoints; `resample_invalid_rate` counts invalid or absent resamples out of the",
+        "frozen k=10. Contrast CIs are 2,000-resample item-clustered bootstraps.",
+        "",
+        "## Cell x endpoint means",
+        "",
+        "| model | cell | endpoint | items | M1 (n) | M2 (n) | entropy (n) | length | accuracy | non-answer | resample invalid |",
+        "| --- | --- | --- | ---: | --- | --- | --- | ---: | ---: | ---: | ---: |",
+    ]
+
+    def cell(value, count=None):
+        if value is None:
+            return "-"
+        text = "%.3f" % value
+        return text if count is None else "%s (%d)" % (text, count)
+
+    for record in summary:
+        lines.append("| `%s` | %s | %s | %d | %s | %s | %s | %s | %s | %s | %s |" % (
+            record["model_id"], record["cell_id"], record["turn_label"], record["n_items"],
+            cell(record["mean_m1"], record["n_m1"]), cell(record["mean_m2"], record["n_m2"]),
+            cell(record["mean_entropy_mean"], record["n_entropy_mean"]),
+            cell(record["mean_length_tokens"]), cell(record["mean_accuracy"]),
+            cell(record["mean_non_answer_rate"]), cell(record["mean_resample_invalid_rate"]),
+        ))
+    lines += [
+        "",
+        "## Paired item-level contrasts (2,000-resample item-clustered bootstrap)",
+        "",
+        "| model | contrast | metric | stratum | items | pairs | mean difference | 95% CI |",
+        "| --- | --- | --- | --- | ---: | ---: | ---: | --- |",
+    ]
+    for record in contrasts:
+        interval = "-"
+        if record["ci95_lower"] is not None:
+            interval = "[%.3f, %.3f]" % (record["ci95_lower"], record["ci95_upper"])
+        lines.append("| `%s` | %s | %s | %s | %d | %d | %s | %s |" % (
+            record["model_id"], record["contrast"], record["metric"], record["stratum"],
+            record["n_items"], record["n_pairs"], cell(record["mean_difference"]), interval,
+        ))
+    lines.append("")
+    return "\n".join(lines)
+
+
+# --------------------------------------------------------------------------
 # Phase 1 composition
 # --------------------------------------------------------------------------
 
@@ -847,6 +1105,8 @@ class ModelAnalysis:
     unavailable_reasons: tuple[str, ...]
     item_exclusions: tuple[ItemExclusion, ...] = ()
     standardization: Mapping[str, Any] = field(default_factory=lambda: MappingProxyType({}))
+    # Eligible reversal rows dropped per metric for an incomplete endpoint triple.
+    g2_incomplete_dropped: Mapping[str, int] = field(default_factory=lambda: MappingProxyType({}))
 
 
 @dataclass(frozen=True)
@@ -969,11 +1229,14 @@ def run_phase1_gates(rows, primary_model, control_model, *, extra_models=(), sty
         real_g1 = {metric: effects.get((model, metric)) for metric in family}
         null = nulls[model]
         reversal_rows = build_reversal_rows(rows, model, metrics=family, amendments=amendments)
-        real_g2 = {}
+        real_g2, g2_dropped = {}, {}
         for metric in family:
             subset = [row for row in reversal_rows if row.metric_name == metric]
+            eligible_rows = [row for row in subset if row.false_negative_history_eligible]
+            complete = complete_reversal_rows(subset)
+            g2_dropped[metric] = len(eligible_rows) - len(complete)
             try:
-                real_g2[metric] = g2_reversal(subset) if subset else None
+                real_g2[metric] = g2_reversal(complete) if complete else None
             except AnalysisInputError as error:
                 real_g2[metric] = None
                 reasons.append("g2_unavailable:%s:%s" % (metric, error))
@@ -988,6 +1251,7 @@ def run_phase1_gates(rows, primary_model, control_model, *, extra_models=(), sty
             tuple(reasons),
             item_exclusions(rows, model, phase="phase_1", split="discovery") if amendments.item_exclusion else (),
             _freeze({metric: scale.get((model, metric)) for metric in family}),
+            _freeze(g2_dropped),
         )
     core_inputs = {
         model: _core_inputs(model, family, analyses[model].real_g1, analyses[model].shuffled,
@@ -1034,10 +1298,11 @@ def render_phase1_markdown(verdict: Phase1Verdict) -> str:
             "%s (`%s`)" % (metric, reason) for metric, reason in sorted(verdict.unavailable_metrics.items())) or "none"),
         "- extra models (exploratory, boundary only): %s" % (", ".join(
             "`%s`" % model for model in verdict.extra_model_ids) or "none"),
-        "- rule set: **%s** (A2 item exclusion: %s; A3 pooled-SD fallback: %s)" % (
+        "- rule set: **%s** (A2 item exclusion: %s; A3 pooled-SD fallback: %s; A4 pooled QC bars: %s)" % (
             "amended" if verdict.amendments != FROZEN_RULES else "frozen (preregistered only)",
             "on" if verdict.amendments.item_exclusion else "off",
-            "on" if verdict.amendments.pooled_sd_fallback else "off"),
+            "on" if verdict.amendments.pooled_sd_fallback else "off",
+            "on" if verdict.amendments.pooled_qc else "off"),
         "- Phase-1 status: **%s**" % summary.phase_1_status,
         "- interpretable: %s%s" % (
             "yes" if summary.interpretable else "no",
@@ -1085,6 +1350,21 @@ def render_phase1_markdown(verdict: Phase1Verdict) -> str:
         lines.append("| `%s` | %s | %s |" % (model_id, dropped, ", ".join(scales)))
     lines += [
         "",
+        "## Confirmatory QC (A4: the 5% bar is pooled across cells; worst cell shown too)",
+        "",
+        "| model | metric | eligible | decided on | pooled rate | worst cell | worst-cell rate | reason |",
+        "| --- | --- | :---: | --- | ---: | --- | ---: | --- |",
+    ]
+    for model_id, analysis in ((key, verdict.models[key]) for key in verdict.models):
+        for item in analysis.eligibility:
+            lines.append("| `%s` | %s | %s | %s | %s | %s | %s | %s |" % (
+                model_id, item.metric_name, "yes" if item.eligible else "**no**", item.scope,
+                "%.4f" % item.pooled_rate if item.pooled_rate is not None else "n/a",
+                item.worst_cell_id or "-",
+                "%.4f" % item.worst_rate if item.worst_rate is not None else "n/a",
+                "`%s`" % item.reason if item.reason else ""))
+    lines += [
+        "",
         "## G1 adjusted effects (z vs same-model neutral discovery)",
         "",
         "| model | metric | effect | coefficient | 95% CI | BH p | sign-aligned | qualifies |",
@@ -1107,22 +1387,31 @@ def render_phase1_markdown(verdict: Phase1Verdict) -> str:
                     "yes" if coefficient.qualifying else "no"))
     lines += [
         "",
-        "## G2 reversal (false-negative-eligible subset, item-clustered bootstrap)",
+        "## G2 reversal (false-negative-eligible subset, complete cases, item-clustered bootstrap)",
         "",
-        "| model | metric | items | induction | recovery | recovery/induction | recovery 95% CI |",
-        "| --- | --- | ---: | ---: | ---: | ---: | --- |",
+        "| model | metric | items | dropped (incomplete triple) | induction | recovery | recovery/induction | recovery 95% CI |",
+        "| --- | --- | ---: | ---: | ---: | ---: | ---: | --- |",
     ]
     for model_id, analysis in ((key, verdict.models[key]) for key in verdict.models):
         for metric in verdict.eligible_metrics:
             result = analysis.real_g2.get(metric)
+            dropped = analysis.g2_incomplete_dropped.get(metric, 0)
             if result is None or result.unavailable_reason:
-                lines.append("| `%s` | %s | - | - | - | - | unavailable (`%s`) |" % (
-                    model_id, metric, None if result is None else result.unavailable_reason))
+                lines.append("| `%s` | %s | - | %d | - | - | - | unavailable (`%s`) |" % (
+                    model_id, metric, dropped, None if result is None else result.unavailable_reason))
                 continue
-            lines.append("| `%s` | %s | %d | %.4f | %.4f | %s | [%.3f, %.3f] |" % (
-                model_id, metric, result.n_items, result.induction, result.recovery,
+            lines.append("| `%s` | %s | %d | %d | %.4f | %.4f | %s | [%.3f, %.3f] |" % (
+                model_id, metric, result.n_items, dropped, result.induction, result.recovery,
                 "%.3f" % result.recovery_to_induction if result.recovery_to_induction is not None else "n/a",
                 result.recovery_ci95[0], result.recovery_ci95[1]))
+    lines += [
+        "",
+        "An eligible item-cell whose measured-accurate, measured-malfunctioning or",
+        "recovery endpoint is quality-control missing cannot support a within-item",
+        "contrast, so it is excluded from this metric's estimate and counted above.",
+        "M2 is missing whenever any of its ten resamples returns an invalid final",
+        "answer, which is why the dropped counts are large here.",
+    ]
     lines += [
         "",
         "## G5 classifier and shuffled-label null",
@@ -1140,6 +1429,20 @@ def render_phase1_markdown(verdict: Phase1Verdict) -> str:
             "%.3f" % real.auc_gap if real is not None and real.auc_gap is not None else "n/a",
             "%.3f" % null.g5.auc_gap if null.g5 is not None and null.g5.auc_gap is not None else "n/a",
             ("pass" if null.passed else "FAIL") + ("" if null.reason is None else " (`%s`)" % null.reason)))
+    primary_g5 = verdict.models[verdict.primary_model_id].real_g5
+    if primary_g5 is not None and primary_g5.baseline_auc is not None and primary_g5.baseline_auc < 0.5:
+        lines += [
+            "",
+            "**Read the primary model's G5 gap with care.** The gap is %.3f only because the"
+            % (primary_g5.auc_gap or 0.0),
+            "baseline (correctness + length) AUC is %.3f -- below the 0.5 of a coin flip, i.e."
+            % primary_g5.baseline_auc,
+            "the baseline features predict the condition *backwards* out of fold -- while the full",
+            "model reaches %.3f, itself barely above chance. The preregistered rule is a gap of"
+            % (primary_g5.full_auc or 0.0),
+            "at least .1 and is applied unchanged, but a gap produced by a sub-chance baseline is",
+            "not evidence that the primary metrics carry condition information.",
+        ]
     if verdict.style:
         lines += [
             "",

@@ -209,10 +209,80 @@ def figure_f4(gates, out_dir: Path):
     return _save(figure, out_dir, "F4_cause_removal_reversal")
 
 
+def _read_csv(path: Path):
+    import csv
+
+    if not path.exists():
+        return []
+    with path.open("r", encoding="utf-8", newline="") as handle:
+        rows = list(csv.DictReader(handle))
+
+    def number(value):
+        try:
+            return float(value) if value != "" else None
+        except ValueError:
+            return value
+
+    return [{key: number(value) for key, value in row.items()} for row in rows]
+
+
+ENDPOINT_ORDER = ("measured", "recovery", "onset", "onset_washout")
+ENDPOINT_COLOURS = {"measured": VERMILLION, "recovery": SKY, "onset": PURPLE, "onset_washout": GREEN}
+
+
+def figure_exploratory(summary, out_dir: Path, model_id: str):
+    """EXPLORATORY - M1 and non-answer rate by cell and endpoint for one model."""
+    rows = [row for row in summary if row["model_id"] == model_id and row["cell_kind"] == "factorial"]
+    if not rows:
+        return []
+    difficulties = [value for value in ("easy", "hard") if any(row["difficulty"] == value for row in rows)]
+    figure, axes_grid = plt.subplots(2, len(difficulties), figsize=(6.6 * len(difficulties), 8.2), squeeze=False)
+    for column, difficulty in enumerate(difficulties):
+        arms = sorted({row["cell_id"] for row in rows if row["difficulty"] == difficulty})
+        for panel, (field, label) in enumerate((("m1", "M1 margin (raw)"), ("non_answer_rate", "non-answer rate"))):
+            axes = axes_grid[panel][column]
+            width = 0.2
+            for index, endpoint in enumerate(ENDPOINT_ORDER):
+                offsets, values, lower, upper = [], [], [], []
+                for position, cell_id in enumerate(arms):
+                    match = next((row for row in rows if row["cell_id"] == cell_id and row["turn_label"] == endpoint), None)
+                    if match is None or match["mean_" + field] is None:
+                        continue
+                    offsets.append(position + (index - 1.5) * width)
+                    values.append(match["mean_" + field])
+                    low, high = match.get("ci95_lower_" + field), match.get("ci95_upper_" + field)
+                    lower.append(match["mean_" + field] - low if low is not None else 0.0)
+                    upper.append(high - match["mean_" + field] if high is not None else 0.0)
+                if not offsets:
+                    continue
+                axes.bar(offsets, values, width, label=endpoint, color=ENDPOINT_COLOURS[endpoint],
+                         edgecolor="black", linewidth=0.4)
+                axes.errorbar(offsets, values, yerr=[lower, upper], fmt="none", ecolor="black",
+                              capsize=2.5, linewidth=0.9)
+            axes.set_xticks(range(len(arms)))
+            axes.set_xticklabels([cell.replace(difficulty + "__", "").replace("_always_fail", "") for cell in arms],
+                                 rotation=18, ha="right", fontsize=8)
+            axes.set_ylabel(label)
+            axes.axhline(0.0, color="black", linewidth=0.8)
+            axes.grid(axis="y", linestyle=":", linewidth=0.5, alpha=0.6)
+            axes.set_title("%s - %s items" % (label, difficulty), fontsize=10)
+    handles, labels = axes_grid[0][0].get_legend_handles_labels()
+    axes_grid[0][-1].legend(handles, labels, fontsize=8, title="endpoint", title_fontsize=8,
+                            loc="upper left", bbox_to_anchor=(1.01, 1.0), borderaxespad=0.0)
+    figure.suptitle("EXPLORATORY - %s by cell and endpoint (%s)\nno QC exclusion, no confirmatory status"
+                    % (_short(model_id), "item bootstrap 95% CI"), fontsize=11)
+    figure.supxlabel("Descriptive only. Raw values, every endpoint present in the raw data.",
+                     fontsize=7, color="#444444")
+    figure.tight_layout()
+    return _save(figure, out_dir, "FX_exploratory_%s_by_endpoint" % _short(model_id).replace(".", "_"))
+
+
 def parse_args(argv=None):
     parser = argparse.ArgumentParser(description="Regenerate DGS figures from committed summaries.")
     parser.add_argument("--summaries", default="results/summaries", help="committed summary root")
     parser.add_argument("--out", default="results/figures", help="figure output directory")
+    parser.add_argument("--exploratory-model", default=None,
+                        help="model for the exploratory endpoint figure (default: the Phase-1 primary)")
     return parser.parse_args(argv)
 
 
@@ -231,6 +301,14 @@ def main(argv=None) -> int:
     else:
         written += figure_f2(gates, out_dir)
         written += figure_f4(gates, out_dir)
+    summary = _read_csv(summaries / "phase1" / "exploratory" / "cell_endpoint_summary.csv")
+    if not summary:
+        print("skipping the exploratory figure: no exploratory cell summary found", file=sys.stderr)
+    else:
+        model_id = args.exploratory_model
+        if model_id is None:
+            model_id = gates["verdict"]["primary_model_id"] if gates else summary[0]["model_id"]
+        written += figure_exploratory(summary, out_dir, model_id)
     for path in written:
         print("wrote %s" % path)
     return 0 if written else 2

@@ -412,3 +412,97 @@ records provider usage and list-price cost.
 Phase-1 files: 160 per model (80 measured, 40 onset, 40 recovery) for both
 `google/gemma-2-9b-it` and `Qwen/Qwen2.5-3B-Instruct` — **320 judge calls**, estimated
 **$0.40–0.90** at $3/$15 per MTok with the 1,084-token rubric block prompt-cached.
+
+### Provisional first pass over the Phase-1 raw (agent C, 2026-08-17)
+
+`analyze_phase1.py` ran end-to-end over `results/raw/phase1` (22,880 records, 0 malformed lines,
+peak RSS ~36 MB after the streaming fix). Exit code 4 is the script's BLOCKED-verdict code, not a
+crash. **Numbers are provisional** — ~96 trajectories per model still carry the warm-up placeholder
+`initial` record and will be regenerated.
+
+Every metric is currently unusable, for two independent reasons:
+
+- **M1 QC-excluded for all four models** (frozen rule: >5% of required greedy trials missing in any
+  confirmatory condition). Worst-cell missing rates: gemma-2-9b 0.222, gemma-2-2b 0.125,
+  Qwen-3B 0.222, Qwen-7B 0.800. This is almost certainly the format failure agent A logged on
+  2026-08-17: models end with `**Answer: D**` (markdown bold) and the frozen parser requires a final
+  line exactly `Answer: X`, so the answer is invalid and M1 has no option-letter token to read.
+- **M2 QC-excluded for all four models** (>5% of required sampled responses invalid): worst-cell
+  rates 0.100–0.150 — the same format failure in the resample ensembles.
+- **M3 is the only QC-eligible metric and has zero variance** (neutral and pooled), so no z-scale
+  exists and it cannot be estimated.
+
+Nothing is estimable, so G1 is UNAVAILABLE and Phase 1 is BLOCKED — which is the behaviour the
+amended family rule specifies, not a pipeline failure. The blocker is upstream: the `Answer: X`
+format compliance (a protocol decision, since the prompt is hash-locked) and whatever makes the M3
+parser fire no events at all. Both need resolving before the Phase-1 gate can say anything.
+
+## 2026-08-17 — agent C — Amendment A4 (pooled confirmatory QC bars)
+
+**Amendment A4 (decided by orchestrator 2026-08-17 ~16:35, before any Phase-1 effect estimate was
+viewed; structural rationale).** Each factorial cell holds only 10 discovery items, so the frozen
+per-condition 5% QC bar is effectively zero-tolerance: one invalid greedy answer in one cell is
+already 10% and excludes the metric outright. A4 evaluates the same two 5% bars POOLED across the
+model's discovery factorial cells (measured endpoint, after A2's item exclusion): M1 is excluded if
+more than 5% of that model's required greedy trials are missing, M2 if more than 5% of its required
+sampled responses are invalid or absent (k stays frozen at 10). The bars themselves, the metrics
+they govern and the M3 F1 rule are unchanged — only the denominator moves from one cell to the
+model. Per-cell rates are still computed, carried on `MetricEligibility.worst_cell_id`/`worst_rate`
+and printed in `gates.md` next to the pooled rate; `qc_by_cell.csv` keeps its per-condition
+breakdown untouched. A4 is flag-controlled exactly like A2/A3 (`--no-amendments` reproduces the
+frozen per-condition outcome) and must be applied identically to the Phase-2 holdout.
+
+Ordering note: A2 runs before A4, so an item whose baseline resample ensemble is mostly invalid is
+removed from the design first and never contributes to the pooled QC rate.
+
+**Two corrections to my earlier provisional note.** (a) That run was over PURGED files — 96 whole
+trajectories per model had been removed pending regeneration — so the M1/M2 missing rates I logged
+(0.125–0.800) are inflated by absent trajectories and should not be read as parser failures. Do not
+use them. (b) Amendment A1 is confirmed active in extraction: on `google__gemma-2-9b-it.jsonl`,
+greedy measured records whose final line is `**Answer: D**` parse valid and yield real M1 margins
+(12.25 and 9.81, no missing reason). The remaining `m1_invalid_final_answer` cases are genuine
+non-answers such as `**Answer:**` and `**Answer:  None of the above**`. No bug.
+
+## 2026-08-17 — agent C — G2 complete-case fix, exploratory appendix, figures
+
+**G2 `required_reversal_endpoint_missing` was a glue gap, not a data wall.** `analysis.g2_reversal`
+voids a metric outright if *any* supplied false-negative-eligible row has a missing endpoint. With
+the gate family reduced to {M2}, and M2 missing whenever any one of its ten resamples returns an
+invalid final answer, that guard fired for every model: M2 is present on only 46–61 of 80 measured
+and 16–27 of 40 recovery endpoints. Eligibility itself was never the problem — 29–34 of ~38 rows
+per model are false-negative eligible — and complete triples do exist (11–24 per model).
+
+The preregistration's standing treatment of a quality-control gap is to exclude the observation
+from that metric's estimate, count it and report it, not to void the estimand. Complete-case
+selection now happens in the glue (`pipeline.complete_reversal_rows`), the frozen `g2_reversal`
+contract is untouched, and the number of eligible rows dropped for an incomplete triple is carried
+on `ModelAnalysis.g2_incomplete_dropped` and printed in the G2 table. The descriptive reversal now
+computes for all four models (M2, sign-aligned z, item-clustered bootstrap):
+
+| model | items | dropped | induction | recovery | recovery 95% CI |
+|---|---:|---:|---:|---:|---|
+| gemma-2-9b-it | 15 | 10 | -0.370 | 0.082 | [-0.197, 0.352] |
+| gemma-2-2b-it | 9 | 17 | 0.508 | 0.056 | [-0.474, 0.469] |
+| Qwen2.5-3B | 8 | 19 | 0.000 | -0.296 | [-0.592, -0.090] |
+| Qwen2.5-7B | 12 | 6 | 0.161 | -0.322 | [-0.748, 0.000] |
+
+No model shows the preregistered reversal pattern: the primary's induction is negative and its
+recovery CI spans zero. G2 remains NOT_EVALUATED at the gate because G1 failed; this is descriptive.
+
+**Exploratory descriptive appendix** — `results/summaries/phase1/exploratory/`
+(`appendix.md`, `cell_endpoint_summary.csv/.jsonl`, `paired_contrasts.csv`). Clearly labelled
+EXPLORATORY: no QC exclusion, no amendment, no confirmatory status, raw (unstandardised) values,
+every endpoint and cell present in the raw data. Per model × cell × endpoint means and item counts
+for M1, M2, entropy, length, greedy accuracy, non-answer rate and resample-invalid rate (80 rows);
+plus 314 paired item-level contrasts with 2,000-resample item-clustered bootstrap CIs for validity
+(mal−acc within tone×difficulty), tone (hostile−neutral within validity×difficulty),
+recovery−measured, onset−measured and washout−onset, over M1, M2, accuracy and non-answer rate.
+Conventions are stated in the appendix header: accuracy is scored only over answers that parsed,
+so an unparseable answer is absent rather than counted wrong, and `non_answer_rate` carries that
+information separately.
+
+**G5 caveat now stated in `gates.md`.** The primary's G5 "PASS" rests on a baseline
+(correctness + length) AUC of 0.27 — below chance, i.e. the baseline predicts the condition
+backwards out of fold — against a full-model AUC of 0.53, itself barely above chance. The
+preregistered gap rule is applied unchanged, but a gap manufactured by a sub-chance baseline is not
+evidence that the primary metrics carry condition information, and the write-up must say so.
