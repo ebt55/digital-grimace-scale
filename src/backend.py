@@ -100,7 +100,7 @@ def normalize_alternatives(sampled_text: str, sampled_logprob: float,
         raise BackendError("alternative limit must be positive")
     merged: dict[str, float] = {}
     for text, logprob in alternatives:
-        if not isinstance(text, str) or not text:
+        if not isinstance(text, str):
             continue
         merged[text] = _logaddexp(merged[text], logprob) if text in merged else logprob
     if sampled_text not in merged:
@@ -136,25 +136,38 @@ def _sse_lines(chunks: Iterable[bytes]) -> Iterator[str]:
         yield buffer.decode("utf-8", errors="replace").strip()
 
 
-def _trim_trailing_special(tokens: list[Token], content: str) -> tuple[list[Token], int]:
-    """Drop trailing tokens the server never showed in `message.content`.
+def _trim_trailing_special(tokens: list[Token], content: str) -> tuple[list[Token], list[Token]]:
+    """Split off trailing tokens the server never showed in `message.content`.
 
     vLLM streams the end-of-turn token as a logprob entry with no matching content delta, so
     a naive concatenation appends `<end_of_turn>` to the response. That extra line makes the
     frozen `Answer: X` parser reject an otherwise-valid response, so trim it -- but only when
     the visible content is an exact prefix, never when the two genuinely disagree.
+
+    An immediately-terminated turn lands here as `content == ""` with a lone EOS entry, and
+    correctly trims to nothing; the caller turns that into one zero-width position.
     """
-    if not content:
-        return tokens, 0
     joined = "".join(token.text for token in tokens)
     if joined == content or not joined.startswith(content):
-        return tokens, 0
+        return tokens, []
     trimmed = list(tokens)
     while trimmed and len("".join(token.text for token in trimmed)) > len(content):
         trimmed.pop()
-    if trimmed and "".join(token.text for token in trimmed) == content:
-        return trimmed, len(tokens) - len(trimmed)
-    return tokens, 0
+    if "".join(token.text for token in trimmed) == content:
+        return trimmed, tokens[len(trimmed):]
+    return tokens, []
+
+
+def _empty_position(dropped: Sequence[Token]) -> Token:
+    """One zero-width position standing in for a response that generated no visible text.
+
+    An empty response is a legitimate outcome (it simply parses as an invalid final answer),
+    so it has to be recordable. The EOS position's own distribution is informative -- it says
+    how confident the model was about stopping -- so carry it over when we have it.
+    """
+    if dropped:
+        return Token("", dropped[0].logprob, dropped[0].top_logprobs)
+    return Token("", 0.0, (("", 0.0),))
 
 
 def _endpoint_root(base_url: str) -> str:
@@ -193,7 +206,7 @@ class OpenAICompatBackend:
         self.stats: dict[str, int] = {"requests": 0, "retries": 0, "content_mismatches": 0,
                                       "prompt_tokens": 0, "completion_tokens": 0,
                                       "nonfinite_logprobs": 0, "truncated": 0,
-                                      "trailing_special_tokens": 0}
+                                      "trailing_special_tokens": 0, "empty_responses": 0}
         # ~100 worker threads share this client, so the pool must not become the bottleneck.
         self._client = httpx.Client(
             timeout=httpx.Timeout(self.timeout_s, connect=60.0),
@@ -283,14 +296,17 @@ class OpenAICompatBackend:
                     continue
                 for entry in entries:
                     tokens.append(self._token(entry))
-        if not tokens:
-            raise BackendError("server returned no tokens with logprobs")
         if finish_reason == "length":
             self._bump("truncated")
         content = "".join(content_parts)
         tokens, dropped = _trim_trailing_special(tokens, content)
         if dropped:
-            self._bump("trailing_special_tokens", dropped)
+            self._bump("trailing_special_tokens", len(dropped))
+        if not tokens:
+            # An immediately-terminated turn: no visible text, but still a real generated
+            # position. Recording it beats crashing -- it parses as an invalid final answer.
+            tokens = [_empty_position(dropped)]
+            self._bump("empty_responses")
         return tokens, content, usage
 
     @staticmethod
@@ -307,8 +323,10 @@ class OpenAICompatBackend:
 
     def _token(self, entry: Mapping[str, Any]) -> Token:
         text = entry.get("token")
-        if not isinstance(text, str) or not text:
-            raise BackendError("logprob entry is missing a nonempty token string")
+        # "" is a legitimate generated position: byte-level pieces can decode to nothing while
+        # still carrying a real log probability. Only a missing/non-string field is an error.
+        if not isinstance(text, str):
+            raise BackendError("logprob entry is missing a token string")
         logprob, floored = _clean_logprob(entry.get("logprob"))
         if floored:
             self._bump("nonfinite_logprobs")
@@ -317,7 +335,7 @@ class OpenAICompatBackend:
             if not isinstance(alternative, Mapping):
                 continue
             candidate = alternative.get("token")
-            if not isinstance(candidate, str) or not candidate:
+            if not isinstance(candidate, str):
                 continue
             score, was_floored = _clean_logprob(alternative.get("logprob"))
             if was_floored:

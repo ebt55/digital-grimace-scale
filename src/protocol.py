@@ -283,7 +283,11 @@ def canonical_prompt_sha256(messages: Sequence[Mapping[str, str]]) -> str:
         raise ProtocolError("messages must be a nonempty sequence")
     normalized = []
     for message in messages:
-        if not isinstance(message, Mapping) or set(message) != {"role", "content"} or message.get("role") not in ("system", "user", "assistant") or not isinstance(message.get("content"), str) or not message["content"]:
+        # An assistant turn may be empty: a response that terminated immediately generated no
+        # visible text, and that transcript still has to hash. Prompts (system/user) are
+        # authored by the protocol and stay nonempty. No existing hash changes -- an empty
+        # assistant turn was previously unrepresentable rather than hashed differently.
+        if not isinstance(message, Mapping) or set(message) != {"role", "content"} or message.get("role") not in ("system", "user", "assistant") or not isinstance(message.get("content"), str) or (not message["content"] and message["role"] != "assistant"):
             raise ProtocolError("messages must contain only string role/content pairs")
         normalized.append({"role": message["role"], "content": message["content"]})
     payload = json.dumps(normalized, ensure_ascii=False, separators=(",", ":"), sort_keys=True).encode("utf-8")

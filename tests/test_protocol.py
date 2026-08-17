@@ -89,6 +89,22 @@ class ProtocolTests(unittest.TestCase):
         onset, washout = onset_messages(correct, "C", "hostile", self.protocol)
         self.assertIn("Wrong again", onset); self.assertIn("correct", washout)
 
+    def test_empty_assistant_turn_hashes_deterministically(self):
+        # A turn that terminated immediately produced no visible text; the transcript still hashes.
+        messages = [{"role": "user", "content": "task"}, {"role": "assistant", "content": ""},
+                    {"role": "user", "content": "Incorrect."}]
+        digest = canonical_prompt_sha256(messages)
+        self.assertEqual(digest, canonical_prompt_sha256([dict(m) for m in messages]))
+        self.assertEqual(digest, sha256(json.dumps(messages, ensure_ascii=False, separators=(",", ":"), sort_keys=True).encode()).hexdigest())
+        # Distinct from the same transcript with the empty turn absent, and from a whitespace turn.
+        self.assertNotEqual(digest, canonical_prompt_sha256([messages[0], messages[2]]))
+        self.assertNotEqual(digest, canonical_prompt_sha256(
+            [messages[0], {"role": "assistant", "content": " "}, messages[2]]))
+        # Prompt-side roles are authored by the protocol and must stay nonempty.
+        for role in ("user", "system"):
+            with self.assertRaises(ProtocolError):
+                canonical_prompt_sha256([{"role": role, "content": ""}])
+
     def test_message_and_identifier_validation(self):
         with self.assertRaises(ProtocolError): canonical_prompt_sha256([])
         with self.assertRaises(ProtocolError): canonical_prompt_sha256("not messages")

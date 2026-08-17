@@ -8,10 +8,10 @@ from unittest import mock
 
 from src.backend import (BackendError, GenerationRequest, OpenAICompatBackend, SyntheticBackend,
                          normalize_alternatives, probe_letter_tokens)
-from src.metrics import m1_margin, partial_entropy
+from src.metrics import m1_margin, m3_for_record, partial_entropy
 from src.protocol import discovery_tasks, load_protocol
-from src.records import record_from_dict
-from src.runner import run_trajectory
+from src.records import Token, record_from_dict
+from src.runner import run_single_turn_trajectory, run_trajectory
 
 
 def sse(*chunks: dict) -> list[str]:
@@ -280,6 +280,158 @@ class RecordIntegrationTests(unittest.TestCase):
         margin = m1_margin(measured, protocol=protocol)
         self.assertIsNotNone(margin.margin.value, margin.margin.missing_reason)
         self.assertIsNotNone(partial_entropy(measured).mean_partial_entropy.value)
+
+    def test_an_empty_token_mid_response_still_yields_m1_and_counts_for_entropy(self):
+        protocol = load_protocol()
+        task = discovery_tasks(protocol)[0]
+        letter = " %s" % task.canonical_answer
+
+        def handler(payload, index):
+            return FakeResponse(200, sse(
+                token_chunk("Reason", math.log(0.90), [("Reason", math.log(0.90))]),
+                # zero-width position sitting between the reasoning and the answer line
+                token_chunk("", math.log(0.80), [("", math.log(0.80)), ("x", math.log(0.15))]),
+                token_chunk("\nAnswer:", math.log(0.95), [("\nAnswer:", math.log(0.95))]),
+                token_chunk(letter, math.log(SAMPLED_PROBABILITY), letter_distribution(letter),
+                            finish="stop")))
+
+        backend = backend_with(handler)
+        records = run_trajectory(task=task, cell_id="%s__malfunctioning_always_fail__neutral" % task.difficulty,
+                                 model_id="test/model", immutable_revision="b" * 40, backend=backend,
+                                 protocol=protocol)
+        measured = next(record for record in records if record.turn_label == "measured")
+        self.assertEqual([t.text for t in measured.tokens], ["Reason", "", "\nAnswer:", letter])
+        self.assertEqual(measured.response_text, "Reason\nAnswer:%s" % letter)
+        margin = m1_margin(measured, protocol=protocol)
+        # The zero-width token must not shift the character offset of the option token.
+        self.assertIsNotNone(margin.margin.value, margin.margin.missing_reason)
+        self.assertEqual(margin.option_token_index, 3)
+        entropy = partial_entropy(measured)
+        self.assertEqual(entropy.position_count, 4)  # the empty position is counted
+        self.assertIsNotNone(entropy.mean_partial_entropy.value)
+
+
+class EmptyTokenTests(unittest.TestCase):
+    """vLLM emits byte-level pieces that decode to "" but still carry a real logprob."""
+
+    def stream_with_empty_token(self):
+        return sse(
+            token_chunk("Reason", math.log(0.90), [("Reason", math.log(0.90))]),
+            token_chunk("", math.log(0.80), [("", math.log(0.80)), ("x", math.log(0.15))]),
+            token_chunk("\nAnswer:", math.log(0.95), [("\nAnswer:", math.log(0.95))]),
+            token_chunk(" C", math.log(SAMPLED_PROBABILITY), letter_distribution(" C"), finish="stop"),
+        )
+
+    def test_empty_token_is_kept_as_a_generated_position(self):
+        backend = backend_with(lambda payload, index: FakeResponse(200, self.stream_with_empty_token()))
+        result = backend.generate(REQUEST)
+        self.assertEqual([token.text for token in result.tokens], ["Reason", "", "\nAnswer:", " C"])
+        self.assertEqual(result.text, "Reason\nAnswer: C")
+        empty = result.tokens[1]
+        self.assertAlmostEqual(empty.logprob, math.log(0.80), places=12)
+        self.assertIn("", dict(empty.top_logprobs))
+
+    def test_empty_alternative_text_survives_normalization(self):
+        merged = normalize_alternatives("", math.log(0.5), [("", math.log(0.2)), ("", math.log(0.3)),
+                                                            ("a", math.log(0.1))])
+        self.assertAlmostEqual(dict(merged)[""], math.log(0.5), places=12)
+        self.assertEqual(len(merged), 2)
+
+    def test_missing_or_non_string_token_is_still_an_error(self):
+        for value in (None, 7):
+            chunk = {"object": "chat.completion.chunk", "choices": [{
+                "index": 0, "delta": {"content": "x"}, "finish_reason": None,
+                "logprobs": {"content": [{"token": value, "logprob": -0.1,
+                                          "top_logprobs": [{"token": "x", "logprob": -0.1}]}]}}]}
+            backend = backend_with(lambda payload, index, c=chunk: FakeResponse(200, sse(c)))
+            with self.assertRaises(BackendError):
+                backend.generate(REQUEST)
+
+
+class EmptyResponseTests(unittest.TestCase):
+    """An immediately-terminated turn is a legitimate outcome, not a crash."""
+
+    def eos_only_stream(self):
+        return sse({"object": "chat.completion.chunk", "choices": [{
+            "index": 0, "delta": {}, "finish_reason": "stop",
+            "logprobs": {"content": [{"token": "<end_of_turn>", "logprob": math.log(0.97),
+                                      "top_logprobs": [{"token": "<end_of_turn>", "logprob": math.log(0.97)},
+                                                       {"token": "The", "logprob": math.log(0.02)}]}]}}]})
+
+    def test_eos_only_response_becomes_one_zero_width_position(self):
+        backend = backend_with(lambda payload, index: FakeResponse(200, self.eos_only_stream()))
+        result = backend.generate(REQUEST)
+        self.assertEqual(result.text, "")
+        self.assertEqual(len(result.tokens), 1)
+        token = result.tokens[0]
+        self.assertEqual(token.text, "")
+        # The EOS distribution is carried over -- it says how sure the model was about stopping.
+        self.assertAlmostEqual(token.logprob, math.log(0.97), places=12)
+        self.assertEqual(dict(token.top_logprobs).keys(), {"<end_of_turn>", "The"})
+        self.assertEqual(backend.stats["empty_responses"], 1)
+        self.assertEqual(backend.stats["trailing_special_tokens"], 1)
+
+    def test_stream_with_no_logprob_entries_at_all_still_returns_a_record(self):
+        bare = sse({"object": "chat.completion.chunk",
+                    "choices": [{"index": 0, "delta": {}, "logprobs": None, "finish_reason": "stop"}]})
+        backend = backend_with(lambda payload, index: FakeResponse(200, bare))
+        result = backend.generate(REQUEST)
+        self.assertEqual(result.text, "")
+        self.assertEqual(result.tokens, (Token("", 0.0, (("", 0.0),)),))
+        self.assertEqual(backend.stats["empty_responses"], 1)
+        self.assertEqual(backend.stats["trailing_special_tokens"], 0)
+
+    def test_empty_response_records_and_parses_as_an_invalid_final_answer(self):
+        protocol = load_protocol()
+        task = discovery_tasks(protocol)[0]
+        backend = backend_with(lambda payload, index: FakeResponse(200, self.eos_only_stream()))
+        # Single-turn path: a multi-turn replay additionally needs protocol.py to accept an
+        # empty assistant turn, which is outside this module's contract (see lab log).
+        records = run_single_turn_trajectory(task=task, cell_id="style__neutral_reference",
+                                             model_id="test/model", immutable_revision="b" * 40,
+                                             backend=backend, protocol=protocol)
+        measured = records[0]
+        self.assertEqual(measured.response_text, "")
+        self.assertFalse(measured.final_answer_valid)
+        self.assertIsNone(measured.final_answer_letter)
+        round_tripped = record_from_dict(measured.to_dict(), protocol)
+        self.assertEqual(round_tripped.response_text, "".join(t.text for t in round_tripped.tokens))
+        self.assertEqual(m1_margin(measured, protocol=protocol).margin.missing_reason,
+                         "m1_invalid_final_answer")
+        self.assertEqual(m3_for_record(measured).rate_per_100_tokens.missing_reason,
+                         "m3_zero_visible_reasoning_tokens")
+        self.assertEqual(partial_entropy(measured).position_count, 1)
+
+    def test_multi_turn_trajectory_survives_an_empty_response_on_turn_two(self):
+        protocol = load_protocol()
+        task = discovery_tasks(protocol)[0]
+        letter = " %s" % task.canonical_answer
+
+        def handler(payload, index):
+            if index == 1:  # the second assistant turn terminates immediately
+                return FakeResponse(200, self.eos_only_stream())
+            return FakeResponse(200, answer_stream(letter))
+
+        backend = backend_with(handler)
+        records = run_trajectory(task=task, cell_id="%s__accurate__neutral" % task.difficulty,
+                                 model_id="test/model", immutable_revision="b" * 40,
+                                 backend=backend, protocol=protocol)
+        self.assertEqual(len(records), 7)  # initial + 3 feedback + measured + onset + washout
+        for record in records:
+            round_tripped = record_from_dict(record.to_dict(), protocol)
+            self.assertEqual(round_tripped.response_text,
+                             "".join(t.text for t in round_tripped.tokens))
+        empty = records[1]
+        self.assertEqual(empty.response_text, "")
+        self.assertFalse(empty.final_answer_valid)
+        self.assertIsNone(empty.final_answer_letter)
+        self.assertIsNone(empty.final_answer_correct)
+        # Every other turn still parses, so the empty turn did not corrupt the replay.
+        self.assertTrue(all(record.final_answer_valid for record in records if record is not empty))
+        # In the accurate arm an invalid preceding answer branches as incorrect.
+        incorrect = protocol.conditions["feedback_messages"]["accurate"]["neutral"]["if_preceding_answer_incorrect"]
+        self.assertEqual(records[2].messages[-1]["content"], incorrect)
+        self.assertEqual(backend.stats["empty_responses"], 1)
 
 
 class SseFramingTests(unittest.TestCase):

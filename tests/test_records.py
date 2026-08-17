@@ -98,6 +98,22 @@ class RecordTests(unittest.TestCase):
         empirical["immutable_revision"] = "not-a-sha"
         with self.assertRaises(RecordError): record_from_dict(empirical, self.protocol)
 
+    def test_empty_token_text_is_accepted_but_a_missing_field_is_not(self):
+        value = self.record()
+        # A byte-level piece can decode to "" while still being a real generated position.
+        value["tokens"].insert(1, {"text": "", "logprob": -0.2,
+                                   "top_logprobs": [{"text": "", "logprob": -0.2},
+                                                    {"text": "q", "logprob": -1.9}]})
+        record = record_from_dict(value, self.protocol)
+        self.assertEqual([token.text for token in record.tokens], ["reason\nAnswer:", "", " D"])
+        self.assertEqual(record.response_text, "".join(t.text for t in record.tokens))
+        for bad_text in (None, 5):
+            bad = copy.deepcopy(value); bad["tokens"][1]["text"] = bad_text
+            with self.assertRaises(RecordError): record_from_dict(bad, self.protocol)
+        duplicate = copy.deepcopy(value)  # distinctness still applies to empty strings
+        duplicate["tokens"][1]["top_logprobs"][1]["text"] = ""
+        with self.assertRaises(RecordError): record_from_dict(duplicate, self.protocol)
+
     def test_manifest_provenance_is_shape_checked_on_load_and_bound_explicitly(self):
         value = self.record()
         self.assertTrue(verify_manifest_provenance(record_from_dict(value, self.protocol), self.protocol))

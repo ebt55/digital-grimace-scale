@@ -124,14 +124,16 @@ def _tokens(value: Any) -> tuple[Token, ...]:
         raise RecordError("tokens must be a nonempty list")
     result = []
     for item in value:
-        if not isinstance(item, Mapping) or not isinstance(item.get("text"), str) or not item["text"]:
+        # Empty token text is legitimate: a byte-level piece can decode to nothing while still
+        # occupying a generated position with a real log probability.
+        if not isinstance(item, Mapping) or not isinstance(item.get("text"), str):
             raise RecordError("invalid token")
         alternatives = item.get("top_logprobs")
         if not isinstance(alternatives, list) or not alternatives or len(alternatives) > 20:
             raise RecordError("top_logprobs must contain one to 20 alternatives")
         parsed = []
         for alternative in alternatives:
-            if not isinstance(alternative, Mapping) or not isinstance(alternative.get("text"), str) or not alternative["text"]:
+            if not isinstance(alternative, Mapping) or not isinstance(alternative.get("text"), str):
                 raise RecordError("invalid top_logprob alternative")
             parsed.append((alternative["text"], _logprob(alternative.get("logprob"), "top_logprob")))
         if len({text for text, _ in parsed}) != len(parsed):
@@ -153,7 +155,12 @@ def record_from_dict(value: Mapping[str, Any], protocol: Protocol | None = None)
     expected_fields = {field.name for field in fields(RawRecord)}
     if set(value) != expected_fields:
         raise RecordError("record fields must exactly match dgs-generation-v1")
-    _require_strings(value, ("schema_version", "run_id", "phase", "model_id", "immutable_revision", "backend", "task_id", "cell_id", "trajectory_kind", "turn_label", "response_id", "prompt_sha256", "response_text"))
+    _require_strings(value, ("schema_version", "run_id", "phase", "model_id", "immutable_revision", "backend", "task_id", "cell_id", "trajectory_kind", "turn_label", "response_id", "prompt_sha256"))
+    # response_text may legitimately be "": a turn that terminated immediately generated no
+    # visible text, which is an outcome to record (it parses as an invalid final answer),
+    # not an error. The token trace still carries that position.
+    if not isinstance(value.get("response_text"), str):
+        raise RecordError("response_text must be a string")
     if value["schema_version"] != SCHEMA_VERSION:
         raise RecordError("unsupported schema version")
     if value.get("run_kind") not in ("synthetic_smoke", "empirical"):
