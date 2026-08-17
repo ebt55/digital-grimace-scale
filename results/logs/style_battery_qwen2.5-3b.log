@@ -1,0 +1,20 @@
+phase style-battery | model Qwen/Qwen2.5-3B-Instruct | revision aa8e72537993ba99e69dfaafa59ed015b17504d1 | run_kind empirical | run_id style-battery-qwen2.5-3b-2026-08-17
+HOLDOUT UNLOCKED | frozen analysis commit aa5cd44c5420473a5a243722293fc25b13c94301 | unlocked_at 2026-08-17T16:48:50+05:30 | preregistration_v3_sha256 64e03886438b262a0ef775db2a2d9c57def9ffaa26d1a1489c359b2a87bd7452
+jobs 100 | samples 0,1,2,3,4,5,6,7,8,9,10 | trajectories 1100 | workers 32 | out C:\Users\ebin\claude-ground\Digital Grimace Scale\.claude\worktrees\digital-grimace-scale-experiment-f825fc\results\raw\style_battery\Qwen__Qwen2.5-3B-Instruct.jsonl
+[ 231.1s] 100/1100 trajectories (completed 100, failed 0, skipped 0, records 100)
+[ 306.5s] 200/1100 trajectories (completed 200, failed 0, skipped 0, records 200)
+[ 367.0s] 300/1100 trajectories (completed 300, failed 0, skipped 0, records 300)
+[ 431.7s] 400/1100 trajectories (completed 400, failed 0, skipped 0, records 400)
+[ 488.9s] 500/1100 trajectories (completed 500, failed 0, skipped 0, records 500)
+[ 562.9s] 600/1100 trajectories (completed 600, failed 0, skipped 0, records 600)
+[ 632.7s] 700/1100 trajectories (completed 700, failed 0, skipped 0, records 700)
+[ 682.8s] 800/1100 trajectories (completed 800, failed 0, skipped 0, records 800)
+[ 722.2s] 900/1100 trajectories (completed 900, failed 0, skipped 0, records 900)
+[ 783.1s] 1000/1100 trajectories (completed 1000, failed 0, skipped 0, records 1000)
+[ 843.2s] 1100/1100 trajectories (completed 1100, failed 0, skipped 0, records 1100)
+run summary: planned 1100, skipped 0, completed 1100, failed 0
+  records written 1100, stale records dropped 0, wall time 843.2s
+  output C:\Users\ebin\claude-ground\Digital Grimace Scale\.claude\worktrees\digital-grimace-scale-experiment-f825fc\results\raw\style_battery\Qwen__Qwen2.5-3B-Instruct.jsonl
+  backend stats {"completion_tokens": 337793, "content_mismatch_examples": [], "content_mismatches": 0, "empty_responses": 0, "empty_stream_retries": 1, "nonfinite_logprobs": 0, "prompt_tokens": 151910, "requests": 1100, "retries": 0, "trailing_special_tokens": 985, "truncated": 116, "warm_up_attempts": 2}
+  throughput prompt_tokens 180.2/s | completion_tokens 400.6/s
+backend stats: completion_tokens=337793, content_mismatches=0, empty_responses=0, empty_stream_retries=1, nonfinite_logprobs=0, prompt_tokens=151910, requests=1100, retries=0, trailing_special_tokens=985, truncated=116, warm_up_attempts=2

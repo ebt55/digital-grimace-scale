@@ -1,0 +1,18 @@
+phase phase2 | model Qwen/Qwen2.5-3B-Instruct | revision aa8e72537993ba99e69dfaafa59ed015b17504d1 | run_kind empirical | run_id phase2-qwen2.5-3b-2026-08-17
+HOLDOUT UNLOCKED | frozen analysis commit aa5cd44c5420473a5a243722293fc25b13c94301 | unlocked_at 2026-08-17T16:48:50+05:30 | preregistration_v3_sha256 64e03886438b262a0ef775db2a2d9c57def9ffaa26d1a1489c359b2a87bd7452
+jobs 80 | samples 0,1,2,3,4,5,6,7,8,9,10 | trajectories 880 | workers 96 | out C:\Users\ebin\claude-ground\Digital Grimace Scale\.claude\worktrees\digital-grimace-scale-experiment-f825fc\results\raw\phase2\Qwen__Qwen2.5-3B-Instruct.jsonl
+[ 372.3s] 100/880 trajectories (completed 100, failed 0, skipped 0, records 656)
+[ 476.9s] 200/880 trajectories (completed 200, failed 0, skipped 0, records 1307)
+[ 626.9s] 300/880 trajectories (completed 300, failed 0, skipped 0, records 1954)
+[ 725.2s] 400/880 trajectories (completed 400, failed 0, skipped 0, records 2605)
+[ 863.1s] 500/880 trajectories (completed 500, failed 0, skipped 0, records 3255)
+[ 933.7s] 600/880 trajectories (completed 600, failed 0, skipped 0, records 3905)
+[1011.1s] 700/880 trajectories (completed 700, failed 0, skipped 0, records 4551)
+[1096.0s] 800/880 trajectories (completed 800, failed 0, skipped 0, records 5203)
+[1153.0s] 880/880 trajectories (completed 880, failed 0, skipped 0, records 5720)
+run summary: planned 880, skipped 0, completed 880, failed 0
+  records written 5720, stale records dropped 0, wall time 1153.0s
+  output C:\Users\ebin\claude-ground\Digital Grimace Scale\.claude\worktrees\digital-grimace-scale-experiment-f825fc\results\raw\phase2\Qwen__Qwen2.5-3B-Instruct.jsonl
+  backend stats {"completion_tokens": 1298863, "content_mismatch_examples": [], "content_mismatches": 0, "empty_responses": 0, "empty_stream_retries": 1, "nonfinite_logprobs": 0, "prompt_tokens": 5328132, "requests": 5720, "retries": 0, "trailing_special_tokens": 5369, "truncated": 352, "warm_up_attempts": 2}
+  throughput prompt_tokens 4621.0/s | completion_tokens 1126.5/s
+backend stats: completion_tokens=1298863, content_mismatches=0, empty_responses=0, empty_stream_retries=1, nonfinite_logprobs=0, prompt_tokens=5328132, requests=5720, retries=0, trailing_special_tokens=5369, truncated=352, warm_up_attempts=2

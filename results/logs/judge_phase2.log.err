@@ -1,0 +1,19 @@
+Traceback (most recent call last):
+  File "C:\Users\ebin\claude-ground\Digital Grimace Scale\.claude\worktrees\digital-grimace-scale-experiment-f825fc\scripts\run_judge.py", line 480, in <module>
+    raise SystemExit(main())
+                     ^^^^^^
+  File "C:\Users\ebin\claude-ground\Digital Grimace Scale\.claude\worktrees\digital-grimace-scale-experiment-f825fc\scripts\run_judge.py", line 474, in main
+    return int(args.handler(args))
+               ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ebin\claude-ground\Digital Grimace Scale\.claude\worktrees\digital-grimace-scale-experiment-f825fc\scripts\run_judge.py", line 302, in command_judge
+    lines.append(compact_judge_json(record, source, protocol))
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ebin\claude-ground\Digital Grimace Scale\.claude\worktrees\digital-grimace-scale-experiment-f825fc\src\judge.py", line 466, in compact_judge_json
+    checked = judge_record_from_dict(checked.to_dict(), source, protocol)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ebin\claude-ground\Digital Grimace Scale\.claude\worktrees\digital-grimace-scale-experiment-f825fc\src\judge.py", line 394, in judge_record_from_dict
+    manifest, manifest_hash = _frozen_manifest(protocol)
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ebin\claude-ground\Digital Grimace Scale\.claude\worktrees\digital-grimace-scale-experiment-f825fc\src\judge.py", line 202, in _frozen_manifest
+    raise JudgeError("Protocol manifest differs from authoritative manifest.json")
+src.judge.JudgeError: Protocol manifest differs from authoritative manifest.json
