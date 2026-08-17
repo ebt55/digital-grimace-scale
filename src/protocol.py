@@ -5,8 +5,15 @@ from dataclasses import dataclass
 from hashlib import sha256
 import json
 from pathlib import Path
+import re
 from types import MappingProxyType
 from typing import Any, Mapping, Sequence
+
+# Amendment A1 (2026-08-17): the final-answer line is normalised before matching, because live
+# gemma-2-2b-it emits `**Answer: D**`.  Markdown emphasis characters are removed and whitespace is
+# collapsed; the label itself stays case-sensitive and exactly one qualifying line is still required.
+ANSWER_LINE_RE = re.compile(r"Answer:\s*([A-D])\.?")
+MARKUP_CHARACTERS = frozenset("*_`")
 
 
 class ProtocolError(ValueError):
@@ -17,6 +24,7 @@ class ProtocolError(ValueError):
 class AnswerResult:
     valid: bool
     letter: str | None = None
+    letter_offset: int | None = None
 
 
 @dataclass(frozen=True)
@@ -179,15 +187,59 @@ def render_r5_variant(item: Mapping[str, Any], variant: str, protocol: Protocol 
     return render_task(value.get("prompt"), value.get("options"), protocol)
 
 
+def normalize_answer_line(line: str) -> tuple[str, tuple[int, ...]]:
+    """Drop markdown emphasis and collapse whitespace, keeping each kept character's source index."""
+    characters: list[str] = []
+    origins: list[int] = []
+    pending_space = False
+    for index, character in enumerate(line):
+        if character in MARKUP_CHARACTERS:
+            continue
+        if character.isspace():
+            pending_space = bool(characters)
+            continue
+        if pending_space:
+            characters.append(" "); origins.append(index)
+            pending_space = False
+        characters.append(character); origins.append(index)
+    return "".join(characters), tuple(origins)
+
+
+def answer_line_match(line: str) -> re.Match[str] | None:
+    """Amendment A1 line rule, shared with the M3 visible-reasoning boundary."""
+    return ANSWER_LINE_RE.fullmatch(normalize_answer_line(line)[0])
+
+
 def parse_final_answer(text: str) -> AnswerResult:
+    """Accept exactly one qualifying `Answer: X` line, which must be the last nonempty line.
+
+    Emphasis markers and whitespace runs are normalised away first, so `**Answer: D**`,
+    `Answer: **D**`, and `` `Answer: D` `` all parse.  `letter_offset` is the option letter's
+    absolute index in the original text, or None when it cannot be located unambiguously.
+    """
     if not isinstance(text, str):
         return AnswerResult(False)
-    lines = text.splitlines()
-    nonempty = [line for line in lines if line.strip()]
-    exact = [line for line in lines if line in ("Answer: A", "Answer: B", "Answer: C", "Answer: D")]
-    if len(exact) == 1 and nonempty and nonempty[-1] == exact[0]:
-        return AnswerResult(True, exact[0][-1])
-    return AnswerResult(False)
+    offset = 0
+    qualifying: list[tuple[int, tuple[int, ...], re.Match[str]]] = []
+    last_nonempty_start: int | None = None
+    for line in text.splitlines(keepends=True):
+        if line.strip():
+            last_nonempty_start = offset
+            normalized, origins = normalize_answer_line(line)
+            match = ANSWER_LINE_RE.fullmatch(normalized)
+            if match is not None:
+                qualifying.append((offset, origins, match))
+        offset += len(line)
+    if len(qualifying) != 1 or last_nonempty_start is None:
+        return AnswerResult(False)
+    start, origins, match = qualifying[0]
+    if start != last_nonempty_start:
+        return AnswerResult(False)
+    letter, position = match.group(1), match.start(1)
+    letter_offset = start + origins[position] if position < len(origins) else None
+    if letter_offset is not None and not (0 <= letter_offset < len(text) and text[letter_offset] == letter):
+        letter_offset = None
+    return AnswerResult(True, letter, letter_offset)
 
 
 def build_cell_id(difficulty: str, feedback_validity: str, tone: str, protocol: Protocol | None = None) -> str:

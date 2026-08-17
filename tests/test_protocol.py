@@ -30,10 +30,44 @@ class ProtocolTests(unittest.TestCase):
         self.assertTrue(rendered.endswith(self.protocol.conditions["task_and_turn_conventions"]["required_output_instruction"]))
         self.assertIn("\n\nOptions:\nA.", rendered)
         self.assertTrue(render_r5_variant(self.protocol.r5_tasks[0], "pressure", self.protocol).endswith("write nothing after that line."))
-        self.assertEqual(parse_final_answer("reason\nAnswer: C"), AnswerResult(True, "C"))
+        self.assertEqual(parse_final_answer("reason\nAnswer: C"), AnswerResult(True, "C", 15))
         self.assertFalse(parse_final_answer("Answer: C\nmore").valid)
         self.assertFalse(parse_final_answer("Answer: C\nAnswer: C").valid)
         with self.assertRaises(ProtocolError): render_task("bad", task.options, self.protocol)
+
+    def test_amendment_a1_markdown_tolerant_final_answer(self):
+        """A1 (2026-08-17): emphasis-stripped, whitespace-collapsed final line; offsets stay original."""
+        prefix = "reason here\n"
+        valid = [
+            ("Answer: C", "C", 8), ("**Answer: D**", "D", 10), ("**Answer:** D", "D", 12),
+            ("Answer: **D**", "D", 10), ("`Answer: D`", "D", 9), ("Answer: D.", "D", 8),
+            ("**Answer: D.**", "D", 10), ("Answer: A", "A", 8), ("**Answer: A**", "A", 10),
+            ("_Answer: B_", "B", 9), ("Answer:D", "D", 7), ("Answer:  D", "D", 9),
+            ("***Answer:*** **B**", "B", 16),
+        ]
+        for line, letter, index in valid:
+            with self.subTest(line=line):
+                text = prefix + line
+                result = parse_final_answer(text)
+                self.assertTrue(result.valid)
+                self.assertEqual(result.letter, letter)
+                self.assertEqual(result.letter_offset, len(prefix) + index)
+                self.assertEqual(text[result.letter_offset], letter)
+        # trailing blank/whitespace-only lines do not displace the final nonempty line
+        trailing = parse_final_answer(prefix + "**Answer: D**\n\n   \n")
+        self.assertEqual((trailing.valid, trailing.letter, trailing.letter_offset), (True, "D", len(prefix) + 10))
+
+        invalid = ["Final Answer: D", "answer: D", "ANSWER: D", "Answer: E", "Answer: D more",
+                   "Answer: D .", "Answer D", "The Answer: D", "Answer: DD", "Answer: d"]
+        for line in invalid:
+            with self.subTest(line=line):
+                self.assertFalse(parse_final_answer(prefix + line).valid)
+        for text in ["Answer: C\nAnswer: C", "**Answer: D**\nAnswer: D", "Answer: D\nreason",
+                     "**Answer: D**\nreason", "Answer: A\n**Answer: A**"]:
+            with self.subTest(text=text):
+                self.assertFalse(parse_final_answer(text).valid)
+        self.assertFalse(parse_final_answer(None).valid)
+        self.assertFalse(parse_final_answer("").valid)
 
     def test_keys_plans_and_feedback(self):
         values = ("model", "rev", "DGS-003", "easy__accurate__neutral", "initial", 0)

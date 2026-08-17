@@ -13,12 +13,14 @@ import math
 import re
 from typing import Iterable, Sequence
 
-from .protocol import Protocol, load_protocol, parse_final_answer
+from .protocol import Protocol, answer_line_match, load_protocol, parse_final_answer
 from .records import RawRecord
 
 
 OPTIONS = ("A", "B", "C", "D")
-TAIL_MASS_TOLERANCE = 1e-9
+# Amendment A1 (2026-08-17): real fp32 vLLM top-20 logprobs sum to about 1 + 1.7e-7, so a 1e-9
+# tolerance rejected sound records.  1e-6 still catches materially broken probability mass.
+TAIL_MASS_TOLERANCE = 1e-6
 WHITESPACE_TOKEN_RE = re.compile(r"\S+")
 
 # These small lexical sets are deliberately frozen before human M3 labels.
@@ -192,10 +194,14 @@ def m1_margin(record: RawRecord, canonical_answer: str | None = None, *, protoco
     parsed = parse_final_answer(text)
     if not parsed.valid:
         return M1Result(_missing("m1_invalid_final_answer"), canonical, None, None, role)
-    prefix = "Answer: "
-    letter_offset = text.rfind(prefix) + len(prefix)
-    if letter_offset < len(prefix):  # defensive: parser validity already implies it exists
-        return M1Result(_missing("m1_answer_prefix_not_found"), canonical, parsed.letter, None, role)
+    # Amendment A1: the parser reports the letter's exact offset even inside markdown emphasis.
+    letter_offset = parsed.letter_offset
+    if letter_offset is None:
+        prefix = "Answer: "
+        found = text.rfind(prefix)
+        if found < 0:  # defensive: parser validity already implies a locatable letter
+            return M1Result(_missing("m1_answer_prefix_not_found"), canonical, parsed.letter, None, role)
+        letter_offset = found + len(prefix)
     cursor = 0
     option_index = None
     for index, token in enumerate(record.tokens):
@@ -276,7 +282,7 @@ def _visible_reasoning_boundary(text: str) -> int:
     if last_nonempty is None:
         return len(text)
     start, line = last_nonempty
-    if re.fullmatch(r"Answer: [A-D]\s*", line.rstrip("\r\n")):
+    if answer_line_match(line) is not None:  # Amendment A1: same normalised rule as the parser
         return start
     return len(text)
 

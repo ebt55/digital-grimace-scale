@@ -5,10 +5,13 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from src.protocol import discovery_tasks, load_protocol
+from src.protocol import discovery_tasks, load_protocol, render_task, style_smoke_tasks
 from src.records import RecordError, compact_json, record_from_dict
-from src.runner import (RunnerError, plan_phase0_jobs, plan_phase1_jobs, run_batch,
-    run_trajectory, write_jsonl_atomic)
+from src.runner import (RunnerError, expected_turn_labels, plan_phase0_jobs, plan_phase1_jobs,
+    plan_phase1_model_jobs, plan_r5_jobs, plan_style_smoke_jobs, r5_task, run_batch,
+    run_single_turn_trajectory, run_trajectory, write_jsonl_atomic)
+
+EMPIRICAL_REVISION = "0123456789abcdef0123456789abcdef01234567"
 
 
 class RunnerTests(unittest.TestCase):
@@ -92,3 +95,71 @@ class RunnerTests(unittest.TestCase):
                 with self.assertRaises(OSError): write_jsonl_atomic(target, records, self.protocol, overwrite=True)
             self.assertEqual(target.read_bytes(), original)
             self.assertFalse(list(Path(directory).glob("*.tmp")))
+
+    def test_run_kind_and_holdout_guard(self):
+        empirical = run_trajectory(task=self.task, cell_id=self.task.difficulty + "__accurate__neutral",
+                                   model_id=self.model, immutable_revision=EMPIRICAL_REVISION,
+                                   protocol=self.protocol, run_kind="empirical", continuations=False)
+        self.assertTrue(all(record.run_kind == "empirical" for record in empirical))
+        self.assertTrue(all(record_from_dict(record.to_dict(), self.protocol) == record for record in empirical))
+        self.assertTrue(all(record.run_kind == "synthetic_smoke" for record in self.trajectory(continuations=False)))
+        with self.assertRaises(RecordError):  # empirical records demand a resolved 40-hex revision
+            self.trajectory(run_kind="empirical", continuations=False)
+        with self.assertRaises(RunnerError):
+            self.trajectory(run_kind="dress_rehearsal")
+        holdout = next(task for task in discovery_tasks(self.protocol, allow_holdout=True) if task.split == "holdout")
+        arguments = dict(task=holdout, cell_id=holdout.difficulty + "__accurate__neutral", model_id=self.model,
+                         immutable_revision="synthetic", protocol=self.protocol, continuations=False)
+        with self.assertRaises(RunnerError):
+            run_trajectory(**arguments)
+        unlocked = run_trajectory(allow_holdout=True, **arguments)
+        self.assertEqual(unlocked[0].split, "holdout")
+
+    def test_run_batch_accepts_sample_indices(self):
+        batch = run_batch(task=self.task, cell_id=self.task.difficulty + "__accurate__neutral", model_id=self.model,
+                          immutable_revision="synthetic", protocol=self.protocol, continuations=False,
+                          sample_indices=(0, 4, 9))
+        self.assertEqual([record.sample_index for record in batch], [0] * 5 + [4] * 5 + [9] * 5)
+        self.assertEqual({record.trajectory_kind for record in batch}, {"greedy", "resample"})
+
+    def test_single_turn_style_wording(self):
+        task = style_smoke_tasks(self.protocol)[0]
+        rendered = render_task(task.prompt, task.options, self.protocol)
+        prompts = self.protocol.conditions["style_only_controls"]["prompts"]
+        for cell, prefix in [("style__neutral_reference", None)] + [("style__" + name, text) for name, text in prompts.items()]:
+            record, = run_single_turn_trajectory(task=task, cell_id=cell, model_id=self.model,
+                                                 immutable_revision="synthetic", protocol=self.protocol)
+            self.assertEqual(record.messages[0]["content"], rendered if prefix is None else "%s\n\n%s" % (prefix, rendered))
+            self.assertEqual((record.turn_label, record.feedback_validity, record.tone), ("measured", None, None))
+            self.assertEqual((record.split, record.difficulty, record.domain), (task.split, task.difficulty, task.domain))
+            self.assertIsNone(record.feedback_history_false_negative)
+            self.assertEqual(record_from_dict(record.to_dict(), self.protocol).to_dict(), record.to_dict())
+
+    def test_single_turn_rejects_factorial_cells_and_bad_samples(self):
+        task = style_smoke_tasks(self.protocol)[0]
+        arguments = dict(task=task, model_id=self.model, immutable_revision="synthetic", protocol=self.protocol)
+        with self.assertRaises(RunnerError):
+            run_single_turn_trajectory(cell_id=task.difficulty + "__accurate__neutral", **arguments)
+        with self.assertRaises(RunnerError):
+            run_single_turn_trajectory(cell_id="style__enthusiastic", sample_index=11, **arguments)
+        with self.assertRaises(RunnerError):
+            run_single_turn_trajectory(cell_id="style__enthusiastic", sample_index=True, **arguments)
+        with self.assertRaises(RunnerError):
+            run_single_turn_trajectory(cell_id="r5__pressure", **arguments)  # matched task is not an R5 item
+
+    def test_non_factorial_planners_and_turn_plans(self):
+        style, r5 = plan_style_smoke_jobs(self.model, self.protocol), plan_r5_jobs(self.model, self.protocol)
+        self.assertEqual((len(style), len(r5)), (25, 20))
+        self.assertTrue(all(job.feedback_rounds == 0 for job in style + r5))
+        self.assertEqual(len(plan_phase1_model_jobs(self.model, self.protocol)), 80)
+        self.assertEqual(plan_phase1_jobs(self.model, "Qwen/Qwen2.5-7B-Instruct", self.protocol)[:80],
+                         plan_phase1_model_jobs(self.model, self.protocol))
+        self.assertEqual(expected_turn_labels("style__verbose", None, self.protocol), ("measured",))
+        self.assertEqual(expected_turn_labels("easy__accurate__neutral", 3, self.protocol),
+                         ("initial", "feedback_response_1", "feedback_response_2", "feedback_response_3", "measured", "onset", "onset_washout"))
+        self.assertEqual(expected_turn_labels("hard__malfunctioning_always_fail__hostile", 5, self.protocol)[-1], "recovery")
+        self.assertEqual(len(expected_turn_labels("hard__malfunctioning_always_fail__hostile", 5, self.protocol)), 8)
+        with self.assertRaises(RunnerError): expected_turn_labels("nonsense__cell", None, self.protocol)
+        with self.assertRaises(RunnerError): r5_task("R5-001", "style__verbose", self.protocol)
+        with self.assertRaises(RunnerError): r5_task("DGS-001", "r5__pressure", self.protocol)
+        with self.assertRaises(RunnerError): plan_style_smoke_jobs("not/a-model", self.protocol)

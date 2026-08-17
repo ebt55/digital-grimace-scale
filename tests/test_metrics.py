@@ -9,7 +9,9 @@ from src.metrics import (
     m1_margin, m2_disagreement, m3_events, m3_for_record, partial_entropy,
     repeated_4gram_rate, tier_b_metrics,
 )
-from src.protocol import canonical_prompt_sha256, deterministic_seed, load_protocol, manifest_semantic_hash, response_id
+from src.metrics import TAIL_MASS_TOLERANCE, visible_reasoning
+from src.protocol import (canonical_prompt_sha256, deterministic_seed, load_protocol,
+    manifest_semantic_hash, parse_final_answer, response_id)
 from src.records import record_from_dict
 
 
@@ -63,6 +65,51 @@ class MetricTests(unittest.TestCase):
         self.assertEqual(m1_margin(record_from_dict(combined, self.protocol), "D").margin.missing_reason, "m1_option_token_contains_visible_text")
         visible = self.raw(); visible["tokens"][1]["text"] = " D because"; visible["response_text"] = "Work it out.\nAnswer: D because"; visible["final_answer_valid"] = False; visible["final_answer_letter"] = None; visible["final_answer_correct"] = None
         self.assertEqual(m1_margin(record_from_dict(visible, self.protocol), "D").margin.missing_reason, "m1_invalid_final_answer")
+
+    def retokenized(self, tokens, response_text):
+        """A record whose token stream is supplied verbatim, with answer fields rederived by the parser."""
+        value = self.raw()
+        value["tokens"] = tokens
+        value["response_text"] = response_text
+        parsed = parse_final_answer(response_text)
+        value["final_answer_valid"] = parsed.valid
+        value["final_answer_letter"] = parsed.letter
+        value["final_answer_correct"] = (parsed.letter == self.task.canonical_answer) if parsed.valid else None
+        return record_from_dict(value, self.protocol)
+
+    def test_amendment_a1_m1_boundary_and_tail_tolerance(self):
+        """A1 (2026-08-17): bold answers are extractable, merged option tokens stay honestly MISSING."""
+        candidates = [{"text": text, "logprob": score} for text, score in [(" A", -4.0), (" B", -3.0), (" C", -2.0), (" D", -0.5)]]
+        head = {"text": "Work it out.\n**Answer:", "logprob": -0.2, "top_logprobs": [{"text": "x", "logprob": -0.2}]}
+        closer = {"text": "**", "logprob": -0.05, "top_logprobs": [{"text": "**", "logprob": -0.05}]}
+        bold_text = "Work it out.\n**Answer: D**"
+        self.assertEqual(parse_final_answer(bold_text).letter_offset, 23)
+
+        clean = self.retokenized([head, {"text": " D", "logprob": -0.1, "top_logprobs": candidates}, closer], bold_text)
+        self.assertTrue(clean.final_answer_valid)
+        result = m1_margin(clean, "D")
+        self.assertAlmostEqual(result.margin.value, 1.5)  # -0.5 minus max(-2, -3, -4)
+        self.assertEqual((result.generated_answer, result.option_token_index), ("D", 1))
+
+        merged = self.retokenized([head, {"text": " D**", "logprob": -0.1, "top_logprobs": candidates}], bold_text)
+        self.assertEqual(m1_margin(merged, "D").margin.missing_reason, "m1_option_token_contains_visible_text")
+
+        # the normalised boundary keeps the emphasised answer line out of visible reasoning
+        self.assertEqual(visible_reasoning(bold_text), "Work it out.\n")
+        self.assertEqual(m3_events("one two three\n**Answer: D**").visible_token_count, 3)
+        self.assertEqual(m3_events("one two\n`Answer: D`").visible_token_count, 2)
+        self.assertEqual(m3_for_record(clean).visible_token_count, 1)  # only the merged head token is visible
+        self.assertEqual(m3_events("one two three\nFinal Answer: D").visible_token_count, 6)
+
+        def massed(excess):
+            half = math.log((1.0 + excess) / 2.0)
+            return [{"text": " A", "logprob": half}, {"text": " B", "logprob": half}]
+        self.assertEqual(TAIL_MASS_TOLERANCE, 1e-6)
+        tolerated = self.raw(); tolerated["tokens"][1]["top_logprobs"] = massed(5e-7)
+        self.assertEqual(partial_entropy(record_from_dict(tolerated, self.protocol)).position_count, 2)
+        excessive = self.raw(); excessive["tokens"][1]["top_logprobs"] = massed(5e-6)
+        with self.assertRaises(MetricInputError):
+            partial_entropy(record_from_dict(excessive, self.protocol))
 
     def test_m2_known_value_invalid_and_mixed_group_errors(self):
         result = m2_disagreement(self.resamples("AAAAABBBCC"))
