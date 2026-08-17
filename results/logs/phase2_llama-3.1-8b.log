@@ -1,0 +1,6 @@
+phase phase2 | model meta-llama/Llama-3.1-8B-Instruct | revision 0e9e39f249a16976918f6564b8830bc894c89659 | run_kind empirical | run_id phase2-llama-3.1-8b-2026-08-17
+HOLDOUT UNLOCKED | frozen analysis commit aa5cd44c5420473a5a243722293fc25b13c94301 | unlocked_at 2026-08-17T16:48:50+05:30 | preregistration_v3_sha256 fa2617bde8bcd660be68406eb6a079360f055d6057181e20ccc7e77e9d3b62ed
+jobs 80 | samples 0,1,2,3,4,5,6,7,8,9,10 | trajectories 880 | workers 96 | out C:\Users\ebin\claude-ground\Digital Grimace Scale\.claude\worktrees\digital-grimace-scale-experiment-f825fc\results\raw\phase2\meta-llama__Llama-3.1-8B-Instruct.jsonl
+[ 431.0s] 100/880 trajectories (completed 98, failed 2, skipped 0, records 640)
+[ 568.6s] 200/880 trajectories (completed 147, failed 53, skipped 0, records 960)
+[ 947.8s] 300/880 trajectories (completed 247, failed 53, skipped 0, records 1610)

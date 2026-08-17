@@ -1,0 +1,13 @@
+phase r5 | model Qwen/Qwen2.5-3B-Instruct | revision aa8e72537993ba99e69dfaafa59ed015b17504d1 | run_kind empirical | run_id r5-qwen2.5-3b-2026-08-17
+jobs 20 | samples 0,1,2,3,4,5,6,7,8,9,10 | trajectories 220 | workers 32 | out C:\Users\ebin\claude-ground\Digital Grimace Scale\.claude\worktrees\digital-grimace-scale-experiment-f825fc\results\raw\r5\Qwen__Qwen2.5-3B-Instruct.jsonl
+[ 189.2s] 50/220 trajectories (completed 50, failed 0, skipped 0, records 50)
+[ 196.7s] 100/220 trajectories (completed 100, failed 0, skipped 0, records 100)
+[ 207.3s] 150/220 trajectories (completed 150, failed 0, skipped 0, records 150)
+[ 215.6s] 200/220 trajectories (completed 200, failed 0, skipped 0, records 200)
+[ 221.2s] 220/220 trajectories (completed 220, failed 0, skipped 0, records 220)
+run summary: planned 220, skipped 0, completed 220, failed 0
+  records written 220, stale records dropped 0, wall time 221.3s
+  output C:\Users\ebin\claude-ground\Digital Grimace Scale\.claude\worktrees\digital-grimace-scale-experiment-f825fc\results\raw\r5\Qwen__Qwen2.5-3B-Instruct.jsonl
+  backend stats {"completion_tokens": 51590, "content_mismatch_examples": [], "content_mismatches": 0, "empty_responses": 0, "empty_stream_retries": 1, "nonfinite_logprobs": 0, "prompt_tokens": 31658, "requests": 220, "retries": 0, "trailing_special_tokens": 220, "truncated": 1, "warm_up_attempts": 2}
+  throughput prompt_tokens 143.1/s | completion_tokens 233.2/s
+backend stats: completion_tokens=51590, content_mismatches=0, empty_responses=0, empty_stream_retries=1, nonfinite_logprobs=0, prompt_tokens=31658, requests=220, retries=0, trailing_special_tokens=220, truncated=1, warm_up_attempts=2

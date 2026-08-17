@@ -1,0 +1,7 @@
+model_id,metric,eligible,eligibility_reason,neutral_sd,scale_source,instability_sign,raw_estimate,raw_upper_bound_95,standardized_estimate,standardized_upper_bound_95,low_instability,counts_for_p6,n_items,n_pairs,untestable_reason
+google/gemma-2-9b-it,M1,false,m1_missing_rate_above_5_percent,5.87685235040395,neutral,-1.0,0.20625019048129617,1.0595314664540818,-0.03509535005879795,0.09784145815314939,true,false,10,10,
+google/gemma-2-9b-it,M2,true,,0.10144785195688802,neutral,1.0,0.0,0.0,0.0,0.0,true,true,10,10,
+google/gemma-2-9b-it,M3,true,m3_audit_f1_not_supplied_eligible_by_default,,,1.0,0.0,0.0,,,false,false,10,10,zero_neutral_and_pooled_sample_sd
+Qwen/Qwen2.5-3B-Instruct,M1,true,,14.901491747819787,neutral,-1.0,-1.888888941870789,-0.5409722248713178,0.1267583792171109,0.2171669302083752,false,false,9,9,
+Qwen/Qwen2.5-3B-Instruct,M2,false,m2_invalid_sampled_response_rate_above_5_percent,0.18439088914585774,neutral,1.0,0.0,0.0,0.0,0.0,true,false,4,4,
+Qwen/Qwen2.5-3B-Instruct,M3,true,m3_audit_f1_not_supplied_eligible_by_default,,,1.0,0.0,0.0,,,false,false,10,10,zero_neutral_and_pooled_sample_sd

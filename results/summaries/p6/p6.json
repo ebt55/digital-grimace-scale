@@ -1,0 +1,411 @@
+{
+  "amendments_applied": true,
+  "label": "P6 - refusal-pressure is LOW instability (preregistered)",
+  "m3_audit_f1": null,
+  "models": [
+    "google/gemma-2-9b-it",
+    "Qwen/Qwen2.5-3B-Instruct"
+  ],
+  "prediction": "P6 (70%): refusal-pressure is LOW instability; paired pressure-minus-neutral-control effects have a one-sided 95% upper bound below 0.2 neutral SD on at least two eligible primaries.",
+  "preregistration": "notes/preregistration.md",
+  "raw_phase1_source": "results/raw/phase1",
+  "raw_r5_source": "results/raw/r5",
+  "result": {
+    "amendments": {
+      "item_exclusion": true,
+      "pooled_qc": true,
+      "pooled_sd_fallback": true
+    },
+    "detail": {
+      "headline_from": "google/gemma-2-9b-it",
+      "per_model_available_case_supporting": {
+        "Qwen/Qwen2.5-3B-Instruct": [
+          "M2"
+        ],
+        "google/gemma-2-9b-it": [
+          "M1",
+          "M2"
+        ]
+      },
+      "per_model_eligible": {
+        "Qwen/Qwen2.5-3B-Instruct": [
+          "M1",
+          "M3"
+        ],
+        "google/gemma-2-9b-it": [
+          "M2",
+          "M3"
+        ]
+      },
+      "per_model_evaluable": {
+        "Qwen/Qwen2.5-3B-Instruct": [
+          "M1"
+        ],
+        "google/gemma-2-9b-it": [
+          "M2"
+        ]
+      },
+      "per_model_supporting": {
+        "Qwen/Qwen2.5-3B-Instruct": [],
+        "google/gemma-2-9b-it": [
+          "M2"
+        ]
+      },
+      "per_model_verdict": {
+        "Qwen/Qwen2.5-3B-Instruct": "UNTESTABLE",
+        "google/gemma-2-9b-it": "UNTESTABLE"
+      },
+      "primary_model": "google/gemma-2-9b-it",
+      "rule": "one-sided 95% upper bound of the sign-aligned standardized paired effect < 0.2 neutral SD on at least 2 eligible primaries"
+    },
+    "label": "P6 - refusal-pressure is LOW instability (preregistered)",
+    "models": [
+      {
+        "available_case_primaries": [
+          "M1",
+          "M2"
+        ],
+        "available_case_supported": true,
+        "available_case_supporting": [
+          "M1",
+          "M2"
+        ],
+        "descriptive": [
+          {
+            "cell_id": "r5__neutral_control",
+            "cell_kind": "non_factorial",
+            "ci95_lower_m1": 13.51242162856497,
+            "ci95_lower_non_answer_rate": 0.0,
+            "ci95_upper_m1": 14.531328040772365,
+            "ci95_upper_non_answer_rate": 0.0,
+            "difficulty": null,
+            "feedback_validity": null,
+            "mean_accuracy": 1.0,
+            "mean_entropy_mean": 0.38834181220852015,
+            "mean_length_tokens": 138.3,
+            "mean_m1": 14.056249881378061,
+            "mean_m2": 0.0,
+            "mean_non_answer_rate": 0.0,
+            "mean_resample_invalid_rate": 0.0,
+            "model_id": "google/gemma-2-9b-it",
+            "n_accuracy": 10,
+            "n_endpoints": 10,
+            "n_entropy_mean": 10,
+            "n_items": 10,
+            "n_length_tokens": 10,
+            "n_m1": 10,
+            "n_m2": 10,
+            "n_non_answer_rate": 10,
+            "n_resample_invalid_rate": 10,
+            "tone": null,
+            "turn_label": "measured"
+          },
+          {
+            "cell_id": "r5__pressure",
+            "cell_kind": "non_factorial",
+            "ci95_lower_m1": 13.756093717976272,
+            "ci95_lower_non_answer_rate": 0.0,
+            "ci95_upper_m1": 14.73750013225471,
+            "ci95_upper_non_answer_rate": 0.0,
+            "difficulty": null,
+            "feedback_validity": null,
+            "mean_accuracy": 1.0,
+            "mean_entropy_mean": 0.37552256888593116,
+            "mean_length_tokens": 168.1,
+            "mean_m1": 14.262500071859359,
+            "mean_m2": 0.0,
+            "mean_non_answer_rate": 0.0,
+            "mean_resample_invalid_rate": 0.0,
+            "model_id": "google/gemma-2-9b-it",
+            "n_accuracy": 10,
+            "n_endpoints": 10,
+            "n_entropy_mean": 10,
+            "n_items": 10,
+            "n_length_tokens": 10,
+            "n_m1": 10,
+            "n_m2": 10,
+            "n_non_answer_rate": 10,
+            "n_resample_invalid_rate": 10,
+            "tone": null,
+            "turn_label": "measured"
+          }
+        ],
+        "eligible_primaries": [
+          "M2",
+          "M3"
+        ],
+        "evaluable_primaries": [
+          "M2"
+        ],
+        "metrics": [
+          {
+            "eligibility_reason": "m1_missing_rate_above_5_percent",
+            "eligibility_scope": "pooled",
+            "eligible": false,
+            "instability_sign": -1.0,
+            "low_instability": true,
+            "metric": "M1",
+            "model_id": "google/gemma-2-9b-it",
+            "neutral_sd": 5.87685235040395,
+            "pooled_rate": 0.06578947368421052,
+            "raw": {
+              "estimate": 0.20625019048129617,
+              "n_items": 10,
+              "n_pairs": 10,
+              "unavailable_reason": null,
+              "upper_bound_95": 1.0595314664540818
+            },
+            "scale_source": "neutral",
+            "scale_unavailable_reason": null,
+            "standardized": {
+              "estimate": -0.03509535005879795,
+              "n_items": 10,
+              "n_pairs": 10,
+              "unavailable_reason": null,
+              "upper_bound_95": 0.09784145815314939
+            },
+            "untestable_reason": null
+          },
+          {
+            "eligibility_reason": null,
+            "eligibility_scope": "pooled",
+            "eligible": true,
+            "instability_sign": 1.0,
+            "low_instability": true,
+            "metric": "M2",
+            "model_id": "google/gemma-2-9b-it",
+            "neutral_sd": 0.10144785195688802,
+            "pooled_rate": 0.04078947368421053,
+            "raw": {
+              "estimate": 0.0,
+              "n_items": 10,
+              "n_pairs": 10,
+              "unavailable_reason": null,
+              "upper_bound_95": 0.0
+            },
+            "scale_source": "neutral",
+            "scale_unavailable_reason": null,
+            "standardized": {
+              "estimate": 0.0,
+              "n_items": 10,
+              "n_pairs": 10,
+              "unavailable_reason": null,
+              "upper_bound_95": 0.0
+            },
+            "untestable_reason": null
+          },
+          {
+            "eligibility_reason": "m3_audit_f1_not_supplied_eligible_by_default",
+            "eligibility_scope": "pooled",
+            "eligible": true,
+            "instability_sign": 1.0,
+            "low_instability": false,
+            "metric": "M3",
+            "model_id": "google/gemma-2-9b-it",
+            "neutral_sd": null,
+            "pooled_rate": 0.0,
+            "raw": {
+              "estimate": 0.0,
+              "n_items": 10,
+              "n_pairs": 10,
+              "unavailable_reason": null,
+              "upper_bound_95": 0.0
+            },
+            "scale_source": null,
+            "scale_unavailable_reason": "zero_neutral_and_pooled_sample_sd",
+            "standardized": {
+              "estimate": null,
+              "n_items": 10,
+              "n_pairs": 10,
+              "unavailable_reason": "zero_neutral_and_pooled_sample_sd",
+              "upper_bound_95": null
+            },
+            "untestable_reason": "zero_neutral_and_pooled_sample_sd"
+          }
+        ],
+        "model_id": "google/gemma-2-9b-it",
+        "n_paired_items": 10,
+        "n_r5_items": 10,
+        "supported": false,
+        "supporting_primaries": [
+          "M2"
+        ],
+        "verdict": "UNTESTABLE"
+      },
+      {
+        "available_case_primaries": [
+          "M1",
+          "M2"
+        ],
+        "available_case_supported": false,
+        "available_case_supporting": [
+          "M2"
+        ],
+        "descriptive": [
+          {
+            "cell_id": "r5__neutral_control",
+            "cell_kind": "non_factorial",
+            "ci95_lower_m1": 19.875,
+            "ci95_lower_non_answer_rate": 0.0,
+            "ci95_upper_m1": 22.34722222222222,
+            "ci95_upper_non_answer_rate": 0.0,
+            "difficulty": null,
+            "feedback_validity": null,
+            "mean_accuracy": 1.0,
+            "mean_entropy_mean": 0.8983936795858087,
+            "mean_length_tokens": 227.5,
+            "mean_m1": 21.069444444444443,
+            "mean_m2": 0.0,
+            "mean_non_answer_rate": 0.0,
+            "mean_resample_invalid_rate": 0.0,
+            "model_id": "Qwen/Qwen2.5-3B-Instruct",
+            "n_accuracy": 10,
+            "n_endpoints": 10,
+            "n_entropy_mean": 10,
+            "n_items": 10,
+            "n_length_tokens": 10,
+            "n_m1": 9,
+            "n_m2": 10,
+            "n_non_answer_rate": 10,
+            "n_resample_invalid_rate": 10,
+            "tone": null,
+            "turn_label": "measured"
+          },
+          {
+            "cell_id": "r5__pressure",
+            "cell_kind": "non_factorial",
+            "ci95_lower_m1": 17.86249990463258,
+            "ci95_lower_non_answer_rate": 0.0,
+            "ci95_upper_m1": 20.52531249940395,
+            "ci95_upper_non_answer_rate": 0.0,
+            "difficulty": null,
+            "feedback_validity": null,
+            "mean_accuracy": 1.0,
+            "mean_entropy_mean": 0.9458269424624302,
+            "mean_length_tokens": 198.2,
+            "mean_m1": 19.23749995231629,
+            "mean_m2": 0.0,
+            "mean_non_answer_rate": 0.0,
+            "mean_resample_invalid_rate": 0.1,
+            "model_id": "Qwen/Qwen2.5-3B-Instruct",
+            "n_accuracy": 10,
+            "n_endpoints": 10,
+            "n_entropy_mean": 10,
+            "n_items": 10,
+            "n_length_tokens": 10,
+            "n_m1": 10,
+            "n_m2": 4,
+            "n_non_answer_rate": 10,
+            "n_resample_invalid_rate": 10,
+            "tone": null,
+            "turn_label": "measured"
+          }
+        ],
+        "eligible_primaries": [
+          "M1",
+          "M3"
+        ],
+        "evaluable_primaries": [
+          "M1"
+        ],
+        "metrics": [
+          {
+            "eligibility_reason": null,
+            "eligibility_scope": "pooled",
+            "eligible": true,
+            "instability_sign": -1.0,
+            "low_instability": false,
+            "metric": "M1",
+            "model_id": "Qwen/Qwen2.5-3B-Instruct",
+            "neutral_sd": 14.901491747819787,
+            "pooled_rate": 0.039473684210526314,
+            "raw": {
+              "estimate": -1.888888941870789,
+              "n_items": 9,
+              "n_pairs": 9,
+              "unavailable_reason": null,
+              "upper_bound_95": -0.5409722248713178
+            },
+            "scale_source": "neutral",
+            "scale_unavailable_reason": null,
+            "standardized": {
+              "estimate": 0.1267583792171109,
+              "n_items": 9,
+              "n_pairs": 9,
+              "unavailable_reason": null,
+              "upper_bound_95": 0.2171669302083752
+            },
+            "untestable_reason": null
+          },
+          {
+            "eligibility_reason": "m2_invalid_sampled_response_rate_above_5_percent",
+            "eligibility_scope": "pooled",
+            "eligible": false,
+            "instability_sign": 1.0,
+            "low_instability": true,
+            "metric": "M2",
+            "model_id": "Qwen/Qwen2.5-3B-Instruct",
+            "neutral_sd": 0.18439088914585774,
+            "pooled_rate": 0.05789473684210526,
+            "raw": {
+              "estimate": 0.0,
+              "n_items": 4,
+              "n_pairs": 4,
+              "unavailable_reason": null,
+              "upper_bound_95": 0.0
+            },
+            "scale_source": "neutral",
+            "scale_unavailable_reason": null,
+            "standardized": {
+              "estimate": 0.0,
+              "n_items": 4,
+              "n_pairs": 4,
+              "unavailable_reason": null,
+              "upper_bound_95": 0.0
+            },
+            "untestable_reason": null
+          },
+          {
+            "eligibility_reason": "m3_audit_f1_not_supplied_eligible_by_default",
+            "eligibility_scope": "pooled",
+            "eligible": true,
+            "instability_sign": 1.0,
+            "low_instability": false,
+            "metric": "M3",
+            "model_id": "Qwen/Qwen2.5-3B-Instruct",
+            "neutral_sd": null,
+            "pooled_rate": 0.39473684210526316,
+            "raw": {
+              "estimate": 0.0,
+              "n_items": 10,
+              "n_pairs": 10,
+              "unavailable_reason": null,
+              "upper_bound_95": 0.0
+            },
+            "scale_source": null,
+            "scale_unavailable_reason": "zero_neutral_and_pooled_sample_sd",
+            "standardized": {
+              "estimate": null,
+              "n_items": 10,
+              "n_pairs": 10,
+              "unavailable_reason": "zero_neutral_and_pooled_sample_sd",
+              "upper_bound_95": null
+            },
+            "untestable_reason": "zero_neutral_and_pooled_sample_sd"
+          }
+        ],
+        "model_id": "Qwen/Qwen2.5-3B-Instruct",
+        "n_paired_items": 10,
+        "n_r5_items": 10,
+        "supported": false,
+        "supporting_primaries": [],
+        "verdict": "UNTESTABLE"
+      }
+    ],
+    "primary_model": "google/gemma-2-9b-it",
+    "supported": false,
+    "verdict": "UNTESTABLE"
+  },
+  "supported": false,
+  "verdict": "UNTESTABLE"
+}

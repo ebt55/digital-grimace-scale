@@ -1,0 +1,5 @@
+phase phase1 | model meta-llama/Llama-3.1-8B-Instruct | revision 0e9e39f249a16976918f6564b8830bc894c89659 | run_kind empirical | run_id phase1-llama-3.1-8b-2026-08-17
+jobs 80 | samples 0,1,2,3,4,5,6,7,8,9,10 | trajectories 880 | workers 96 | out C:\Users\ebin\claude-ground\Digital Grimace Scale\.claude\worktrees\digital-grimace-scale-experiment-f825fc\results\raw\phase1\meta-llama__Llama-3.1-8B-Instruct.jsonl
+[ 394.7s] 100/880 trajectories (completed 98, failed 2, skipped 0, records 640)
+[ 614.4s] 200/880 trajectories (completed 167, failed 33, skipped 0, records 1090)
+[1111.6s] 300/880 trajectories (completed 267, failed 33, skipped 0, records 1743)
