@@ -17,10 +17,17 @@ LOGPROB_EPSILON = 1e-6
 # Floor substituted for non-finite alternatives so records.py stays satisfiable.
 LOGPROB_FLOOR = -9999.0
 MAX_ALTERNATIVES = 20
+# Bounded diagnostic sample of content/token-trace disagreements.
+MISMATCH_SAMPLE_LIMIT = 20
+MISMATCH_SAMPLE_CHARS = 200
 
 
 class BackendError(RuntimeError):
     """Raised when a generation backend cannot produce a usable response."""
+
+
+class TransientBackendError(BackendError):
+    """A server fault worth retrying, never something to record as model output."""
 
 
 @dataclass(frozen=True)
@@ -203,10 +210,12 @@ class OpenAICompatBackend:
         self._api_key = api_key
         self._include_usage = True
         self._lock = threading.Lock()
-        self.stats: dict[str, int] = {"requests": 0, "retries": 0, "content_mismatches": 0,
+        self.stats: dict[str, Any] = {"requests": 0, "retries": 0, "content_mismatches": 0,
                                       "prompt_tokens": 0, "completion_tokens": 0,
                                       "nonfinite_logprobs": 0, "truncated": 0,
-                                      "trailing_special_tokens": 0, "empty_responses": 0}
+                                      "trailing_special_tokens": 0, "empty_responses": 0,
+                                      "empty_stream_retries": 0, "warm_up_attempts": 0,
+                                      "content_mismatch_examples": []}
         # ~100 worker threads share this client, so the pool must not become the bottleneck.
         self._client = httpx.Client(
             timeout=httpx.Timeout(self.timeout_s, connect=60.0),
@@ -227,6 +236,19 @@ class OpenAICompatBackend:
     def _bump(self, field: str, amount: int = 1) -> None:
         with self._lock:
             self.stats[field] = self.stats.get(field, 0) + amount
+
+    def _sample_mismatch(self, server_content: str, concatenation: str) -> None:
+        """Keep a bounded sample of content/token-trace disagreements for diagnosis.
+
+        Purely observational: `response_text` stays the token concatenation, so the record
+        contract is untouched. The sample is what tells us whether the difference is only
+        whitespace or special tokens, or genuinely different text.
+        """
+        with self._lock:
+            examples = self.stats.setdefault("content_mismatch_examples", [])
+            if len(examples) < MISMATCH_SAMPLE_LIMIT:
+                examples.append({"server_content": server_content[:MISMATCH_SAMPLE_CHARS],
+                                 "concatenation": concatenation[:MISMATCH_SAMPLE_CHARS]})
 
     # -- request construction ---------------------------------------------
     def _payload(self, request: GenerationRequest) -> dict[str, Any]:
@@ -273,6 +295,10 @@ class OpenAICompatBackend:
                     chunk = json.loads(data)
                 except json.JSONDecodeError as exc:
                     raise BackendError("malformed stream chunk: %s" % data[:200]) from exc
+                if isinstance(chunk, Mapping) and chunk.get("error") is not None:
+                    # vLLM reports mid-stream faults as a data: payload, not an HTTP status.
+                    raise TransientBackendError("server reported a stream error: %s"
+                                                % json.dumps(chunk["error"])[:300])
                 if isinstance(chunk.get("usage"), Mapping):
                     for key in ("prompt_tokens", "completion_tokens"):
                         value = chunk["usage"].get(key)
@@ -296,15 +322,21 @@ class OpenAICompatBackend:
                     continue
                 for entry in entries:
                     tokens.append(self._token(entry))
+        content = "".join(content_parts)
+        if not tokens and not content:
+            # Nothing at all -- not even an EOS logprob entry. That is a server fault (it shows
+            # up on the first request per connection while a container is still warming up),
+            # NOT a model that chose to say nothing. Recording it would fabricate data.
+            self._bump("empty_stream_retries")
+            raise TransientBackendError("server returned an empty stream (no logprob entries)")
         if finish_reason == "length":
             self._bump("truncated")
-        content = "".join(content_parts)
         tokens, dropped = _trim_trailing_special(tokens, content)
         if dropped:
             self._bump("trailing_special_tokens", len(dropped))
         if not tokens:
-            # An immediately-terminated turn: no visible text, but still a real generated
-            # position. Recording it beats crashing -- it parses as an invalid final answer.
+            # A genuine immediately-terminated turn: the server DID send an EOS logprob entry,
+            # so there is a real generated position to record. It parses as an invalid answer.
             tokens = [_empty_position(dropped)]
             self._bump("empty_responses")
         return tokens, content, usage
@@ -344,6 +376,29 @@ class OpenAICompatBackend:
         return Token(text, logprob, normalize_alternatives(text, logprob, raw))
 
     # -- public surface ----------------------------------------------------
+    def warm_up(self, deadline_s: float = 600.0) -> None:
+        """Block until one trivial request succeeds, so no worker thread races a cold start.
+
+        The empty-stream fault this guards against appears on the first request per connection
+        while a container is still coming up. Paying for it once, synchronously, keeps it out
+        of the recorded data entirely.
+        """
+        settings = {"temperature": 0, "top_p": 1, "max_logprobs": MAX_ALTERNATIVES, "max_tokens": 1}
+        request = GenerationRequest(({"role": "user", "content": "ping"},), 0, settings)
+        deadline = time.monotonic() + deadline_s
+        last: Exception | None = None
+        while True:
+            self._bump("warm_up_attempts")
+            try:
+                self._stream_once(self._payload(request))
+                return
+            except Exception as exc:  # noqa: BLE001 - any failure here is worth retrying
+                last = exc
+                if time.monotonic() >= deadline:
+                    raise BackendError(
+                        "backend did not warm up within %.0fs (last error: %s)" % (deadline_s, exc)) from exc
+                time.sleep(min(15.0, 2.0 + 0.5 * self.stats["warm_up_attempts"]))
+
     def generate(self, request: GenerationRequest) -> GenerationResult:
         import httpx
 
@@ -362,7 +417,7 @@ class OpenAICompatBackend:
                         continue
                     if status < 500 and status != 429:
                         raise BackendError("generation failed permanently: %s" % exc) from exc
-                elif isinstance(exc, BackendError):
+                elif isinstance(exc, BackendError) and not isinstance(exc, TransientBackendError):
                     raise
                 last = exc
                 if attempt >= self.max_retries:
@@ -377,6 +432,7 @@ class OpenAICompatBackend:
             text = "".join(token.text for token in tokens)
             if content and content != text:
                 self._bump("content_mismatches")
+                self._sample_mismatch(content, text)
             return GenerationResult(text, tuple(tokens))
         raise BackendError("generation failed after %d attempts: %s" % (self.max_retries + 1, last))
 

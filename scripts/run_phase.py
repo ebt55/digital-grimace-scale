@@ -17,6 +17,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+from src.backend import BackendError  # noqa: E402  (httpx is imported lazily inside the client)
 from src.generate import GenerateError, format_progress, format_summary, run_jobs  # noqa: E402
 from src.protocol import Protocol, ProtocolError, load_protocol  # noqa: E402
 from src.runner import (RunnerError, plan_phase0_jobs, plan_phase1_model_jobs, plan_r5_jobs,  # noqa: E402
@@ -25,6 +26,20 @@ from src.runner import (RunnerError, plan_phase0_jobs, plan_phase1_model_jobs, p
 HEX40 = re.compile(r"[0-9a-fA-F]{40}")
 DEFAULT_OUT = {"phase0": "results/raw/phase0", "phase1": "results/raw/phase1",
                "style-smoke": "results/raw/style_smoke", "r5": "results/raw/r5"}
+
+
+def format_backend_stats(backend) -> str:
+    """Counters plus the bounded content-mismatch sample, so faults are visible per run."""
+    stats = getattr(backend, "stats", None)
+    if not isinstance(stats, dict):
+        return "backend stats: unavailable (%s)" % getattr(backend, "name", "unknown")
+    examples = stats.get("content_mismatch_examples") or []
+    counters = {key: value for key, value in stats.items() if not isinstance(value, list)}
+    lines = ["backend stats: " + ", ".join("%s=%s" % item for item in sorted(counters.items()))]
+    for index, example in enumerate(examples, 1):
+        lines.append("  content mismatch %d: server=%r" % (index, example.get("server_content")))
+        lines.append("                     tokens=%r" % (example.get("concatenation"),))
+    return "\n".join(lines)
 
 
 def sample_spec(text: str) -> tuple[int, ...]:
@@ -152,16 +167,23 @@ def main(argv: Sequence[str] | None = None) -> int:
     if args.dry_run:
         return 0
 
+    backend = _backend(args)
     try:
-        summary = run_jobs(jobs, backend=_backend(args), out_path=out_path, immutable_revision=revision,
+        summary = run_jobs(jobs, backend=backend, out_path=out_path, immutable_revision=revision,
                            run_id=run_id, run_kind=run_kind, sample_indices=args.samples,
                            max_workers=args.workers, resume=not args.no_resume, protocol=protocol,
                            progress_every=args.progress_every,
                            on_progress=lambda snapshot: print(format_progress(snapshot), flush=True))
+    except BackendError as exc:
+        # Includes the synchronous warm-up: better to abort before any worker starts than to
+        # record one poisoned trajectory per worker thread.
+        print("generation aborted before starting: %s" % exc, file=sys.stderr)
+        return 2
     except (GenerateError, RunnerError, ImportError) as exc:
         print("generation aborted: %s" % exc, file=sys.stderr)
         return 2
     print(format_summary(summary))
+    print(format_backend_stats(backend))
     if summary.failed:
         print("failed trajectories recorded in %s" % summary.failures_path, file=sys.stderr)
         return 1

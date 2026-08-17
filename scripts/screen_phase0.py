@@ -19,7 +19,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from src.extract import LoadIssue, build_metric_rows, load_records, write_summaries  # noqa: E402
+from src.extract import LoadIssue, build_metric_rows, iter_records, write_summaries  # noqa: E402
 from src.pipeline import AMENDED_RULES, FROZEN_RULES, phase0_screen, render_phase0_markdown  # noqa: E402
 from src.protocol import load_protocol  # noqa: E402
 
@@ -41,13 +41,20 @@ def main(argv=None) -> int:
     args = parse_args(argv)
     protocol = load_protocol(ROOT)
     issues: list[LoadIssue] = []
-    records = load_records(args.raw, protocol=protocol, issues=None if args.strict else issues)
+    counter = [0]
+
+    def stream():
+        for record in iter_records(args.raw, protocol=protocol, issues=None if args.strict else issues):
+            counter[0] += 1
+            yield record
+
+    # Streamed: raw files are far too large to materialise as a list of records.
+    rows = build_metric_rows(stream(), protocol=protocol)
     for issue in issues:
         print("skipped %s:%d: %s" % (issue.path, issue.line_number, issue.message), file=sys.stderr)
-    if not records:
+    if not counter[0]:
         print("no raw records under %s" % args.raw, file=sys.stderr)
         return 2
-    rows = build_metric_rows(records, protocol=protocol)
     phase0_rows = [row for row in rows if row.phase == "phase_0"]
     if not phase0_rows:
         print("no phase_0 endpoints in %s" % args.raw, file=sys.stderr)
@@ -62,7 +69,7 @@ def main(argv=None) -> int:
     payload = {
         "raw_source": str(args.raw),
         "skipped_line_count": len(issues),
-        "record_count": len(records),
+        "record_count": counter[0],
         "amendments_authoritative": result.amendments_authoritative,
         "screen": result.to_dict(),
     }

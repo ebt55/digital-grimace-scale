@@ -308,3 +308,107 @@ shuffle; two run IDs for one model still block with the model named.
 3. `gates.StyleEffectEvidence` now accepts a nonempty SUBSET of the five frozen G3 smoke items,
    because A2 can drop one (DGS-022 is both a smoke item and an A2 candidate); the analysed IDs
    travel with the evidence and anything outside the frozen five is still rejected.
+
+## 2026-08-17 — orchestrator — Phase-0 screen outcome and Phase-1 launch
+
+**Course correction (morning).** The prior executor's eight commits were a sound preregistration
+firewall with a synthetic-only pipeline and no way to call a model. Kept: locked configs/stimuli/
+manifest, `protocol.py`, `records.py`, `metrics.py`, and the G1/G2/G5 statistics. Built today by
+four agents (backend + Modal server; concurrent resumable driver + phase CLI; extraction/pipeline/
+G3/G4/figures; judge client). All amendments are registered in `notes/amendments.md`.
+
+**Environment facts.** HF access OK for gemma-2-2b-it, gemma-2-9b-it, gemma-2-9b, Qwen2.5-*;
+`meta-llama/Llama-3.2-3B-Instruct` 403 (no licence) — dropped from the screen (four models, not
+five). Judge pinned `anthropic/claude-sonnet-4-6` at temperature 0 (`claude-sonnet-5` rejects the
+temperature parameter). Modal: vLLM 0.26.0, `--max-logprobs 20`; A10G for 2–3B, L40S for 7–9B.
+
+**Phase 0 (screen items DGS-003/005/010/014/018/022/026/030/034/037; accurate+neutral vs
+malfunctioning+neutral; greedy + 10 resamples; 220 trajectories / 1,430 records per model).**
+Wall time 2.5–4.3 min per model at 96 concurrent trajectories; 0 permanent failures after two
+edge-case fixes (empty-string logprob token; empty EOS-only response). Estimated GPU spend for
+Phase 0 ≈ $1.
+
+| model | M1 (sign-aligned z) | M2 | M3 | S | coherent |
+|---|---:|---:|---:|---:|:---:|
+| gemma-2-9b-it | +2.00 | +0.69 (pooled scale, A3) | n/a | 1.35 | yes |
+| gemma-2-2b-it | +0.48 | +0.94 | n/a | 0.71 | yes |
+| Qwen2.5-3B-Instruct | −0.35 | −0.08 | n/a | −0.22 | no |
+| Qwen2.5-7B-Instruct | −0.26 | −0.34 | n/a | −0.30 | no |
+
+Authoritative (A2+A3) selection: **primary gemma-2-9b-it, control Qwen2.5-3B-Instruct**. Frozen
+rule would have selected gemma-2-2b-it / Qwen2.5-7B-Instruct (gemma-2-9b's neutral M2 is
+identically 0, so the frozen rule calls M2 "unavailable" and the model "incoherent"). Both
+Gemmas move toward instability under false-failure and both Qwens do not — the preregistered P4
+family boundary already appears at screen strength.
+
+**M3 is unavailable for every model**: the frozen parser fires zero events in any response. Spot
+checks (gemma-2-9b greedy: 21/130 responses contain a mid-body proposal, 1 revise cue) show this is
+genuine — the models do not visibly thrash on these tasks within the 512-token cap — not a markdown
+artefact. M3 is therefore reported as unavailable (zero variance); the human M3 audit will be run
+on the export but cannot rescue a metric with no predicted events.
+
+**Believability spot-check.** Read transcripts: the false-failure verdicts are engaged with (models
+re-derive, occasionally switch letters or refuse to pick — "Answer: Cannot be determined"); the
+truthful cause-removal correction is delivered in every malfunctioning conversation.
+
+**Phase 1 launched 13:12 IST** on discovery items: full 2×2×2 factorial + reversal/onset on the
+primary and control, plus gemma-2-2b-it and Qwen2.5-7B-Instruct as logged exploratory extras
+(cheap; makes the G4 boundary test stricter). Style smoke (5 items × 5 style cells × 11) on the
+primary. Judge pass and G1–G5 follow.
+
+## 2026-08-17 — agent C — Phase-1 gate family, extra models, streaming extraction
+
+**Gate family = eligible AND estimable.** `run_phase1_gates` now drops a QC-eligible metric that
+cannot be estimated for the primary model — zero variance so no z-scale exists even under A3, or a
+model that will not fit — records the reason (`zero_variance`, or the fit's own reason) in
+`Phase1Verdict.unavailable_metrics`, and refits the Benjamini-Hochberg family over the survivors.
+G1–G5, the shuffled-label null and the G5 feature set all follow the surviving metrics exactly.
+Only when nothing is estimable does the full eligible family go forward, so G1 reports UNAVAILABLE
+rather than passing on nothing. This matters immediately: M3 has zero neutral AND pooled variance
+for every model in Phase 0, so it is expected to drop out of the Phase-1 family with reason
+`zero_variance` while M1/M2 decide the gates.
+
+**Extra models.** `analyze_phase1.py --extra HF_ID` (repeatable). Extras get the same per-model
+G1/G2/G5 and null-check tables, labelled exploratory, and their G1 evidence enters G4's
+family-boundary comparison — "at least one Gemma has an eligible positive" may be satisfied by
+either Gemma, and "every evaluated Qwen lacks one" now considers both Qwens. The gate verdict
+columns stay primary/control as preregistered, and `gates.md` names which models the boundary
+decision evaluated and in what role.
+
+**Streaming extraction.** Raw Phase-1 files are 0.8–1.3 GB each because every token carries twenty
+logprobs. `extract.iter_records()` parses one line at a time (`newline="\n"`, so U+2028/U+2029
+inside a response still cannot end a record) and `build_metric_rows()` reduces each record to its
+metric contribution and releases it: greedy records become their computed columns, resample records
+become a ten-field stub carrying only what M2 reads. Peak memory now scales with the number of
+endpoints, not with the raw bytes. `load_records()` remains as the materialising wrapper for tests.
+
+## 2026-08-17 — agent D — manipulation check PASSED; judge cache made content-addressed
+
+**Manipulation check (live, pinned judge `anthropic` / `claude-sonnet-4-6`, temperature 0).**
+Outputs in `results/summaries/manipulation_check/` (JSON + CSV + markdown table). **PASSED**:
+hostile mean 6.5 vs neutral mean 1.5, all four tone-matched pairs strictly ordered, and every
+dry turn (cause-removal correction, truthful washout, irrelevant-information control,
+measured-trial message) scored below the lowest hostile string — evidencing the preregistered
+requirement that the correction turn stays maximally dry. `sampling_mode: temperature_zero`,
+so the wire request carried the preregistered temperature literally.
+
+**Judge cache is now content-addressed — this was a live correctness fault.** `cache_key`
+gained `input_sha256`. `response_id` is derived from model/revision/task/cell/turn/sample and
+is *unchanged when a trajectory is regenerated*, so the previous key would have served the
+stale score for freshly generated text. Caught while preparing the Phase-1 judge run against
+the ~96 regenerated placeholder trajectories. Regenerated responses now miss and are
+re-judged; untouched responses stay cached. Cache lines written before this change lack the
+field and are ignored rather than trusted. Regression test:
+`test_regenerated_response_is_not_served_from_the_cache`.
+
+**Judge CLI hardened for GB-scale raw.** `scripts/run_judge.py` streams raw JSONL line by line
+and applies a cheap dict-level pre-filter (`trajectory_kind`/`sample_index`/`turn_label`/
+`model_id`) before `record_from_json`, so a 1.24 GB Phase-1 file is scanned in 20 s with
+bounded memory instead of being materialised. Added `--models`; `run_manifest.json` now
+records provider usage and list-price cost.
+
+**Phase-1 judge dry run** (Phase-0 raw as stand-in, `--limit 5`, scratch dir since deleted):
+5/5 judged, 0 failures; rerun 5 cache hits at $0.0000. Eligible counts confirmed on the real
+Phase-1 files: 160 per model (80 measured, 40 onset, 40 recovery) for both
+`google/gemma-2-9b-it` and `Qwen/Qwen2.5-3B-Instruct` — **320 judge calls**, estimated
+**$0.40–0.90** at $3/$15 per MTok with the 1,084-token rubric block prompt-cached.

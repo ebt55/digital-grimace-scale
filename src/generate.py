@@ -204,6 +204,12 @@ def run_jobs(jobs: Iterable[PlannedJob], *, backend: GenerationBackend | None = 
 
     pending = tuple(unit for unit in units if (unit[0].model_id, unit[0].task_id, unit[0].cell_id, unit[1]) not in complete)
     skipped = len(units) - len(pending)
+    # One synchronous warm-up before any worker starts. A cold server can fault on the first
+    # request per connection, and every worker thread opening at once turns that into one bad
+    # trajectory per worker. Backends without a warm_up (synthetic, test doubles) are untouched.
+    warm = getattr(backend, "warm_up", None)
+    if pending and callable(warm):
+        warm()
     completed = failed = written = 0
     lock = threading.Lock()
     failure_lock = threading.Lock()

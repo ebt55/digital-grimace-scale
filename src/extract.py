@@ -22,7 +22,7 @@ import csv
 from dataclasses import dataclass, fields
 import json
 from pathlib import Path
-from typing import Any, Iterable, Mapping, Sequence
+from typing import Any, Iterable, Mapping, NamedTuple, Sequence
 
 from .metrics import (
     MetricInputError, MetricValue, m1_margin, m2_disagreement, m3_for_record,
@@ -194,27 +194,45 @@ def load_records(
     caller supplies an ``issues`` list, in which case it is reported and skipped
     so that one bad line cannot silently discard an entire run.
     """
+    return list(iter_records(paths_or_dir, protocol=protocol, issues=issues))
+
+
+def iter_records(
+    paths_or_dir: str | Path | Iterable[str | Path],
+    *,
+    protocol: Protocol | None = None,
+    issues: list[LoadIssue] | None = None,
+):
+    """Stream validated raw records without reading a whole file into memory.
+
+    Raw Phase-1 files reach gigabytes because every token carries twenty
+    logprobs, so records are parsed one line at a time and never retained here.
+    ``newline="\\n"`` keeps the frozen JSONL rule that only a line feed ends a
+    record: U+2028/U+2029 and lone carriage returns occur inside real response
+    text and are legal, unescaped, inside a JSON string.
+    """
     protocol = protocol or load_protocol()
-    records: list[RawRecord] = []
     for path in _jsonl_paths(paths_or_dir):
         try:
-            text = path.read_text(encoding="utf-8")
+            handle = path.open("r", encoding="utf-8", newline="\n")
         except OSError as error:
             if issues is None:
                 raise ExtractError("cannot read raw file: %s" % path) from error
             issues.append(LoadIssue(str(path), 0, "cannot read file: %s" % error))
             continue
-        # split on "\n" only: U+2028/U+2029 occur inside real response text and are legal in JSON strings
-        for number, line in enumerate(jsonl_lines(text), 1):
-            if not line.strip():
-                continue
-            try:
-                records.append(record_from_json(line, protocol))
-            except RecordError as error:
-                if issues is None:
-                    raise ExtractError("%s:%d: %s" % (path, number, error)) from error
-                issues.append(LoadIssue(str(path), number, str(error)))
-    return records
+        with handle:
+            for number, raw_line in enumerate(handle, 1):
+                line = raw_line[:-1] if raw_line.endswith("\n") else raw_line
+                if not line.strip():
+                    continue
+                try:
+                    record = record_from_json(line, protocol)
+                except RecordError as error:
+                    if issues is None:
+                        raise ExtractError("%s:%d: %s" % (path, number, error)) from error
+                    issues.append(LoadIssue(str(path), number, str(error)))
+                    continue
+                yield record
 
 
 def _conversation_key(record: RawRecord) -> tuple[str, str, str, str, str]:
@@ -357,26 +375,131 @@ def endpoint_metric_row(
     )
 
 
-def build_metric_rows(records: Sequence[RawRecord], *, protocol: Protocol | None = None) -> tuple[MetricRow, ...]:
-    """Turn validated raw records into the committed flat endpoint table."""
+class _M2Stub(NamedTuple):
+    """The only fields M2 reads, kept so ensembles cost bytes instead of tokens."""
+
+    run_id: str
+    model_id: str
+    immutable_revision: str
+    task_id: str
+    cell_id: str
+    turn_label: str
+    trajectory_kind: str
+    sample_index: int
+    final_answer_valid: bool
+    final_answer_letter: str | None
+
+
+def _stub(record: RawRecord) -> _M2Stub:
+    return _M2Stub(
+        record.run_id, record.model_id, record.immutable_revision, record.task_id,
+        record.cell_id, record.turn_label, record.trajectory_kind, record.sample_index,
+        record.final_answer_valid, record.final_answer_letter,
+    )
+
+
+def build_metric_rows(records: Iterable[RawRecord], *, protocol: Protocol | None = None) -> tuple[MetricRow, ...]:
+    """Turn validated raw records into the committed flat endpoint table.
+
+    Streams: each record is reduced to its metric contribution and released, so
+    peak memory scales with the number of endpoints, not with the gigabytes of
+    token logprobs that produced them.  Length drift and the observed feedback
+    round count are cross-record, so they are filled in once the stream ends.
+    """
     protocol = protocol or load_protocol()
-    records = tuple(records)
-    rounds = _feedback_round_counts(records)
-    neutral = _neutral_baseline_lengths(records)
-    rows = []
-    for endpoint in group_endpoints(records):
-        if endpoint.greedy is None:
-            # A resample-only endpoint carries no confirmatory metric; the QC
-            # table records the gap through the absent row rather than a zero.
+    greedy: dict[tuple, dict[str, Any]] = {}
+    ensembles: dict[tuple, dict[int, _M2Stub]] = {}
+    rounds: dict[tuple, set[str]] = {}
+    neutral: dict[tuple, int] = {}
+    for record in records:
+        conversation = _conversation_key(record)
+        if record.trajectory_kind == "greedy" and record.turn_label in FEEDBACK_TURNS:
+            rounds.setdefault(conversation, set()).add(record.turn_label)
             continue
-        conversation = _conversation_key(endpoint.greedy)
-        rows.append(endpoint_metric_row(
-            endpoint,
-            protocol=protocol,
-            neutral_length=neutral.get(conversation[:4]),
-            feedback_rounds=rounds.get(conversation, 0),
+        if record.turn_label not in ENDPOINT_TURNS:
+            continue
+        key = conversation + (record.turn_label,)
+        if record.trajectory_kind == "greedy" and record.sample_index == 0:
+            if key in greedy:
+                raise ExtractError("duplicate sample_index 0 for endpoint %s" % (key,))
+            greedy[key] = _greedy_fields(record, protocol)
+            if (
+                record.turn_label == "measured" and record.difficulty is not None
+                and record.cell_id == record.difficulty + NEUTRAL_BASELINE_CELL_SUFFIX
+            ):
+                neutral[conversation[:4]] = greedy[key]["length_tokens"]
+            continue
+        bucket = ensembles.setdefault(key, {})
+        if record.sample_index in bucket:
+            raise ExtractError("duplicate sample_index %d for endpoint %s" % (record.sample_index, key))
+        bucket[record.sample_index] = _stub(record)
+    rows = []
+    for key in sorted(greedy):
+        # A resample-only endpoint carries no confirmatory metric and is absent
+        # from the table; the QC table records the gap through that absence.
+        fields = greedy[key]
+        resamples = tuple(bucket for _, bucket in sorted(ensembles.get(key, {}).items()))
+        m2, valid = _m2_from(resamples)
+        baseline = neutral.get(key[:4])
+        rows.append(MetricRow(
+            m2=m2.value, m2_missing_reason=m2.missing_reason,
+            resample_count=len(resamples), resample_valid_count=valid,
+            length_drift=None if baseline is None else (fields["length_tokens"] - baseline) / max(1, baseline),
+            length_drift_missing_reason=None if baseline is not None else "length_drift_neutral_endpoint_absent",
+            feedback_rounds=len(rounds.get(key[:5], ())),
+            **fields,
         ))
     return tuple(rows)
+
+
+def _m2_from(resamples):
+    valid = sum(1 for item in resamples if item.final_answer_valid and item.final_answer_letter in OPTIONS)
+    try:
+        result = m2_disagreement(resamples)
+    except MetricInputError:
+        # metrics.m2_disagreement is frozen and raises; the glue owns the policy.
+        return MetricValue(None, "m2_incomplete_ensemble"), valid
+    return result.disagreement, result.valid_answer_count
+
+
+def _greedy_fields(record: RawRecord, protocol: Protocol) -> dict[str, Any]:
+    """Every greedy-derived column, computed before the record is released."""
+    try:
+        m1 = m1_margin(record, protocol=protocol).margin
+    except MetricInputError as error:
+        m1 = MetricValue(None, "m1_input_error:" + str(error))
+    m3 = m3_for_record(record)
+    try:
+        entropy = partial_entropy(record)
+        entropy_mean, entropy_worst = entropy.mean_partial_entropy, entropy.highest_entropy_decile_mean
+        tail = entropy.mean_tail_mass
+        entropy_reason = entropy_mean.missing_reason
+    except MetricInputError as error:
+        missing = MetricValue(None, "partial_entropy_input_error")
+        entropy_mean = entropy_worst = tail = missing
+        entropy_reason = "partial_entropy_input_error:" + str(error)
+    tier_b = tier_b_metrics(record.response_text)
+    return {
+        "phase": record.phase, "run_id": record.run_id, "run_kind": record.run_kind,
+        "model_id": record.model_id, "immutable_revision": record.immutable_revision,
+        "task_id": record.task_id, "split": record.split, "difficulty": record.difficulty,
+        "domain": record.domain, "cell_id": record.cell_id,
+        "cell_kind": "factorial" if record.cell_id in protocol.factorial_cell_ids else "non_factorial",
+        "feedback_validity": record.feedback_validity, "tone": record.tone,
+        "turn_label": record.turn_label, "response_id": record.response_id,
+        "m1": m1.value, "m1_missing_reason": m1.missing_reason,
+        "m3_rate": m3.rate_per_100_tokens.value, "m3_missing_reason": m3.rate_per_100_tokens.missing_reason,
+        "m3_event_count": m3.event_count, "m3_loop_flag": m3.loop_flag,
+        "entropy_mean": entropy_mean.value, "entropy_worst_decile": entropy_worst.value,
+        "tail_mass_mean": tail.value, "entropy_missing_reason": entropy_reason,
+        "rep4": repeated_4gram_rate(record.response_text), "length_tokens": len(record.tokens),
+        "hedge_per100": tier_b.hedging_per_100_tokens.value,
+        "selfcorr_per100": tier_b.self_correction_per_100_tokens.value,
+        "greedy_answer_valid": record.final_answer_valid,
+        "greedy_answer_correct": record.final_answer_correct,
+        "greedy_answer_letter": record.final_answer_letter,
+        "history_false_negative": record.feedback_history_false_negative,
+    }
 
 
 def qc_by_cell(

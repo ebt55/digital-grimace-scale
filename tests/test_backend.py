@@ -234,6 +234,22 @@ class OpenAICompatBackendTests(unittest.TestCase):
         backend = backend_with(lambda payload, index: FakeResponse(200, [json.dumps(role_only).join(("data: ", ""))] + answer_stream()))
         self.assertEqual(backend.generate(REQUEST).text, "Reasoning.\nAnswer: C")
 
+    def test_content_mismatch_examples_are_sampled_and_bounded(self):
+        divergent = sse(
+            token_chunk("Answer:", math.log(0.95), [("Answer:", math.log(0.95))]),
+            {"object": "chat.completion.chunk", "choices": [{"index": 0, "delta": {"content": "X" * 400},
+             "logprobs": {"content": [{"token": " C", "logprob": math.log(SAMPLED_PROBABILITY),
+                                       "top_logprobs": [{"token": t, "logprob": s} for t, s in letter_distribution(" C")]}]},
+             "finish_reason": "stop"}]})
+        backend = backend_with(lambda payload, index: FakeResponse(200, divergent))
+        for _ in range(25):
+            backend.generate(REQUEST)
+        examples = backend.stats["content_mismatch_examples"]
+        self.assertEqual(backend.stats["content_mismatches"], 25)
+        self.assertEqual(len(examples), 20)  # bounded sample, not one per request
+        self.assertEqual(len(examples[0]["server_content"]), 200)  # truncated
+        self.assertEqual(examples[0]["concatenation"], "Answer: C")
+
     def test_content_mismatch_is_counted_not_fatal(self):
         divergent = sse(
             token_chunk("Answer:", math.log(0.95), [("Answer:", math.log(0.95))]),
@@ -371,15 +387,61 @@ class EmptyResponseTests(unittest.TestCase):
         self.assertEqual(backend.stats["empty_responses"], 1)
         self.assertEqual(backend.stats["trailing_special_tokens"], 1)
 
-    def test_stream_with_no_logprob_entries_at_all_still_returns_a_record(self):
+    def test_empty_stream_is_a_transient_fault_that_retries_then_raises(self):
+        # No logprob entries AND no content: a server fault during warm-up, never model output.
+        bare = sse({"object": "chat.completion.chunk",
+                    "choices": [{"index": 0, "delta": {}, "logprobs": None, "finish_reason": "stop"}]})
+        backend = backend_with(lambda payload, index: FakeResponse(200, bare), max_retries=2)
+        with mock.patch("src.backend.time.sleep"):
+            with self.assertRaises(BackendError):
+                backend.generate(REQUEST)
+        self.assertEqual(backend.stats["retries"], 2)
+        self.assertEqual(backend.stats["empty_stream_retries"], 3)
+        self.assertEqual(backend.stats["empty_responses"], 0)  # nothing was ever recorded
+
+    def test_empty_stream_recovers_when_a_later_attempt_succeeds(self):
+        bare = sse({"object": "chat.completion.chunk",
+                    "choices": [{"index": 0, "delta": {}, "logprobs": None, "finish_reason": "stop"}]})
+
+        def handler(payload, index):
+            return FakeResponse(200, bare if index == 0 else answer_stream())
+
+        backend = backend_with(handler)
+        with mock.patch("src.backend.time.sleep"):
+            self.assertEqual(backend.generate(REQUEST).text, "Reasoning.\nAnswer: C")
+        self.assertEqual(backend.stats["empty_stream_retries"], 1)
+        self.assertEqual(backend.stats["empty_responses"], 0)
+
+    def test_stream_error_payload_is_retried_then_raises(self):
+        failure = sse({"error": {"message": "engine restarting", "type": "server_error"}})
+        backend = backend_with(lambda payload, index: FakeResponse(200, failure), max_retries=1)
+        with mock.patch("src.backend.time.sleep"):
+            with self.assertRaises(BackendError):
+                backend.generate(REQUEST)
+        self.assertEqual(backend.stats["retries"], 1)
+
+    def test_warm_up_retries_until_the_server_answers(self):
+        bare = sse({"object": "chat.completion.chunk",
+                    "choices": [{"index": 0, "delta": {}, "logprobs": None, "finish_reason": "stop"}]})
+
+        def handler(payload, index):
+            return FakeResponse(200, bare if index < 2 else answer_stream())
+
+        backend = backend_with(handler)
+        with mock.patch("src.backend.time.sleep"):
+            backend.warm_up(deadline_s=60)
+        self.assertEqual(backend.stats["warm_up_attempts"], 3)
+        self.assertEqual(backend._client.payloads[0]["max_tokens"], 1)
+
+    def test_warm_up_gives_up_with_a_clear_error(self):
         bare = sse({"object": "chat.completion.chunk",
                     "choices": [{"index": 0, "delta": {}, "logprobs": None, "finish_reason": "stop"}]})
         backend = backend_with(lambda payload, index: FakeResponse(200, bare))
-        result = backend.generate(REQUEST)
-        self.assertEqual(result.text, "")
-        self.assertEqual(result.tokens, (Token("", 0.0, (("", 0.0),)),))
-        self.assertEqual(backend.stats["empty_responses"], 1)
-        self.assertEqual(backend.stats["trailing_special_tokens"], 0)
+        with mock.patch("src.backend.time.sleep"), mock.patch("src.backend.time.monotonic",
+                                                              side_effect=[0.0, 1000.0, 1000.0]):
+            with self.assertRaises(BackendError) as caught:
+                backend.warm_up(deadline_s=600)
+        self.assertIn("did not warm up", str(caught.exception))
 
     def test_empty_response_records_and_parses_as_an_invalid_final_answer(self):
         protocol = load_protocol()

@@ -512,6 +512,48 @@ class PlantedEffectTests(unittest.TestCase):
         self.assertIn(GEMMA_9B, report)
         self.assertIn("G4 boundary detail", report)
 
+    def test_a_zero_variance_metric_is_dropped_and_the_gates_use_the_rest(self):
+        # M3 flattened everywhere: no neutral SD and no pooled SD, so no z-scale
+        # exists even under A3 and the metric cannot be estimated at all.
+        flattened = [replace(row, m3_rate=1.0, m3_event_count=1) for row in self.rows]
+        verdict = run_phase1_gates(flattened, GEMMA_9B, QWEN_7B)
+        self.assertEqual(verdict.eligible_metrics, ("M1", "M2"))
+        self.assertEqual(verdict.unavailable_metrics["M3"], "zero_variance")
+        self.assertNotIn("M3", verdict.models[GEMMA_9B].real_g1)
+        # The verdict is decided by the surviving metrics, not blocked by M3.
+        self.assertEqual(verdict.core[GEMMA_9B].g1.status, PASS)
+        self.assertEqual(verdict.summary.g1.status, PASS)
+        self.assertTrue({effect.metric_name for effect in verdict.summary.g1.qualifying_effects} <= {"M1", "M2"})
+        # BH family and G5 features follow the surviving metrics exactly.
+        self.assertEqual(set(build_g5_rows(flattened, GEMMA_9B, metrics=verdict.eligible_metrics)[0].metrics), {"M1", "M2"})
+        self.assertEqual(set(verdict.models[GEMMA_9B].shuffled.g1), {"M1", "M2"})
+        self.assertTrue(verdict.models[GEMMA_9B].shuffled.passed, verdict.models[GEMMA_9B].shuffled.reason)
+        report = render_phase1_markdown(verdict)
+        self.assertIn("M3 (`zero_variance`)", report)
+
+    def test_extra_models_are_exploratory_and_enter_the_family_boundary(self):
+        extra = build_metric_rows(_factorial_records(NullBackend(), QWEN_3B, self.tasks), protocol=PROTOCOL)
+        verdict = run_phase1_gates(self.rows + extra, GEMMA_9B, QWEN_7B, extra_models=(QWEN_3B,))
+        self.assertEqual(verdict.extra_model_ids, (QWEN_3B,))
+        self.assertEqual(set(verdict.models), {GEMMA_9B, QWEN_7B, QWEN_3B})
+        self.assertEqual(verdict.role(QWEN_3B), "extra (exploratory)")
+        # The extra model gets the full per-model tables ...
+        analysis = verdict.models[QWEN_3B]
+        self.assertEqual(set(analysis.real_g1), set(verdict.eligible_metrics))
+        self.assertIsNotNone(analysis.real_g5)
+        self.assertIsNotNone(analysis.shuffled)
+        self.assertIn(QWEN_3B, verdict.core)
+        # ... and the boundary must clear BOTH Qwens, but the verdict columns
+        # stay primary/control.
+        self.assertEqual(verdict.summary.control_model_id, QWEN_7B)
+        self.assertEqual(verdict.summary.g4.status, PASS)
+        self.assertTrue(verdict.summary.g4.boundary_metrics)
+        report = render_phase1_markdown(verdict)
+        self.assertIn("models evaluated for the boundary", report)
+        self.assertIn("extra (exploratory)", report)
+        with self.assertRaises(PipelineError):
+            run_phase1_gates(self.rows, GEMMA_9B, QWEN_7B, extra_models=(QWEN_7B,))
+
     def test_verdict_serialises_and_rejects_a_degenerate_model_pair(self):
         verdict = run_phase1_gates(self.rows, GEMMA_9B, QWEN_7B)
         payload = verdict.to_dict()

@@ -859,9 +859,24 @@ class Phase1Verdict:
     summary: Any
     style: Mapping[tuple[str, str], StyleEffectEvidence]
     amendments: Amendments = AMENDED_RULES
+    # Metrics dropped from the gate family before fitting, with the reason.
+    unavailable_metrics: Mapping[str, str] = field(default_factory=lambda: MappingProxyType({}))
+    extra_model_ids: tuple[str, ...] = ()
 
     def to_dict(self):
         return _jsonable(self)
+
+    @property
+    def estimable_metrics(self):
+        """The family metrics that actually produced a fit; empty means G1 is UNAVAILABLE."""
+        return tuple(metric for metric in self.eligible_metrics if metric not in self.unavailable_metrics)
+
+    def role(self, model_id):
+        if model_id == self.primary_model_id:
+            return "primary"
+        if model_id == self.control_model_id:
+            return "control"
+        return "extra (exploratory)"
 
 
 def _core_inputs(model_id, family, real_g1, shuffled, real_g2, real_g5):
@@ -875,38 +890,81 @@ def _core_inputs(model_id, family, real_g1, shuffled, real_g2, real_g5):
     )
 
 
-def run_phase1_gates(rows, primary_model, control_model, *, style_rows=None, m3_audit_f1=None, amendments=AMENDED_RULES):
+def _g1_complete(result):
+    return result is not None and result.unavailable_reason is None and result.validity is not None and result.tone is not None
+
+
+def _drop_reason(scale, result):
+    """Why a QC-eligible metric could not be estimated for the primary model."""
+    if scale is None or not scale.available:
+        reason = "standardization_missing" if scale is None else (scale.unavailable_reason or "standardization_unavailable")
+        return "zero_variance" if "sample_sd" in reason else reason
+    if result is None:
+        return "g1_result_missing"
+    return result.unavailable_reason or "g1_coefficients_incomplete"
+
+
+def run_phase1_gates(rows, primary_model, control_model, *, extra_models=(), style_rows=None, m3_audit_f1=None, amendments=AMENDED_RULES):
     """Compose the full five-gate Phase-1 verdict from one metric-row table.
 
-    G1's Benjamini-Hochberg family is fit once across both evaluated models, so
-    "within phase" means exactly that.  G3 is evaluated for the primary model
-    only (the frozen smoke is a primary-model design); when no style rows are
-    supplied G3 is ``NOT_RUN`` and Phase 1 stays provisional rather than passing.
-    ``amendments`` selects the A2/A3 rule set; ``FROZEN_RULES`` reproduces the
-    preregistered-only analysis.
+    The gate family is the set of primaries that are both QC-eligible and
+    actually estimable for the primary model: a metric with zero variance (so no
+    z-scale exists even under amendment A3) or whose model will not fit is
+    dropped with an explicit reason and the gates proceed on what remains.  Only
+    when nothing is estimable does the full eligible family go forward so that
+    G1 reports UNAVAILABLE rather than silently passing on nothing.  The
+    Benjamini-Hochberg family and the G5 feature set follow the surviving
+    metrics exactly.
+
+    ``extra_models`` are evaluated exploratorily: they get the same per-model
+    tables and they enter G4's family-boundary evaluation, but the gate verdict
+    columns stay primary/control as preregistered.  ``amendments`` selects the
+    A2/A3 rule set; ``FROZEN_RULES`` reproduces the preregistered-only analysis.
     """
     rows = tuple(rows)
     if primary_model == control_model:
         raise PipelineError("primary and control models must be distinct")
+    extra_models = tuple(dict.fromkeys(extra_models))
+    if any(model in (primary_model, control_model) for model in extra_models):
+        raise PipelineError("extra models must be distinct from the primary and control models")
+    evaluated = (primary_model, control_model) + extra_models
     exclusions = {
         model: excluded_task_ids(rows, model, amendments, phase="phase_1", split="discovery")
-        for model in (primary_model, control_model)
+        for model in evaluated
     }
     eligibility = {
         model: metric_eligibility(rows, model, m3_audit_f1=m3_audit_f1, amendments=amendments)
-        for model in (primary_model, control_model)
+        for model in evaluated
     }
-    family = tuple(item.metric_name for item in eligibility[primary_model] if item.eligible)
-    if not family:
+    eligible = tuple(item.metric_name for item in eligibility[primary_model] if item.eligible)
+    if not eligible:
         raise PipelineError("no eligible primary metric survives the frozen QC rules for " + primary_model)
-    observations = tuple(
-        observation for model in (primary_model, control_model)
-        for observation in build_g1_observations(rows, model, metrics=family, amendments=amendments)
-    )
-    effects, g1_reason = _g1_for_models(observations, family, amendments)
-    nulls = shuffled_nulls(rows, (primary_model, control_model), metrics=family, amendments=amendments)
+
+    def observations_for(metrics):
+        return tuple(
+            observation for model in evaluated
+            for observation in build_g1_observations(rows, model, metrics=metrics, amendments=amendments)
+        )
+
+    # Drop metrics that cannot be estimated for the primary model, refitting the
+    # BH family over the survivors until every remaining metric is complete.
+    family, unavailable, effects, g1_reason = eligible, {}, {}, None
+    for _ in range(len(eligible) + 1):
+        effects, g1_reason = _g1_for_models(observations_for(family), family, amendments)
+        scale = _neutral_standardization(rows, primary_model, metrics=family, amendments=amendments)
+        broken = [metric for metric in family if not _g1_complete(effects.get((primary_model, metric)))]
+        if not broken or len(broken) == len(family):
+            for metric in broken if len(broken) == len(family) else ():
+                unavailable.setdefault(metric, _drop_reason(scale.get((primary_model, metric)), effects.get((primary_model, metric))))
+            break
+        for metric in broken:
+            unavailable[metric] = _drop_reason(scale.get((primary_model, metric)), effects.get((primary_model, metric)))
+        family = tuple(metric for metric in family if metric not in broken)
+    if not family:
+        family = eligible
+    nulls = shuffled_nulls(rows, evaluated, metrics=family, amendments=amendments)
     analyses = {}
-    for model in (primary_model, control_model):
+    for model in evaluated:
         reasons = [] if g1_reason is None else [g1_reason]
         real_g1 = {metric: effects.get((model, metric)) for metric in family}
         null = nulls[model]
@@ -934,20 +992,23 @@ def run_phase1_gates(rows, primary_model, control_model, *, style_rows=None, m3_
     core_inputs = {
         model: _core_inputs(model, family, analyses[model].real_g1, analyses[model].shuffled,
                             analyses[model].real_g2, analyses[model].real_g5)
-        for model in (primary_model, control_model)
+        for model in evaluated
     }
     core = {model: compose_core_gates(value) for model, value in core_inputs.items()}
     style = style_effects(rows, style_rows, primary_model, family, amendments=amendments) if style_rows else _freeze({})
     g3 = G3Evidence(primary_model, family, dict(style)) if style else None
     try:
-        g4 = G4Evidence(primary_model, control_model, family, (
-            _g4_model(primary_model, family, analyses[primary_model].real_g1),
-            _g4_model(control_model, family, analyses[control_model].real_g1),
-        ))
+        # Every evaluated model enters the family-boundary comparison; the gate
+        # verdict columns stay primary/control as preregistered.
+        g4 = G4Evidence(primary_model, control_model, family, tuple(
+            _g4_model(model, family, analyses[model].real_g1) for model in evaluated))
     except GateInputError as error:
         raise PipelineError("G4 model binding failed: %s" % error) from error
     summary = compose_phase_1_gates(Phase1GateInputs(core_inputs[primary_model], g4, g3))
-    return Phase1Verdict(primary_model, control_model, family, _freeze(analyses), _freeze(core), summary, style, amendments)
+    return Phase1Verdict(
+        primary_model, control_model, family, _freeze(analyses), _freeze(core), summary, style,
+        amendments, _freeze(unavailable), extra_models,
+    )
 
 
 def _g4_model(model_id, family, real_g1):
@@ -966,7 +1027,13 @@ def render_phase1_markdown(verdict: Phase1Verdict) -> str:
         "",
         "- primary: `%s`" % verdict.primary_model_id,
         "- control: `%s`" % verdict.control_model_id,
-        "- eligible primary metrics: %s" % ", ".join(verdict.eligible_metrics),
+        "- gate metric family (eligible and estimable): %s" % (
+            ", ".join(verdict.estimable_metrics)
+            or "**none estimable** - G1 is UNAVAILABLE; QC-eligible were %s" % ", ".join(verdict.eligible_metrics)),
+        "- metrics dropped from the family: %s" % (", ".join(
+            "%s (`%s`)" % (metric, reason) for metric, reason in sorted(verdict.unavailable_metrics.items())) or "none"),
+        "- extra models (exploratory, boundary only): %s" % (", ".join(
+            "`%s`" % model for model in verdict.extra_model_ids) or "none"),
         "- rule set: **%s** (A2 item exclusion: %s; A3 pooled-SD fallback: %s)" % (
             "amended" if verdict.amendments != FROZEN_RULES else "frozen (preregistered only)",
             "on" if verdict.amendments.item_exclusion else "off",
@@ -990,6 +1057,10 @@ def render_phase1_markdown(verdict: Phase1Verdict) -> str:
         _status_cell(summary.g2), _status_cell(control_core.g2)))
     lines.append("| G3 style resistance (provisional smoke) | %s | not applicable |" % _status_cell(summary.g3))
     lines.append("| G4 transfer / family boundary | %s | (contributes) |" % _status_cell(summary.g4))
+    if verdict.extra_model_ids:
+        lines.append("")
+        lines.append("Extra models are exploratory: they carry no verdict column, but their G1")
+        lines.append("evidence enters the G4 family-boundary comparison below.")
     lines.append("| G5 classifier AUC gap | %s | %s |" % (
         _status_cell(summary.g5), _status_cell(control_core.g5)))
     lines += [
@@ -1019,7 +1090,7 @@ def render_phase1_markdown(verdict: Phase1Verdict) -> str:
         "| model | metric | effect | coefficient | 95% CI | BH p | sign-aligned | qualifies |",
         "| --- | --- | --- | ---: | --- | ---: | ---: | :---: |",
     ]
-    for model_id, analysis in verdict.models.items():
+    for model_id, analysis in ((key, verdict.models[key]) for key in verdict.models):
         for metric in verdict.eligible_metrics:
             result = analysis.real_g1.get(metric)
             if result is None or result.validity is None:
@@ -1041,7 +1112,7 @@ def render_phase1_markdown(verdict: Phase1Verdict) -> str:
         "| model | metric | items | induction | recovery | recovery/induction | recovery 95% CI |",
         "| --- | --- | ---: | ---: | ---: | ---: | --- |",
     ]
-    for model_id, analysis in verdict.models.items():
+    for model_id, analysis in ((key, verdict.models[key]) for key in verdict.models):
         for metric in verdict.eligible_metrics:
             result = analysis.real_g2.get(metric)
             if result is None or result.unavailable_reason:
@@ -1091,6 +1162,8 @@ def render_phase1_markdown(verdict: Phase1Verdict) -> str:
         "",
         "## G4 boundary detail",
         "",
+        "- models evaluated for the boundary: %s" % ", ".join(
+            "`%s` (%s)" % (model_id, verdict.role(model_id)) for model_id in verdict.models),
         "- eligible positives in the primary model: %s" % (", ".join(summary.g4.eligible_positive_metrics) or "none"),
         "- transfer metrics: %s" % (", ".join(summary.g4.transfer_metrics) or "none"),
         "- family-boundary metrics: %s" % (", ".join(summary.g4.boundary_metrics) or "none"),

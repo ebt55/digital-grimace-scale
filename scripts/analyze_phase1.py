@@ -24,7 +24,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from src.extract import LoadIssue, build_metric_rows, load_records, write_summaries  # noqa: E402
+from src.extract import LoadIssue, build_metric_rows, iter_records, write_summaries  # noqa: E402
 from src.gates import BLOCKED  # noqa: E402
 from src.pipeline import (  # noqa: E402
     AMENDED_RULES, FROZEN_RULES, PipelineError, excluded_task_ids, render_phase1_markdown, run_phase1_gates,
@@ -37,6 +37,10 @@ def parse_args(argv=None):
     parser.add_argument("--raw", default="results/raw/phase1", help="factorial raw JSONL file or directory")
     parser.add_argument("--primary", required=True, help="primary model HF id")
     parser.add_argument("--control", required=True, help="weak/null control model HF id")
+    parser.add_argument(
+        "--extra", action="append", default=[], metavar="HF_ID",
+        help="additional model to analyse exploratorily and include in the G4 family boundary (repeatable)",
+    )
     parser.add_argument("--style-raw", default=None, help="optional style-smoke raw JSONL file or directory")
     parser.add_argument("--out", default="results/summaries/phase1", help="committed summary directory")
     parser.add_argument("--m3-audit-f1", type=float, default=None, help="human M3 parser audit F1, if available")
@@ -48,37 +52,41 @@ def parse_args(argv=None):
     return parser.parse_args(argv)
 
 
-def _load(source, protocol, issues, strict):
-    records = load_records(source, protocol=protocol, issues=None if strict else issues)
-    for issue in issues:
-        print("skipped %s:%d: %s" % (issue.path, issue.line_number, issue.message), file=sys.stderr)
-    return records
+def _stream(source, protocol, issues, strict, counter):
+    """Yield records one at a time; the GB-scale raw files never fit in memory."""
+    for record in iter_records(source, protocol=protocol, issues=None if strict else issues):
+        counter[0] += 1
+        yield record
 
 
 def main(argv=None) -> int:
     args = parse_args(argv)
     protocol = load_protocol(ROOT)
     issues: list[LoadIssue] = []
-    records = _load(args.raw, protocol, issues, args.strict)
-    if not records:
+    counter = [0]
+    rows = build_metric_rows(_stream(args.raw, protocol, issues, args.strict, counter), protocol=protocol)
+    for issue in issues:
+        print("skipped %s:%d: %s" % (issue.path, issue.line_number, issue.message), file=sys.stderr)
+    if not counter[0]:
         print("no raw records under %s" % args.raw, file=sys.stderr)
         return 2
-    rows = build_metric_rows(records, protocol=protocol)
     amendments = FROZEN_RULES if args.no_amendments else AMENDED_RULES
     dropped = {
         model: sorted(excluded_task_ids(rows, model, amendments, phase="phase_1", split="discovery"))
-        for model in (args.primary, args.control)
+        for model in (args.primary, args.control, *args.extra)
     }
     written = write_summaries(rows, args.out, excluded_items=dropped)
     style_rows = ()
     if args.style_raw:
         style_issues: list[LoadIssue] = []
-        style_records = _load(args.style_raw, protocol, style_issues, args.strict)
-        style_rows = build_metric_rows(style_records, protocol=protocol)
+        style_rows = build_metric_rows(
+            _stream(args.style_raw, protocol, style_issues, args.strict, [0]), protocol=protocol)
+        for issue in style_issues:
+            print("skipped %s:%d: %s" % (issue.path, issue.line_number, issue.message), file=sys.stderr)
         written.update(write_summaries(style_rows, Path(args.out) / "style_smoke", excluded_items=dropped))
     try:
         verdict = run_phase1_gates(
-            rows, args.primary, args.control,
+            rows, args.primary, args.control, extra_models=tuple(args.extra),
             style_rows=style_rows or None, m3_audit_f1=args.m3_audit_f1, amendments=amendments,
         )
     except PipelineError as error:
@@ -88,7 +96,7 @@ def main(argv=None) -> int:
     payload = {
         "raw_source": str(args.raw),
         "style_raw_source": str(args.style_raw) if args.style_raw else None,
-        "record_count": len(records),
+        "record_count": counter[0],
         "skipped_line_count": len(issues),
         "m3_audit_f1": args.m3_audit_f1,
         "amendments_applied": not args.no_amendments,
@@ -102,6 +110,20 @@ def main(argv=None) -> int:
         print("wrote %s" % path)
     summary = verdict.summary
     print("rules=%s" % ("frozen" if args.no_amendments else "amended A2+A3"))
+    print("gate metric family: %s" % (
+        ", ".join(verdict.estimable_metrics)
+        or "NONE ESTIMABLE (G1 unavailable); QC-eligible were " + ", ".join(verdict.eligible_metrics)))
+    for metric, reason in sorted(verdict.unavailable_metrics.items()):
+        print("  dropped %s: unavailable: %s" % (metric, reason))
+    for model, items in sorted(
+        (model, [item for item in analysis.eligibility if not item.eligible])
+        for model, analysis in verdict.models.items()
+    ):
+        for item in items:
+            print("  QC-excluded %s for %s: %s (worst cell %s, rate %.3f)" % (
+                item.metric_name, model, item.reason, item.worst_cell_id, item.worst_rate or 0.0))
+    if verdict.extra_model_ids:
+        print("extra models (exploratory, in G4 boundary): %s" % ", ".join(verdict.extra_model_ids))
     for model, items in dropped.items():
         print("  A2 excluded for %s: %s" % (model, ", ".join(items) or "none"))
     print("phase_1_status=%s" % summary.phase_1_status)
