@@ -20,7 +20,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from src.extract import LoadIssue, build_metric_rows, load_records, write_summaries  # noqa: E402
-from src.pipeline import phase0_screen, render_phase0_markdown  # noqa: E402
+from src.pipeline import AMENDED_RULES, FROZEN_RULES, phase0_screen, render_phase0_markdown  # noqa: E402
 from src.protocol import load_protocol  # noqa: E402
 
 
@@ -29,6 +29,11 @@ def parse_args(argv=None):
     parser.add_argument("--raw", default="results/raw/phase0", help="raw JSONL file or directory")
     parser.add_argument("--out", default="results/summaries/phase0", help="committed summary directory")
     parser.add_argument("--strict", action="store_true", help="fail instead of reporting malformed raw lines")
+    parser.add_argument(
+        "--no-amendments", action="store_true",
+        help="make the frozen preregistered rules authoritative (no A2 item exclusion, no A3 pooled-SD fallback); "
+             "both selections are reported either way",
+    )
     return parser.parse_args(argv)
 
 
@@ -47,13 +52,18 @@ def main(argv=None) -> int:
     if not phase0_rows:
         print("no phase_0 endpoints in %s" % args.raw, file=sys.stderr)
         return 2
-    written = write_summaries(rows, args.out)
-    result = phase0_screen(rows, protocol=protocol)
+    amendments = FROZEN_RULES if args.no_amendments else AMENDED_RULES
+    result = phase0_screen(rows, protocol=protocol, amendments=amendments)
+    written = write_summaries(
+        rows, args.out,
+        excluded_items={model: [item.task_id for item in items] for model, items in result.item_exclusions.items()},
+    )
     out = Path(args.out)
     payload = {
         "raw_source": str(args.raw),
         "skipped_line_count": len(issues),
         "record_count": len(records),
+        "amendments_authoritative": result.amendments_authoritative,
         "screen": result.to_dict(),
     }
     (out / "screen.json").write_text(
@@ -61,9 +71,16 @@ def main(argv=None) -> int:
     (out / "screen.md").write_text(render_phase0_markdown(result), encoding="utf-8", newline="\n")
     for path in list(written.values()) + [out / "screen.json", out / "screen.md"]:
         print("wrote %s" % path)
+    for label, selection in (("frozen ", result.frozen_selection), ("amended", result.amended_selection)):
+        print("%s: status=%s primary=%s control=%s screen_null=%s" % (
+            label, selection.status, selection.primary_model_id, selection.control_model_id, selection.screen_null))
+    for model_id in sorted(result.item_exclusions):
+        print("A2 excluded for %s: %s" % (
+            model_id, ", ".join(item.task_id for item in result.item_exclusions[model_id])))
     selection = result.selection
-    print("status=%s primary=%s control=%s screen_null=%s" % (
-        selection.status, selection.primary_model_id, selection.control_model_id, selection.screen_null))
+    print("authoritative (%s): status=%s primary=%s control=%s" % (
+        "amended" if result.amendments_authoritative else "frozen",
+        selection.status, selection.primary_model_id, selection.control_model_id))
     if selection.status == "blocked":
         print("blocked: %s" % selection.blocked_reason, file=sys.stderr)
         return 3

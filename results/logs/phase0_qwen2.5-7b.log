@@ -1,0 +1,19 @@
+phase phase0 | model Qwen/Qwen2.5-7B-Instruct | revision a09a35458c702b33eeacc393d103063234e8bc28 | run_kind empirical | run_id phase0-qwen2.5-7b-2026-08-17
+jobs 20 | samples 0,1,2,3,4,5,6,7,8,9,10 | trajectories 220 | workers 96 | out C:\Users\ebin\claude-ground\Digital Grimace Scale\.claude\worktrees\digital-grimace-scale-experiment-f825fc\results\raw\phase0\Qwen__Qwen2.5-7B-Instruct.jsonl
+[  71.4s] 20/220 trajectories (completed 19, failed 1, skipped 0, records 120)
+[  81.7s] 40/220 trajectories (completed 39, failed 1, skipped 0, records 254)
+[  97.5s] 60/220 trajectories (completed 59, failed 1, skipped 0, records 384)
+[ 118.2s] 80/220 trajectories (completed 79, failed 1, skipped 0, records 514)
+[ 140.3s] 100/220 trajectories (completed 99, failed 1, skipped 0, records 644)
+[ 152.0s] 120/220 trajectories (completed 119, failed 1, skipped 0, records 774)
+[ 174.4s] 140/220 trajectories (completed 139, failed 1, skipped 0, records 900)
+[ 184.5s] 160/220 trajectories (completed 159, failed 1, skipped 0, records 1032)
+[ 190.7s] 180/220 trajectories (completed 179, failed 1, skipped 0, records 1164)
+[ 197.0s] 200/220 trajectories (completed 199, failed 1, skipped 0, records 1292)
+[ 230.2s] 220/220 trajectories (completed 219, failed 1, skipped 0, records 1424)
+run summary: planned 220, skipped 0, completed 219, failed 1
+  records written 1424, stale records dropped 0, wall time 230.2s
+  output C:\Users\ebin\claude-ground\Digital Grimace Scale\.claude\worktrees\digital-grimace-scale-experiment-f825fc\results\raw\phase0\Qwen__Qwen2.5-7B-Instruct.jsonl
+  backend stats {"completion_tokens": 349772, "content_mismatches": 0, "nonfinite_logprobs": 0, "prompt_tokens": 1334591, "requests": 1424, "retries": 0, "trailing_special_tokens": 1287, "truncated": 137}
+  throughput prompt_tokens 5796.3/s | completion_tokens 1519.1/s
+  failures C:\Users\ebin\claude-ground\Digital Grimace Scale\.claude\worktrees\digital-grimace-scale-experiment-f825fc\results\raw\phase0\Qwen__Qwen2.5-7B-Instruct.jsonl.failures.jsonl

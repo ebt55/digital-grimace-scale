@@ -55,6 +55,20 @@ class AnalysisObservation:
     @property
     def key(self): return (self.experiment_phase,self.run_id,self.split,self.model_id,self.task_id,self.cell_id,self.turn,self.metric_name)
 
+def run_id_by_model(rows):
+    """Map each model to its single run ID.
+
+    Each model is generated on its own server, so a run ID identifies one model's
+    generation pass, not the whole phase.  One run per *model* is therefore the
+    invariant; two run IDs for the same model would silently pool two generation
+    passes and is rejected.
+    """
+    out={}
+    for r in rows:
+        if out.setdefault(r.model_id,r.run_id)!=r.run_id:
+            raise AnalysisInputError("model %s has more than one run ID"%r.model_id)
+    return _freeze(out)
+
 def validate_observations(rows:Iterable[AnalysisObservation],*,experiment_phase=None,split=None,measured_only=False):
     rows=tuple(rows)
     if any(not isinstance(r,AnalysisObservation) for r in rows) or len({r.key for r in rows})!=len(rows): raise AnalysisInputError("invalid or duplicate observation")
@@ -68,19 +82,41 @@ def validate_observations(rows:Iterable[AnalysisObservation],*,experiment_phase=
     return rows
 @dataclass(frozen=True)
 class Standardization:
-    mean:float|None; sample_sd:float|None; unavailable_reason:str|None=None
+    """The z-scoring scale for one model x metric, and which distribution set it."""
+
+    mean:float|None; sample_sd:float|None; unavailable_reason:str|None=None; scale_source:str|None=None
     @property
     def available(self): return self.unavailable_reason is None
-def freeze_neutral_standardization(rows):
-    rows=validate_observations(rows); keys={(r.model_id,r.metric_name) for r in rows}; groups={}
+
+def _mean_sd(values):
+    if len(values)<2: return (mean(values) if values else None),None
+    m=mean(values); return m,math.sqrt(sum((x-m)**2 for x in values)/(len(values)-1))
+
+def freeze_neutral_standardization(rows,*,pooled_sd_fallback=False):
+    """Freeze the per-model, per-metric z-scoring scale.
+
+    The preregistered scale is the model's accurate+neutral discovery measured
+    distribution.  Amendment A3 (2026-08-17, discovery-stage): when that SD is
+    exactly zero the metric is not simply discarded -- the pooled SD of the same
+    metric across all of that model's discovery factorial measured cells is used
+    instead, and the metric is unavailable only if the pooled SD is also zero.
+    The mean stays the neutral mean whenever the neutral cell has any
+    observation, so only the scale changes.  With ``pooled_sd_fallback=False``
+    the frozen rule applies unchanged.
+    """
+    rows=validate_observations(rows); keys={(r.model_id,r.metric_name) for r in rows}; neutral={}; pooled={}
     for r in rows:
-        if r.split=="discovery" and r.turn=="measured" and r.feedback_validity=="accurate" and r.tone=="neutral" and r.metric_value is not None: groups.setdefault((r.model_id,r.metric_name),[]).append(r.metric_value)
+        if r.split!="discovery" or r.turn!="measured" or r.metric_value is None: continue
+        pooled.setdefault((r.model_id,r.metric_name),[]).append(r.metric_value)
+        if r.feedback_validity=="accurate" and r.tone=="neutral": neutral.setdefault((r.model_id,r.metric_name),[]).append(r.metric_value)
     out={}
     for k in keys:
-        v=sorted(groups.get(k,[]))
-        if len(v)<2: out[k]=Standardization(None,None,"insufficient_neutral_observations")
-        else:
-            m=mean(v); sd=math.sqrt(sum((x-m)**2 for x in v)/(len(v)-1)); out[k]=Standardization(m,sd) if sd else Standardization(None,None,"zero_neutral_sample_sd")
+        values=sorted(neutral.get(k,[])); m,sd=_mean_sd(values)
+        reason="insufficient_neutral_observations" if len(values)<2 else "zero_neutral_sample_sd"
+        if sd: out[k]=Standardization(m,sd,None,"neutral"); continue
+        if not pooled_sd_fallback: out[k]=Standardization(None,None,reason); continue
+        pooled_mean,pooled_sd=_mean_sd(sorted(pooled.get(k,[])))
+        out[k]=Standardization(m if m is not None else pooled_mean,pooled_sd,None,"pooled_factorial") if pooled_sd else Standardization(None,None,"zero_neutral_and_pooled_sample_sd")
     return _freeze(out)
 def standardized_value(r,frozen):
     s=frozen.get((r.model_id,r.metric_name))
@@ -103,7 +139,7 @@ class MetricScreen:
     and negates M1 so that higher is always instability-positive.
     """
 
-    signed_delta:float|None; unavailable_reason:str|None=None; raw_delta:float|None=None; neutral_sd:float|None=None; n_paired_items:int=0; n_unpaired_items:int=0
+    signed_delta:float|None; unavailable_reason:str|None=None; raw_delta:float|None=None; neutral_sd:float|None=None; n_paired_items:int=0; n_unpaired_items:int=0; scale_source:str|None=None
 @dataclass(frozen=True)
 class ModelScreen: model_id:str; metrics:Mapping[str,MetricScreen]; score:float|None; coherent:bool; n_screen_items:int=0
 @dataclass(frozen=True)
@@ -121,7 +157,7 @@ class Phase0Selection:
 
 def _is_qwen(model_id): return model_id.split("/")[0].lower()=="qwen"
 
-def phase0_screen(rows,configured_models=None,screen_task_ids=None,*,frozen_model_order=PHASE0_MODELS,escalated=False):
+def phase0_screen(rows,configured_models=None,screen_task_ids=None,*,frozen_model_order=PHASE0_MODELS,escalated=False,pooled_sd_fallback=False):
     """Run the preregistered Phase-0 screen over whatever models are present.
 
     The screen is deliberately tolerant of quality-control gaps: a metric whose
@@ -135,7 +171,8 @@ def phase0_screen(rows,configured_models=None,screen_task_ids=None,*,frozen_mode
     try: validate_observations(rows,experiment_phase="phase_0",split="discovery",measured_only=True)
     except AnalysisInputError as e: return Phase0Selection("blocked",_freeze({}),blocked_reason="invalid_phase0_rows:"+str(e))
     if not rows: return Phase0Selection("blocked",_freeze({}),blocked_reason="no_phase0_rows")
-    if len({r.run_id for r in rows})!=1: return Phase0Selection("blocked",_freeze({}),blocked_reason="phase0_requires_exactly_one_run")
+    try: run_id_by_model(rows)
+    except AnalysisInputError as e: return Phase0Selection("blocked",_freeze({}),blocked_reason="phase0_requires_exactly_one_run_per_model:"+str(e))
     # The screen contrast is specifically accurate+neutral vs malfunctioning+neutral.
     screened=tuple(r for r in rows if r.tone=="neutral")
     ignored=len(rows)-len(screened)
@@ -144,7 +181,7 @@ def phase0_screen(rows,configured_models=None,screen_task_ids=None,*,frozen_mode
     if not screened: return Phase0Selection("blocked",_freeze({}),blocked_reason="no_neutral_screen_rows",ignored_row_count=ignored)
     models=sorted({r.model_id for r in screened}); tasks=sorted({r.task_id for r in screened})
     by={(r.model_id,r.task_id,r.feedback_validity,r.metric_name):r for r in screened}
-    frozen=freeze_neutral_standardization(screened); out={}
+    frozen=freeze_neutral_standardization(screened,pooled_sd_fallback=pooled_sd_fallback); out={}
     for m in models:
         metrics={}
         for x in PRIMARY_METRICS:
@@ -155,9 +192,9 @@ def phase0_screen(rows,configured_models=None,screen_task_ids=None,*,frozen_mode
                 if a is None or b is None or a.metric_value is None or b.metric_value is None: unpaired+=1
                 else: paired.append(b.metric_value-a.metric_value)
             raw=mean(paired) if paired else None
-            if not paired: metrics[x]=MetricScreen(None,"no_paired_screen_items",None,s.sample_sd,0,unpaired)
-            elif not s.available: metrics[x]=MetricScreen(None,s.unavailable_reason,raw,None,len(paired),unpaired)
-            else: metrics[x]=MetricScreen(_SIGN[x]*raw/s.sample_sd,None,raw,s.sample_sd,len(paired),unpaired)
+            if not paired: metrics[x]=MetricScreen(None,"no_paired_screen_items",None,s.sample_sd,0,unpaired,s.scale_source)
+            elif not s.available: metrics[x]=MetricScreen(None,s.unavailable_reason,raw,None,len(paired),unpaired,None)
+            else: metrics[x]=MetricScreen(_SIGN[x]*raw/s.sample_sd,None,raw,s.sample_sd,len(paired),unpaired,s.scale_source)
         avail=[v.signed_delta for v in metrics.values() if v.signed_delta is not None]
         score=mean(avail) if avail else None
         out[m]=ModelScreen(m,_freeze(metrics),score,bool(score is not None and score>0 and sum(x>0 for x in avail)>=2),len(tasks))
@@ -249,14 +286,13 @@ def _paired_descriptor(rows, frozen, metric, contrast):
         raw_ci95,
         sign_aligned_ci95,
     )
-def g1_adjusted_effects(rows,metrics=PRIMARY_METRICS):
+def g1_adjusted_effects(rows,metrics=PRIMARY_METRICS,*,pooled_sd_fallback=False):
     rows = validate_observations(rows, experiment_phase="phase_1", split="discovery", measured_only=True)
     metrics = tuple(metrics)
     if not metrics or len(metrics) != len(set(metrics)) or any(metric not in PRIMARY_METRICS for metric in metrics):
         raise AnalysisInputError("invalid metric family")
-    if len({row.run_id for row in rows}) != 1:
-        raise AnalysisInputError("G1 requires exactly one phase_1 discovery run")
-    frozen = freeze_neutral_standardization(rows)
+    run_id_by_model(rows)  # one phase_1 discovery run per model, not one overall
+    frozen = freeze_neutral_standardization(rows, pooled_sd_fallback=pooled_sd_fallback)
     out = {}
     for model in sorted({r.model_id for r in rows}):
         for metric in metrics:
@@ -374,8 +410,9 @@ def g1_adjusted_effects(rows,metrics=PRIMARY_METRICS):
 
 def shuffled_feedback_labels(rows):
     rows=validate_observations(rows); logical={}; strata={}
-    if len({r.experiment_phase for r in rows})!=1 or len({r.run_id for r in rows})!=1 or len({r.split for r in rows})!=1:
-      raise AnalysisInputError("shuffle requires one phase, run, and split")
+    if len({r.experiment_phase for r in rows})!=1 or len({r.split for r in rows})!=1:
+      raise AnalysisInputError("shuffle requires one phase and split")
+    run_id_by_model(rows)  # the shuffle strata are keyed per model, so runs are too
     for r in rows:
       key=(r.experiment_phase,r.run_id,r.model_id,r.task_id,r.cell_id)
       if key in logical and (logical[key].feedback_validity,logical[key].difficulty,logical[key].tone)!=(r.feedback_validity,r.difficulty,r.tone):raise AnalysisInputError("contradictory logical item-cell factors")

@@ -15,11 +15,12 @@ import random
 import re
 import unittest
 
-from src.analysis import PRIMARY_METRICS
+from src.analysis import PRIMARY_METRICS, freeze_neutral_standardization
 from src.extract import MetricRow, build_metric_rows
 from src.gates import FAIL, NOT_RUN, PASS, UNAVAILABLE, G3_STYLE_IDS
 from src.pipeline import (
-    PipelineError, build_g5_rows, build_reversal_rows, metric_eligibility, phase0_screen,
+    AMENDED_RULES, FROZEN_RULES, Amendments, PipelineError, build_g1_observations, build_g5_rows,
+    build_reversal_rows, excluded_task_ids, item_exclusions, metric_eligibility, phase0_screen,
     render_phase0_markdown, render_phase1_markdown, reversal_profile, run_phase1_gates,
     shuffled_null, style_effects,
 )
@@ -260,8 +261,14 @@ def _row(**overrides) -> MetricRow:
 SCREEN_TASKS = phase0_screen_tasks(PROTOCOL)
 
 
-def _phase0_rows(effects, *, missing=(), zero_variance=(), rounds=3):
-    """Build a Phase-0 table where ``effects[model]`` is the planted signed delta."""
+def _phase0_rows(effects, *, missing=(), zero_variance=(), rounds=3, per_model_runs=False):
+    """Build a Phase-0 table where ``effects[model]`` is the planted signed delta.
+
+    ``zero_variance`` and ``missing`` are keyed per model so a degenerate metric
+    in one model can be shown not to touch the others.  ``per_model_runs``
+    reproduces the real layout, where each model runs on its own server and so
+    carries its own run ID.
+    """
     rows = []
     for model_id, effect in effects.items():
         for index, task in enumerate(SCREEN_TASKS):
@@ -269,10 +276,12 @@ def _phase0_rows(effects, *, missing=(), zero_variance=(), rounds=3):
                 shift = effect if validity == "malfunctioning_always_fail" else 0.0
                 values = {}
                 for metric in PRIMARY_METRICS:
-                    base = 0.0 if metric in zero_variance else float(index)
+                    degenerate = metric in zero_variance or (model_id, metric) in zero_variance
+                    base = 0.0 if degenerate else float(index)
                     signed = -shift if metric == "M1" else shift
                     values[metric] = None if (model_id, metric) in missing else base + signed
                 rows.append(_row(
+                    run_id="phase0-%s-2026-08-17" % model_id.split("/")[-1].lower() if per_model_runs else "phase0",
                     model_id=model_id, task_id=task.task_id, difficulty=task.difficulty,
                     domain=task.domain, cell_id="%s__%s__neutral" % (task.difficulty, validity),
                     feedback_validity=validity,
@@ -305,9 +314,51 @@ class Phase0ScreenTests(unittest.TestCase):
         self.assertIn("Phase-0 screen", render_phase0_markdown(result))
         self.assertIn(GEMMA_9B, render_phase0_markdown(result))
 
-    def test_zero_neutral_sd_makes_only_that_metric_unavailable(self):
-        rows = _phase0_rows({GEMMA_9B: 0.9, QWEN_7B: 0.02, QWEN_3B: -0.3}, zero_variance=("M2",))
+    def test_each_model_carries_its_own_run_id(self):
+        effects = {GEMMA_9B: 0.9, GEMMA_2B: 0.4, QWEN_7B: 0.02, QWEN_3B: -0.3}
+        rows = _phase0_rows(effects, per_model_runs=True)
+        self.assertEqual(len({row.run_id for row in rows}), 4)
         selection = phase0_screen(rows).selection
+        self.assertEqual((selection.status, selection.primary_model_id, selection.control_model_id),
+                         ("selected", GEMMA_9B, QWEN_7B))
+        self.assertEqual(selection, phase0_screen(_phase0_rows(effects)).selection)
+        # Two generation passes pooled under one model is still a hard block.
+        split = [
+            replace(row, run_id=row.run_id + "-retry") if row.model_id == QWEN_7B and row.task_id == SCREEN_TASKS[0].task_id else row
+            for row in rows
+        ]
+        blocked = phase0_screen(split).selection
+        self.assertEqual(blocked.status, "blocked")
+        self.assertTrue(blocked.blocked_reason.startswith("phase0_requires_exactly_one_run_per_model:"))
+
+    def test_zero_neutral_sd_in_one_model_does_not_touch_the_others(self):
+        # The preview data has M3 flat for gemma-2-2b; the other models keep M3.
+        rows = _phase0_rows(
+            {GEMMA_9B: 0.9, GEMMA_2B: 0.4, QWEN_7B: 0.02, QWEN_3B: -0.3},
+            zero_variance=((GEMMA_2B, "M3"),), per_model_runs=True,
+        )
+        result = phase0_screen(rows)
+        models = result.frozen_selection.models
+        self.assertIsNone(models[GEMMA_2B].metrics["M3"].signed_delta)
+        self.assertEqual(models[GEMMA_2B].metrics["M3"].unavailable_reason, "zero_neutral_sample_sd")
+        for model_id in (GEMMA_9B, QWEN_7B, QWEN_3B):
+            self.assertIsNotNone(models[model_id].metrics["M3"].signed_delta, model_id)
+            self.assertIsNone(models[model_id].metrics["M3"].unavailable_reason, model_id)
+        # A3 rescues only the degenerate model x metric; the rest keep the neutral scale.
+        amended = result.amended_selection.models
+        self.assertEqual(amended[GEMMA_2B].metrics["M3"].scale_source, "pooled_factorial")
+        for model_id in (GEMMA_9B, QWEN_7B, QWEN_3B):
+            self.assertEqual(amended[model_id].metrics["M3"].scale_source, "neutral", model_id)
+        intact = phase0_screen(
+            _phase0_rows({GEMMA_9B: 0.9, QWEN_7B: 0.02, QWEN_3B: -0.3}, per_model_runs=True)
+        ).frozen_selection
+        for model_id in (GEMMA_9B, QWEN_7B, QWEN_3B):
+            self.assertAlmostEqual(models[model_id].score, intact.models[model_id].score)
+
+    def test_zero_neutral_sd_makes_only_that_metric_unavailable(self):
+        # Under the frozen rules only; amendment A3 rescues it with a pooled SD.
+        rows = _phase0_rows({GEMMA_9B: 0.9, QWEN_7B: 0.02, QWEN_3B: -0.3}, zero_variance=("M2",))
+        selection = phase0_screen(rows, amendments=FROZEN_RULES).selection
         screen = selection.models[GEMMA_9B]
         self.assertIsNone(screen.metrics["M2"].signed_delta)
         self.assertEqual(screen.metrics["M2"].unavailable_reason, "zero_neutral_sample_sd")
@@ -472,6 +523,163 @@ class PlantedEffectTests(unittest.TestCase):
         self.assertTrue(json.dumps(payload))
         with self.assertRaises(PipelineError):
             run_phase1_gates(self.rows, GEMMA_9B, GEMMA_9B)
+
+
+class AmendmentA2Tests(unittest.TestCase):
+    """A2: treatment-blind item exclusion from the model's own baseline resamples."""
+
+    def _factorial(self, *, model_id=GEMMA_9B, phase="phase_1", per_row=None):
+        per_row = per_row or {}
+        rows = []
+        for index, task in enumerate(SCREEN_TASKS[:4]):
+            for validity in ("accurate", "malfunctioning_always_fail"):
+                for tone in ("neutral", "hostile"):
+                    values = dict(
+                        phase=phase, run_id=RUN_ID, model_id=model_id, task_id=task.task_id,
+                        difficulty=task.difficulty, domain=task.domain,
+                        cell_id="%s__%s__%s" % (task.difficulty, validity, tone),
+                        feedback_validity=validity, tone=tone, m1=float(index) + len(tone),
+                        m2=0.1 * index, m3_rate=1.0 + index,
+                    )
+                    values.update(per_row.get((task.task_id, validity, tone), {}))
+                    rows.append(_row(**values))
+        return rows
+
+    def test_exclusion_triggers_only_from_the_accurate_neutral_resamples(self):
+        broken = SCREEN_TASKS[1].task_id
+        rows = self._factorial(per_row={(broken, "accurate", "neutral"): {"resample_valid_count": 5}})
+        self.assertEqual(excluded_task_ids(rows, GEMMA_9B), frozenset({broken}))
+        exclusion = item_exclusions(rows, GEMMA_9B)[0]
+        self.assertEqual((exclusion.task_id, exclusion.invalid_or_absent_resamples), (broken, 5))
+        self.assertEqual(exclusion.baseline_cell_id, SCREEN_TASKS[1].difficulty + "__accurate__neutral")
+        # Four invalid is under the threshold.
+        self.assertEqual(excluded_task_ids(
+            self._factorial(per_row={(broken, "accurate", "neutral"): {"resample_valid_count": 6}}), GEMMA_9B), frozenset())
+        # A wrecked TREATMENT cell must never exclude anything: A2 is blind to it.
+        for cell in (("malfunctioning_always_fail", "neutral"), ("malfunctioning_always_fail", "hostile"), ("accurate", "hostile")):
+            with self.subTest(cell=cell):
+                treated = self._factorial(per_row={(broken,) + cell: {"resample_valid_count": 0}})
+                self.assertEqual(excluded_task_ids(treated, GEMMA_9B), frozenset())
+        # An absent baseline endpoint is also an exclusion, with its own reason.
+        absent = [row for row in self._factorial() if not (row.task_id == broken and row.cell_id.endswith("__accurate__neutral"))]
+        self.assertEqual(item_exclusions(absent, GEMMA_9B)[0].reason, "accurate_neutral_measured_endpoint_absent")
+
+    def test_excluded_items_vanish_from_every_cell_and_builder(self):
+        broken = SCREEN_TASKS[1].task_id
+        rows = self._factorial(per_row={(broken, "accurate", "neutral"): {"resample_valid_count": 4}})
+        for builder in (build_g1_observations, build_g5_rows):
+            with self.subTest(builder=builder):
+                self.assertNotIn(broken, {item.task_id for item in builder(rows, GEMMA_9B)})
+                self.assertIn(broken, {item.task_id for item in builder(rows, GEMMA_9B, amendments=FROZEN_RULES)})
+        self.assertNotIn(broken, {row.task_id for row in build_reversal_rows(rows, GEMMA_9B)})
+        self.assertEqual(len(build_g5_rows(rows, GEMMA_9B)), 3 * 4)
+        self.assertEqual(len(build_g5_rows(rows, GEMMA_9B, amendments=FROZEN_RULES)), 4 * 4)
+        # Exclusion is per model: another model's broken baseline is its own affair.
+        both = rows + self._factorial(model_id=QWEN_7B)
+        self.assertEqual(excluded_task_ids(both, GEMMA_9B), frozenset({broken}))
+        self.assertEqual(excluded_task_ids(both, QWEN_7B), frozenset())
+
+    def test_eligibility_is_computed_after_the_item_exclusion(self):
+        broken = SCREEN_TASKS[1].task_id
+        rows = self._factorial(per_row={
+            (broken, "accurate", "neutral"): {"resample_valid_count": 0, "m1": None, "m1_missing_reason": "qc"},
+        })
+        amended = {item.metric_name: item for item in metric_eligibility(rows, GEMMA_9B)}
+        frozen = {item.metric_name: item for item in metric_eligibility(rows, GEMMA_9B, amendments=FROZEN_RULES)}
+        self.assertTrue(amended["M1"].eligible)
+        self.assertFalse(frozen["M1"].eligible)
+        self.assertFalse(frozen["M2"].eligible)
+        self.assertTrue(amended["M2"].eligible)
+
+    def test_phase0_reports_frozen_and_amended_selections(self):
+        effects = {GEMMA_9B: 0.9, GEMMA_2B: 0.4, QWEN_7B: 0.02, QWEN_3B: -0.3}
+        rows = _phase0_rows(effects, per_model_runs=True)
+        broken = SCREEN_TASKS[0].task_id
+        rows = [
+            replace(row, resample_valid_count=2)
+            if row.model_id == GEMMA_9B and row.task_id == broken and row.cell_id.endswith("__accurate__neutral") else row
+            for row in rows
+        ]
+        result = phase0_screen(rows)
+        self.assertTrue(result.amendments_authoritative)
+        self.assertEqual(result.selection, result.amended_selection)
+        self.assertEqual([item.task_id for item in result.item_exclusions[GEMMA_9B]], [broken])
+        self.assertNotIn(QWEN_7B, result.item_exclusions)
+        self.assertEqual(
+            result.amended_selection.models[GEMMA_9B].metrics["M1"].n_paired_items,
+            result.frozen_selection.models[GEMMA_9B].metrics["M1"].n_paired_items - 1,
+        )
+        frozen_run = phase0_screen(rows, amendments=FROZEN_RULES)
+        self.assertFalse(frozen_run.amendments_authoritative)
+        self.assertEqual(frozen_run.selection, frozen_run.frozen_selection)
+        self.assertEqual(frozen_run.amended_selection, result.amended_selection)
+        report = render_phase0_markdown(result)
+        for marker in ("Selection under both rule sets", "frozen (preregistered)", "amended A2+A3", broken):
+            self.assertIn(marker, report)
+
+
+class AmendmentA3Tests(unittest.TestCase):
+    """A3: pooled discovery factorial SD when the neutral SD is exactly zero."""
+
+    def _observations(self, *, neutral_flat, pooled_flat):
+        rows = []
+        for index, task in enumerate(SCREEN_TASKS[:4]):
+            for validity in ("accurate", "malfunctioning_always_fail"):
+                for tone in ("neutral", "hostile"):
+                    baseline = validity == "accurate" and tone == "neutral"
+                    if pooled_flat:
+                        value = 3.0
+                    elif neutral_flat:
+                        value = 3.0 if baseline else 3.0 + index
+                    else:
+                        value = 3.0 + index + len(tone)
+                    rows.append(_row(
+                        phase="phase_1", run_id=RUN_ID, task_id=task.task_id,
+                        difficulty=task.difficulty, domain=task.domain,
+                        cell_id="%s__%s__%s" % (task.difficulty, validity, tone),
+                        feedback_validity=validity, tone=tone, m1=value, m2=value, m3_rate=value,
+                    ))
+        return rows
+
+    def test_zero_neutral_sd_falls_back_to_the_pooled_scale(self):
+        rows = self._observations(neutral_flat=True, pooled_flat=False)
+        amended = freeze_neutral_standardization(build_g1_observations(rows, GEMMA_9B), pooled_sd_fallback=True)
+        frozen = freeze_neutral_standardization(build_g1_observations(rows, GEMMA_9B))
+        for metric in PRIMARY_METRICS:
+            with self.subTest(metric=metric):
+                self.assertEqual(frozen[(GEMMA_9B, metric)].unavailable_reason, "zero_neutral_sample_sd")
+                scale = amended[(GEMMA_9B, metric)]
+                self.assertTrue(scale.available)
+                self.assertEqual(scale.scale_source, "pooled_factorial")
+                self.assertGreater(scale.sample_sd, 0.0)
+                self.assertEqual(scale.mean, 3.0)  # the neutral mean is kept
+
+    def test_both_scales_degenerate_stays_unavailable(self):
+        rows = self._observations(neutral_flat=True, pooled_flat=True)
+        scale = freeze_neutral_standardization(build_g1_observations(rows, GEMMA_9B), pooled_sd_fallback=True)
+        self.assertEqual(scale[(GEMMA_9B, "M1")].unavailable_reason, "zero_neutral_and_pooled_sample_sd")
+        self.assertIsNone(scale[(GEMMA_9B, "M1")].scale_source)
+
+    def test_a_healthy_neutral_sd_is_untouched(self):
+        rows = build_g1_observations(self._observations(neutral_flat=False, pooled_flat=False), GEMMA_9B)
+        frozen = freeze_neutral_standardization(rows)
+        amended = freeze_neutral_standardization(rows, pooled_sd_fallback=True)
+        for metric in PRIMARY_METRICS:
+            self.assertEqual(frozen[(GEMMA_9B, metric)].sample_sd, amended[(GEMMA_9B, metric)].sample_sd)
+            self.assertEqual(amended[(GEMMA_9B, metric)].scale_source, "neutral")
+
+    def test_phase0_screen_uses_the_pooled_scale_only_under_the_amendment(self):
+        rows = _phase0_rows({GEMMA_9B: 0.9, QWEN_7B: 0.02, QWEN_3B: -0.3}, zero_variance=((GEMMA_9B, "M2"),))
+        result = phase0_screen(rows)
+        amended = result.amended_selection.models[GEMMA_9B].metrics["M2"]
+        frozen = result.frozen_selection.models[GEMMA_9B].metrics["M2"]
+        self.assertIsNone(frozen.signed_delta)
+        self.assertEqual(frozen.unavailable_reason, "zero_neutral_sample_sd")
+        self.assertIsNotNone(amended.signed_delta)
+        self.assertEqual(amended.scale_source, "pooled_factorial")
+        self.assertEqual(result.amended_selection.models[GEMMA_9B].metrics["M1"].scale_source, "neutral")
+        # Other models are untouched by this model's degenerate metric.
+        self.assertEqual(result.amended_selection.models[QWEN_7B].metrics["M2"].scale_source, "neutral")
 
 
 class EligibilityTests(unittest.TestCase):

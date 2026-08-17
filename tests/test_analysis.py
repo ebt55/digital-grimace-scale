@@ -24,6 +24,7 @@ from src.analysis import (
     g5_predictive_gap,
     g5_shuffled_feedback_labels,
     phase0_screen,
+    run_id_by_model,
     shuffled_feedback_labels,
     validate_observations,
 )
@@ -168,6 +169,24 @@ class ObservationAndPhase0Tests(unittest.TestCase):
         restricted = phase0_screen(rows, PHASE0_MODELS[1:])
         self.assertEqual((restricted.status, restricted.primary_model_id), ("selected", PHASE0_MODELS[1]))
 
+        # Each model is generated on its own server, so run IDs are per model.
+        per_model = [replace(row, run_id="phase0-" + row.model_id.split("/")[-1]) for row in rows]
+        self.assertEqual(len({row.run_id for row in per_model}), len(PHASE0_MODELS))
+        distinct_runs = phase0_screen(per_model)
+        self.assertEqual(distinct_runs.status, "selected")
+        self.assertEqual(
+            (distinct_runs.primary_model_id, distinct_runs.control_model_id),
+            (selected.primary_model_id, selected.control_model_id),
+        )
+        two_runs_one_model = [
+            replace(row, run_id=row.run_id + "-second") if row.model_id == PHASE0_MODELS[0] and row.task_id == PHASE0_SCREEN_TASKS[0] else row
+            for row in per_model
+        ]
+        blocked = phase0_screen(two_runs_one_model)
+        self.assertEqual(blocked.status, "blocked")
+        self.assertTrue(blocked.blocked_reason.startswith("phase0_requires_exactly_one_run_per_model:"))
+        self.assertIn(PHASE0_MODELS[0], blocked.blocked_reason)
+
         m1_tiebreak = []
         for row in rows:
             if row.model_id == PHASE0_MODELS[1] and row.feedback_validity == "malfunctioning_always_fail":
@@ -223,6 +242,25 @@ class ShuffleTests(unittest.TestCase):
         for changed in (replace(rows[0], experiment_phase="phase_0"), replace(rows[0], run_id="other"), replace(rows[0], split="holdout")):
             with self.subTest(changed=changed), self.assertRaises(AnalysisInputError):
                 shuffled_feedback_labels([changed, *rows[1:]])
+
+
+class RunIdentityTests(unittest.TestCase):
+    def test_one_run_per_model_is_the_invariant_everywhere(self):
+        rows = phase1_factorial_rows(models=("a", "b"), metrics=("M2",), items=range(4))
+        per_model = [replace(row, run_id="run-" + row.model_id) for row in rows]
+        self.assertEqual(set(run_id_by_model(per_model)), {"a", "b"})
+        self.assertEqual(set(g1_adjusted_effects(per_model, ("M2",))), {("a", "M2"), ("b", "M2")})
+        self.assertEqual(
+            {row.model_id for row in shuffled_feedback_labels(per_model)}, {"a", "b"},
+        )
+        split = [
+            replace(row, run_id=row.run_id + "-second") if row.model_id == "a" and row.task_id == "item-0" else row
+            for row in per_model
+        ]
+        for call in (run_id_by_model, lambda data: g1_adjusted_effects(data, ("M2",)), shuffled_feedback_labels):
+            with self.subTest(call=call), self.assertRaises(AnalysisInputError) as caught:
+                call(split)
+            self.assertIn("run ID", str(caught.exception))
 
 
 @unittest.skipUnless(HAS_STATSMODELS, "scientific G1 tests require statsmodels")

@@ -136,6 +136,10 @@ class QcRow:
     resample_response_count: int
     resample_invalid_count: int
     resample_invalid_rate: float
+    # Amendment A2: items this model drops entirely, decided treatment-blind from
+    # the model's own accurate+neutral resamples.  Empty under the frozen rules.
+    excluded_item_count: int = 0
+    excluded_task_ids: str = ""
 
     def to_dict(self) -> dict[str, Any]:
         return {field.name: getattr(self, field.name) for field in fields(QcRow)}
@@ -375,8 +379,18 @@ def build_metric_rows(records: Sequence[RawRecord], *, protocol: Protocol | None
     return tuple(rows)
 
 
-def qc_by_cell(rows: Sequence[MetricRow]) -> tuple[QcRow, ...]:
-    """Condition-wise invalid-answer and metric-missing rates, by cell and turn."""
+def qc_by_cell(
+    rows: Sequence[MetricRow],
+    *,
+    excluded_items: Mapping[str, Iterable[str]] | None = None,
+) -> tuple[QcRow, ...]:
+    """Condition-wise invalid-answer and metric-missing rates, by cell and turn.
+
+    ``excluded_items`` maps a model to the item IDs amendment A2 drops for it;
+    the rates are reported over every endpoint present, and the excluded items
+    are named alongside so a thin cell can be read against them.
+    """
+    excluded = {model: sorted(set(items)) for model, items in (excluded_items or {}).items()}
     grouped: dict[tuple[str, str, str, str, str], list[MetricRow]] = {}
     for row in rows:
         grouped.setdefault((row.phase, row.run_id, row.model_id, row.cell_id, row.turn_label), []).append(row)
@@ -388,6 +402,7 @@ def qc_by_cell(rows: Sequence[MetricRow]) -> tuple[QcRow, ...]:
         missing = {name: sum(1 for row in group if row.metric(name)[0] is None) for name in ("M1", "M2", "M3")}
         resample_total = sum(row.resample_count for row in group)
         resample_invalid = resample_total - sum(row.resample_valid_count for row in group)
+        dropped = excluded.get(key[2], [])
         out.append(QcRow(
             *key, total, invalid, invalid / total,
             missing["M1"], missing["M1"] / total,
@@ -395,6 +410,7 @@ def qc_by_cell(rows: Sequence[MetricRow]) -> tuple[QcRow, ...]:
             missing["M3"], missing["M3"] / total,
             resample_total, resample_invalid,
             resample_invalid / resample_total if resample_total else 0.0,
+            len(dropped), ";".join(dropped),
         ))
     return tuple(out)
 
@@ -430,11 +446,21 @@ def write_jsonl(path: str | Path, rows: Iterable[Mapping[str, Any]]) -> Path:
     return path
 
 
-def write_summaries(rows: Sequence[MetricRow], out_dir: str | Path) -> dict[str, Path]:
-    """Emit the committed ``metric_rows.csv``/``.jsonl`` and ``qc_by_cell.csv``."""
+def write_summaries(
+    rows: Sequence[MetricRow],
+    out_dir: str | Path,
+    *,
+    excluded_items: Mapping[str, Iterable[str]] | None = None,
+) -> dict[str, Path]:
+    """Emit the committed ``metric_rows.csv``/``.jsonl`` and ``qc_by_cell.csv``.
+
+    ``metric_rows`` always holds every extracted endpoint: amendment A2 is an
+    analysis-stage exclusion, so it is reported in the QC table rather than
+    deleted from the extraction record.
+    """
     out_dir = Path(out_dir)
     payload = [row.to_dict() for row in rows]
-    qc = qc_by_cell(rows)
+    qc = qc_by_cell(rows, excluded_items=excluded_items)
     return {
         "metric_rows_csv": write_table(out_dir / "metric_rows.csv", METRIC_ROW_COLUMNS, payload),
         "metric_rows_jsonl": write_jsonl(out_dir / "metric_rows.jsonl", payload),

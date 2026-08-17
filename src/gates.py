@@ -485,7 +485,10 @@ def _g3_style_reproduces(evidence, reference):
     if (
         evidence.metric_name not in PRIMARY_METRICS
         or evidence.style_id not in G3_STYLE_IDS
-        or tuple(evidence.task_ids) != G3_SMOKE_TASK_IDS
+        # The design is the frozen five items; amendment A2 may drop some of them
+        # for a model, so a nonempty subset is admissible but nothing outside is.
+        or not evidence.task_ids
+        or not set(evidence.task_ids) <= set(G3_SMOKE_TASK_IDS)
         or evidence.neutral_style_id != G3_NEUTRAL_STYLE_ID
         or evidence.unavailable_reason
         or not _finite(evidence.effect)

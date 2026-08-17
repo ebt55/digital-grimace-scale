@@ -95,6 +95,16 @@ mis-configured server fails loudly instead of silently mislabelling every record
 deploy pass, once as a container re-import with the deploy environment cleared — and asserts the
 baked value wins; it also keeps the old failure mode as an explicit test.
 
+**Empty responses (follow-up).** A Qwen-7B resample terminated immediately (EOS with no
+content). The backend now records that as one zero-width position carrying the EOS
+distribution, `response_text == ""`, counted as `stats["empty_responses"]`; `records.py` accepts
+an empty `response_text` (tokens stay non-empty). **Open blocker:** a *multi-turn* empty response
+still cannot be replayed, because `protocol.canonical_prompt_sha256` rejects an assistant turn
+with empty content, and the runner appends exactly that. protocol.py is outside agent A's
+boundary; allowing empty assistant content there is a pure extension (no existing hash changes,
+since such messages were previously unrepresentable). Until that is decided, only single-turn
+cells tolerate an empty response.
+
 **Also changed.** `manifest.preflight.letter_token_check` (single) became
 `preflight.letter_token_checks` (per-model dict, accumulating across runs, ordered by the
 manifest's frozen model order), so every generated model carries its own check.
@@ -235,3 +245,66 @@ untouched, so nothing hash-locked moves.
 `tests/test_metrics.py` adds a bold-wrapped record with a fake token stream (M1 = 1.5), the merged
 `" D**"` MISSING case, boundary checks, and tail-mass 1+5e-7 accepted / 1+5e-6 rejected. Full suite:
 169 passed, 72 subtests.
+
+## 2026-08-17 — agent C — Amendments A2 and A3 (discovery-stage, pre-Phase-1)
+
+Both amendments were decided by the orchestrator on 2026-08-17 ~13:00 IST from Phase-0 DISCOVERY
+data, before any Phase-1 generation, and must be applied identically to the Phase-2 holdout.
+Every artefact now reports the frozen-rule and the amended outcome side by side; the amended one
+is authoritative and `--no-amendments` on `screen_phase0.py`/`analyze_phase1.py` reproduces the
+frozen-only analysis.
+
+**A2 — treatment-blind item QC exclusion.** For each model separately, an item is excluded from
+all cells, endpoints and analyses (screen, G1–G5, the shuffled-label null, the G3 style smoke and
+the figures) when at least 5 of that model's 10 measured resamples in its own
+`<difficulty>__accurate__neutral` cell are invalid or absent; an item whose baseline endpoint is
+missing entirely is also excluded. The decision reads exactly one cell — the untreated baseline —
+so it can never be informed by the manipulation. Rationale: Phase-0 invalidity is concentrated in
+DGS-014, whose options are the single letters W/X/Y/Z so models answer `Answer: Y`, and DGS-022,
+whose long derivations hit the frozen 512-token cap. Both are instrument non-compliance unrelated
+to the manipulation; holdout DGS-013 carries the same single-letter defect. The M1 >5%-missing and
+M2 >5%-invalid confirmatory exclusions are unchanged and are computed AFTER A2. Excluded items are
+named in `screen.md/json`, `gates.md/json` and the `qc_by_cell.csv` table; `metric_rows.csv` still
+holds every extracted endpoint, because A2 is an analysis-stage exclusion, not an extraction one.
+
+**A3 — zero-variance standardization fallback.** Where a metric is standardized by a model's
+neutral (accurate+neutral discovery, measured) SD and that SD is exactly zero, the pooled SD of
+the same metric across all of that model's discovery factorial measured cells is used instead (for
+the Phase-0 screen: across the two screen arms). The neutral mean is kept, so only the scale
+changes, and the metric is unavailable only when the pooled SD is also zero
+(`zero_neutral_and_pooled_sample_sd`). Strictly nothing changes when the neutral SD is nonzero.
+The scale actually used is recorded per model x metric (`Standardization.scale_source`,
+`MetricScreen.scale_source`) and printed in both reports.
+
+**Effect on the Phase-0 discovery screen** (`results/raw/phase0`, four models; one Qwen-7B resample
+trajectory was still being regenerated, so these may shift slightly):
+
+| rules | primary | control |
+|---|---|---|
+| frozen (preregistered) | `google/gemma-2-2b-it` | `Qwen/Qwen2.5-7B-Instruct` |
+| amended A2+A3 (authoritative) | `google/gemma-2-9b-it` | `Qwen/Qwen2.5-3B-Instruct` |
+
+A2 excluded DGS-014 for `google/gemma-2-9b-it` (7/10 baseline resamples invalid),
+`Qwen/Qwen2.5-7B-Instruct` (5/10) and `Qwen/Qwen2.5-3B-Instruct` (10/10); it did not fire for
+`google/gemma-2-2b-it`. Under the frozen rules gemma-2-9b has only M1 available (M2 and M3 both
+have zero neutral SD), so with a single available delta it cannot clear the "at least two positive
+deltas" coherence bar and the primary fell to gemma-2-2b. A3 rescues gemma-2-9b's M2 on the pooled
+scale, giving it two positive deltas and the highest S (1.346 vs 0.706). A2's removal of DGS-014
+moves Qwen-7B's M1 from -0.019 to -0.258, so its |S| (0.297) now exceeds Qwen-3B's (0.216) and the
+min-|S| control switches. **M3 is unavailable for every model under both rule sets**: its neutral
+AND pooled SDs are zero, i.e. the frozen M3 parser fires no events anywhere in the Phase-0 data.
+That is a genuine finding about the parser on this data, not a scaling artefact, and it should be
+resolved before Phase 1 leans on M3.
+
+**Also fixed.** Run IDs are per model, not per phase (each model runs on its own vLLM server):
+`analysis.run_id_by_model()` is the shared invariant, applied in the Phase-0 screen, G1 and the
+shuffle; two run IDs for one model still block with the model named.
+
+**Judgement calls in these amendments** (beyond the orchestrator's specification):
+1. An item whose accurate+neutral measured endpoint is entirely absent is treated as an A2
+   exclusion (`accurate_neutral_measured_endpoint_absent`) rather than silently retained.
+2. A3 replaces only the SD; the neutral mean is kept whenever the neutral cell has any observation,
+   so z-scores stay centred on the untreated baseline.
+3. `gates.StyleEffectEvidence` now accepts a nonempty SUBSET of the five frozen G3 smoke items,
+   because A2 can drop one (DGS-022 is both a smoke item and an A2 candidate); the analysed IDs
+   travel with the evidence and anything outside the frozen five is still rejected.

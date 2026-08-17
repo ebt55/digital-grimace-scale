@@ -26,7 +26,9 @@ if str(ROOT) not in sys.path:
 
 from src.extract import LoadIssue, build_metric_rows, load_records, write_summaries  # noqa: E402
 from src.gates import BLOCKED  # noqa: E402
-from src.pipeline import PipelineError, render_phase1_markdown, run_phase1_gates  # noqa: E402
+from src.pipeline import (  # noqa: E402
+    AMENDED_RULES, FROZEN_RULES, PipelineError, excluded_task_ids, render_phase1_markdown, run_phase1_gates,
+)
 from src.protocol import load_protocol  # noqa: E402
 
 
@@ -39,6 +41,10 @@ def parse_args(argv=None):
     parser.add_argument("--out", default="results/summaries/phase1", help="committed summary directory")
     parser.add_argument("--m3-audit-f1", type=float, default=None, help="human M3 parser audit F1, if available")
     parser.add_argument("--strict", action="store_true", help="fail instead of reporting malformed raw lines")
+    parser.add_argument(
+        "--no-amendments", action="store_true",
+        help="analyse under the frozen preregistered rules only (no A2 item exclusion, no A3 pooled-SD fallback)",
+    )
     return parser.parse_args(argv)
 
 
@@ -58,17 +64,22 @@ def main(argv=None) -> int:
         print("no raw records under %s" % args.raw, file=sys.stderr)
         return 2
     rows = build_metric_rows(records, protocol=protocol)
-    written = write_summaries(rows, args.out)
+    amendments = FROZEN_RULES if args.no_amendments else AMENDED_RULES
+    dropped = {
+        model: sorted(excluded_task_ids(rows, model, amendments, phase="phase_1", split="discovery"))
+        for model in (args.primary, args.control)
+    }
+    written = write_summaries(rows, args.out, excluded_items=dropped)
     style_rows = ()
     if args.style_raw:
         style_issues: list[LoadIssue] = []
         style_records = _load(args.style_raw, protocol, style_issues, args.strict)
         style_rows = build_metric_rows(style_records, protocol=protocol)
-        written.update(write_summaries(style_rows, Path(args.out) / "style_smoke"))
+        written.update(write_summaries(style_rows, Path(args.out) / "style_smoke", excluded_items=dropped))
     try:
         verdict = run_phase1_gates(
             rows, args.primary, args.control,
-            style_rows=style_rows or None, m3_audit_f1=args.m3_audit_f1,
+            style_rows=style_rows or None, m3_audit_f1=args.m3_audit_f1, amendments=amendments,
         )
     except PipelineError as error:
         print("phase-1 analysis could not be assembled: %s" % error, file=sys.stderr)
@@ -80,6 +91,8 @@ def main(argv=None) -> int:
         "record_count": len(records),
         "skipped_line_count": len(issues),
         "m3_audit_f1": args.m3_audit_f1,
+        "amendments_applied": not args.no_amendments,
+        "excluded_items": dropped,
         "verdict": verdict.to_dict(),
     }
     (out / "gates.json").write_text(
@@ -88,6 +101,9 @@ def main(argv=None) -> int:
     for path in list(written.values()) + [out / "gates.json", out / "gates.md"]:
         print("wrote %s" % path)
     summary = verdict.summary
+    print("rules=%s" % ("frozen" if args.no_amendments else "amended A2+A3"))
+    for model, items in dropped.items():
+        print("  A2 excluded for %s: %s" % (model, ", ".join(items) or "none"))
     print("phase_1_status=%s" % summary.phase_1_status)
     for name, gate in summary.gates:
         print("  %s: %s%s" % (name, gate.status, "" if gate.reason is None else " (%s)" % gate.reason))
