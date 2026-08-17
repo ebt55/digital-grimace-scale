@@ -1,0 +1,92 @@
+﻿run_phase3: C2 dose unit ||d|| = 3.12 at layer 6; mean activation norm 78.59; ratio 0.040
+  steering chunk 1/1 (20 items x 1 alphas) 145.2s, 2493 tokens (17.2 tok/s)
+  steering: 20 generations in 145.2s
+run_phase3: baseline alpha=0 -> 20 generation(s)
+  steering chunk 1/1 (20 items x 1 alphas) 28.0s, 2501 tokens (89.4 tok/s)
+  steering: 20 generations in 28.0s
+run_phase3: random1 alpha=0.5 -> 20 generation(s)
+  steering chunk 1/1 (20 items x 1 alphas) 27.4s, 2488 tokens (90.7 tok/s)
+  steering: 20 generations in 27.4s
+run_phase3: random1 alpha=1 -> 20 generation(s)
+  steering chunk 1/1 (20 items x 1 alphas) 27.2s, 2498 tokens (91.8 tok/s)
+  steering: 20 generations in 27.2s
+run_phase3: random1 alpha=2 -> 20 generation(s)
+  steering chunk 1/1 (20 items x 1 alphas) 30.8s, 2494 tokens (81.0 tok/s)
+  steering: 20 generations in 30.8s
+run_phase3: random1 alpha=4 -> 20 generation(s)
+  steering chunk 1/1 (20 items x 1 alphas) 27.3s, 2486 tokens (91.1 tok/s)
+  steering: 20 generations in 27.3s
+run_phase3: random2 alpha=0.5 -> 20 generation(s)
+  steering chunk 1/1 (20 items x 1 alphas) 27.1s, 2496 tokens (92.3 tok/s)
+  steering: 20 generations in 27.1s
+run_phase3: random2 alpha=1 -> 20 generation(s)
+  steering chunk 1/1 (20 items x 1 alphas) 27.5s, 2488 tokens (90.6 tok/s)
+  steering: 20 generations in 27.5s
+run_phase3: random2 alpha=2 -> 20 generation(s)
+  steering chunk 1/1 (20 items x 1 alphas) 26.8s, 2581 tokens (96.4 tok/s)
+  steering: 20 generations in 26.8s
+run_phase3: random2 alpha=4 -> 20 generation(s)
+  steering chunk 1/1 (20 items x 1 alphas) 26.6s, 2475 tokens (93.0 tok/s)
+  steering: 20 generations in 26.6s
+run_phase3: random3 alpha=0.5 -> 20 generation(s)
+  steering chunk 1/1 (20 items x 1 alphas) 26.5s, 2491 tokens (94.0 tok/s)
+  steering: 20 generations in 26.5s
+run_phase3: random3 alpha=1 -> 20 generation(s)
+  steering chunk 1/1 (20 items x 1 alphas) 26.5s, 2541 tokens (96.0 tok/s)
+  steering: 20 generations in 26.5s
+run_phase3: random3 alpha=2 -> 20 generation(s)
+  steering chunk 1/1 (20 items x 1 alphas) 26.4s, 2554 tokens (96.6 tok/s)
+  steering: 20 generations in 26.4s
+run_phase3: random3 alpha=4 -> 20 generation(s)
+  steering chunk 1/1 (20 items x 1 alphas) 26.3s, 2494 tokens (94.7 tok/s)
+  steering: 20 generations in 26.3s
+run_phase3: random4 alpha=0.5 -> 20 generation(s)
+  steering chunk 1/1 (20 items x 1 alphas) 26.8s, 2503 tokens (93.4 tok/s)
+  steering: 20 generations in 26.8s
+run_phase3: random4 alpha=1 -> 20 generation(s)
+  steering chunk 1/1 (20 items x 1 alphas) 26.6s, 2500 tokens (94.1 tok/s)
+  steering: 20 generations in 26.6s
+run_phase3: random4 alpha=2 -> 20 generation(s)
+  steering chunk 1/1 (20 items x 1 alphas) 26.7s, 2557 tokens (95.7 tok/s)
+  steering: 20 generations in 26.7s
+run_phase3: random4 alpha=4 -> 20 generation(s)
+  steering chunk 1/1 (20 items x 1 alphas) 26.3s, 2482 tokens (94.5 tok/s)
+  steering: 20 generations in 26.3s
+run_phase3: random5 alpha=0.5 -> 20 generation(s)
+  steering chunk 1/1 (20 items x 1 alphas) 26.4s, 2483 tokens (94.2 tok/s)
+  steering: 20 generations in 26.4s
+run_phase3: random5 alpha=1 -> 20 generation(s)
+  steering chunk 1/1 (20 items x 1 alphas) 26.5s, 2608 tokens (98.6 tok/s)
+  steering: 20 generations in 26.5s
+run_phase3: random5 alpha=2 -> 20 generation(s)
+  steering chunk 1/1 (20 items x 1 alphas) 26.3s, 2539 tokens (96.4 tok/s)
+  steering: 20 generations in 26.3s
+run_phase3: random5 alpha=4 -> 20 generation(s)
+  steering chunk 1/1 (20 items x 1 alphas) 26.0s, 2505 tokens (96.3 tok/s)
+  steering: 20 generations in 26.0s
+run_phase3: tone alpha=0.5 -> 20 generation(s)
+  steering chunk 1/1 (20 items x 1 alphas) 27.3s, 2495 tokens (91.4 tok/s)
+  steering: 20 generations in 27.3s
+run_phase3: tone alpha=1 -> 20 generation(s)
+  steering chunk 1/1 (20 items x 1 alphas) 26.9s, 2494 tokens (92.7 tok/s)
+  steering: 20 generations in 26.9s
+run_phase3: tone alpha=2 -> 20 generation(s)
+  steering chunk 1/1 (20 items x 1 alphas) 28.2s, 2570 tokens (91.2 tok/s)
+  steering: 20 generations in 28.2s
+run_phase3: tone alpha=4 -> 20 generation(s)
+  steering chunk 1/1 (20 items x 1 alphas) 26.7s, 2511 tokens (94.2 tok/s)
+  steering: 20 generations in 26.7s
+run_phase3: unrelated_style alpha=0.5 -> 20 generation(s)
+  steering chunk 1/1 (20 items x 1 alphas) 26.3s, 2485 tokens (94.3 tok/s)
+  steering: 20 generations in 26.3s
+run_phase3: unrelated_style alpha=1 -> 20 generation(s)
+  steering chunk 1/1 (20 items x 1 alphas) 26.6s, 2515 tokens (94.7 tok/s)
+  steering: 20 generations in 26.6s
+run_phase3: unrelated_style alpha=2 -> 20 generation(s)
+  steering chunk 1/1 (20 items x 1 alphas) 26.7s, 2480 tokens (92.9 tok/s)
+  steering: 20 generations in 26.7s
+run_phase3: unrelated_style alpha=4 -> 20 generation(s)
+run_phase3: 29 dose cell(s) summarised -> C:\Users\ebin\claude-ground\Digital Grimace Scale\.claude\worktrees\digital-grimace-scale-experiment-f825fc\results\summaries\phase3\steering.json
+  J4 not supported
+  J5 SUPPORTED
+  J6 not supported

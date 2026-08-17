@@ -1,0 +1,805 @@
+{
+  "chosen_layer": 6,
+  "discovery_loo_auc": {
+    "tone": [
+      {
+        "auc": 0.5,
+        "layer": 0,
+        "n_groups": 20,
+        "n_items": 80,
+        "unavailable_reason": null
+      },
+      {
+        "auc": 0.936875,
+        "layer": 1,
+        "n_groups": 20,
+        "n_items": 80,
+        "unavailable_reason": null
+      },
+      {
+        "auc": 0.986875,
+        "layer": 2,
+        "n_groups": 20,
+        "n_items": 80,
+        "unavailable_reason": null
+      },
+      {
+        "auc": 0.97625,
+        "layer": 3,
+        "n_groups": 20,
+        "n_items": 80,
+        "unavailable_reason": null
+      },
+      {
+        "auc": 0.99,
+        "layer": 4,
+        "n_groups": 20,
+        "n_items": 80,
+        "unavailable_reason": null
+      },
+      {
+        "auc": 0.995,
+        "layer": 5,
+        "n_groups": 20,
+        "n_items": 80,
+        "unavailable_reason": null
+      },
+      {
+        "auc": 1.0,
+        "layer": 6,
+        "n_groups": 20,
+        "n_items": 80,
+        "unavailable_reason": null
+      },
+      {
+        "auc": 1.0,
+        "layer": 7,
+        "n_groups": 20,
+        "n_items": 80,
+        "unavailable_reason": null
+      },
+      {
+        "auc": 1.0,
+        "layer": 8,
+        "n_groups": 20,
+        "n_items": 80,
+        "unavailable_reason": null
+      },
+      {
+        "auc": 1.0,
+        "layer": 9,
+        "n_groups": 20,
+        "n_items": 80,
+        "unavailable_reason": null
+      },
+      {
+        "auc": 1.0,
+        "layer": 10,
+        "n_groups": 20,
+        "n_items": 80,
+        "unavailable_reason": null
+      },
+      {
+        "auc": 1.0,
+        "layer": 11,
+        "n_groups": 20,
+        "n_items": 80,
+        "unavailable_reason": null
+      },
+      {
+        "auc": 1.0,
+        "layer": 12,
+        "n_groups": 20,
+        "n_items": 80,
+        "unavailable_reason": null
+      },
+      {
+        "auc": 1.0,
+        "layer": 13,
+        "n_groups": 20,
+        "n_items": 80,
+        "unavailable_reason": null
+      },
+      {
+        "auc": 1.0,
+        "layer": 14,
+        "n_groups": 20,
+        "n_items": 80,
+        "unavailable_reason": null
+      },
+      {
+        "auc": 1.0,
+        "layer": 15,
+        "n_groups": 20,
+        "n_items": 80,
+        "unavailable_reason": null
+      },
+      {
+        "auc": 1.0,
+        "layer": 16,
+        "n_groups": 20,
+        "n_items": 80,
+        "unavailable_reason": null
+      },
+      {
+        "auc": 1.0,
+        "layer": 17,
+        "n_groups": 20,
+        "n_items": 80,
+        "unavailable_reason": null
+      },
+      {
+        "auc": 1.0,
+        "layer": 18,
+        "n_groups": 20,
+        "n_items": 80,
+        "unavailable_reason": null
+      },
+      {
+        "auc": 1.0,
+        "layer": 19,
+        "n_groups": 20,
+        "n_items": 80,
+        "unavailable_reason": null
+      },
+      {
+        "auc": 1.0,
+        "layer": 20,
+        "n_groups": 20,
+        "n_items": 80,
+        "unavailable_reason": null
+      },
+      {
+        "auc": 1.0,
+        "layer": 21,
+        "n_groups": 20,
+        "n_items": 80,
+        "unavailable_reason": null
+      },
+      {
+        "auc": 1.0,
+        "layer": 22,
+        "n_groups": 20,
+        "n_items": 80,
+        "unavailable_reason": null
+      },
+      {
+        "auc": 1.0,
+        "layer": 23,
+        "n_groups": 20,
+        "n_items": 80,
+        "unavailable_reason": null
+      },
+      {
+        "auc": 1.0,
+        "layer": 24,
+        "n_groups": 20,
+        "n_items": 80,
+        "unavailable_reason": null
+      },
+      {
+        "auc": 1.0,
+        "layer": 25,
+        "n_groups": 20,
+        "n_items": 80,
+        "unavailable_reason": null
+      },
+      {
+        "auc": 0.99875,
+        "layer": 26,
+        "n_groups": 20,
+        "n_items": 80,
+        "unavailable_reason": null
+      },
+      {
+        "auc": 0.993125,
+        "layer": 27,
+        "n_groups": 20,
+        "n_items": 80,
+        "unavailable_reason": null
+      },
+      {
+        "auc": 0.98625,
+        "layer": 28,
+        "n_groups": 20,
+        "n_items": 80,
+        "unavailable_reason": null
+      },
+      {
+        "auc": 0.99,
+        "layer": 29,
+        "n_groups": 20,
+        "n_items": 80,
+        "unavailable_reason": null
+      },
+      {
+        "auc": 0.99,
+        "layer": 30,
+        "n_groups": 20,
+        "n_items": 80,
+        "unavailable_reason": null
+      },
+      {
+        "auc": 0.99,
+        "layer": 31,
+        "n_groups": 20,
+        "n_items": 80,
+        "unavailable_reason": null
+      },
+      {
+        "auc": 0.986875,
+        "layer": 32,
+        "n_groups": 20,
+        "n_items": 80,
+        "unavailable_reason": null
+      },
+      {
+        "auc": 0.989375,
+        "layer": 33,
+        "n_groups": 20,
+        "n_items": 80,
+        "unavailable_reason": null
+      },
+      {
+        "auc": 0.98625,
+        "layer": 34,
+        "n_groups": 20,
+        "n_items": 80,
+        "unavailable_reason": null
+      },
+      {
+        "auc": 0.989375,
+        "layer": 35,
+        "n_groups": 20,
+        "n_items": 80,
+        "unavailable_reason": null
+      },
+      {
+        "auc": 0.984375,
+        "layer": 36,
+        "n_groups": 20,
+        "n_items": 80,
+        "unavailable_reason": null
+      },
+      {
+        "auc": 0.980625,
+        "layer": 37,
+        "n_groups": 20,
+        "n_items": 80,
+        "unavailable_reason": null
+      },
+      {
+        "auc": 0.9825,
+        "layer": 38,
+        "n_groups": 20,
+        "n_items": 80,
+        "unavailable_reason": null
+      },
+      {
+        "auc": 0.983125,
+        "layer": 39,
+        "n_groups": 20,
+        "n_items": 80,
+        "unavailable_reason": null
+      },
+      {
+        "auc": 0.979375,
+        "layer": 40,
+        "n_groups": 20,
+        "n_items": 80,
+        "unavailable_reason": null
+      },
+      {
+        "auc": 0.974375,
+        "layer": 41,
+        "n_groups": 20,
+        "n_items": 80,
+        "unavailable_reason": null
+      },
+      {
+        "auc": 0.96375,
+        "layer": 42,
+        "n_groups": 20,
+        "n_items": 80,
+        "unavailable_reason": null
+      }
+    ],
+    "validity": [
+      {
+        "auc": 0.5,
+        "layer": 0,
+        "n_groups": 20,
+        "n_items": 80,
+        "unavailable_reason": null
+      },
+      {
+        "auc": 0.7271875,
+        "layer": 1,
+        "n_groups": 20,
+        "n_items": 80,
+        "unavailable_reason": null
+      },
+      {
+        "auc": 0.9159375,
+        "layer": 2,
+        "n_groups": 20,
+        "n_items": 80,
+        "unavailable_reason": null
+      },
+      {
+        "auc": 0.8678125,
+        "layer": 3,
+        "n_groups": 20,
+        "n_items": 80,
+        "unavailable_reason": null
+      },
+      {
+        "auc": 0.9146875,
+        "layer": 4,
+        "n_groups": 20,
+        "n_items": 80,
+        "unavailable_reason": null
+      },
+      {
+        "auc": 0.8315625,
+        "layer": 5,
+        "n_groups": 20,
+        "n_items": 80,
+        "unavailable_reason": null
+      },
+      {
+        "auc": 0.8759375,
+        "layer": 6,
+        "n_groups": 20,
+        "n_items": 80,
+        "unavailable_reason": null
+      },
+      {
+        "auc": 0.8840625,
+        "layer": 7,
+        "n_groups": 20,
+        "n_items": 80,
+        "unavailable_reason": null
+      },
+      {
+        "auc": 0.9421875,
+        "layer": 8,
+        "n_groups": 20,
+        "n_items": 80,
+        "unavailable_reason": null
+      },
+      {
+        "auc": 0.9409375,
+        "layer": 9,
+        "n_groups": 20,
+        "n_items": 80,
+        "unavailable_reason": null
+      },
+      {
+        "auc": 0.9278125,
+        "layer": 10,
+        "n_groups": 20,
+        "n_items": 80,
+        "unavailable_reason": null
+      },
+      {
+        "auc": 0.9096875,
+        "layer": 11,
+        "n_groups": 20,
+        "n_items": 80,
+        "unavailable_reason": null
+      },
+      {
+        "auc": 0.9003125,
+        "layer": 12,
+        "n_groups": 20,
+        "n_items": 80,
+        "unavailable_reason": null
+      },
+      {
+        "auc": 0.9409375,
+        "layer": 13,
+        "n_groups": 20,
+        "n_items": 80,
+        "unavailable_reason": null
+      },
+      {
+        "auc": 0.9415625,
+        "layer": 14,
+        "n_groups": 20,
+        "n_items": 80,
+        "unavailable_reason": null
+      },
+      {
+        "auc": 0.9309375,
+        "layer": 15,
+        "n_groups": 20,
+        "n_items": 80,
+        "unavailable_reason": null
+      },
+      {
+        "auc": 0.9334375,
+        "layer": 16,
+        "n_groups": 20,
+        "n_items": 80,
+        "unavailable_reason": null
+      },
+      {
+        "auc": 0.9428125,
+        "layer": 17,
+        "n_groups": 20,
+        "n_items": 80,
+        "unavailable_reason": null
+      },
+      {
+        "auc": 0.9365625,
+        "layer": 18,
+        "n_groups": 20,
+        "n_items": 80,
+        "unavailable_reason": null
+      },
+      {
+        "auc": 0.9471875,
+        "layer": 19,
+        "n_groups": 20,
+        "n_items": 80,
+        "unavailable_reason": null
+      },
+      {
+        "auc": 0.9378125,
+        "layer": 20,
+        "n_groups": 20,
+        "n_items": 80,
+        "unavailable_reason": null
+      },
+      {
+        "auc": 0.9353125,
+        "layer": 21,
+        "n_groups": 20,
+        "n_items": 80,
+        "unavailable_reason": null
+      },
+      {
+        "auc": 0.9184375,
+        "layer": 22,
+        "n_groups": 20,
+        "n_items": 80,
+        "unavailable_reason": null
+      },
+      {
+        "auc": 0.9346875,
+        "layer": 23,
+        "n_groups": 20,
+        "n_items": 80,
+        "unavailable_reason": null
+      },
+      {
+        "auc": 0.9353125,
+        "layer": 24,
+        "n_groups": 20,
+        "n_items": 80,
+        "unavailable_reason": null
+      },
+      {
+        "auc": 0.9365625,
+        "layer": 25,
+        "n_groups": 20,
+        "n_items": 80,
+        "unavailable_reason": null
+      },
+      {
+        "auc": 0.9434375,
+        "layer": 26,
+        "n_groups": 20,
+        "n_items": 80,
+        "unavailable_reason": null
+      },
+      {
+        "auc": 0.9434375,
+        "layer": 27,
+        "n_groups": 20,
+        "n_items": 80,
+        "unavailable_reason": null
+      },
+      {
+        "auc": 0.9403125,
+        "layer": 28,
+        "n_groups": 20,
+        "n_items": 80,
+        "unavailable_reason": null
+      },
+      {
+        "auc": 0.9265625,
+        "layer": 29,
+        "n_groups": 20,
+        "n_items": 80,
+        "unavailable_reason": null
+      },
+      {
+        "auc": 0.9284375,
+        "layer": 30,
+        "n_groups": 20,
+        "n_items": 80,
+        "unavailable_reason": null
+      },
+      {
+        "auc": 0.9196875,
+        "layer": 31,
+        "n_groups": 20,
+        "n_items": 80,
+        "unavailable_reason": null
+      },
+      {
+        "auc": 0.9321875,
+        "layer": 32,
+        "n_groups": 20,
+        "n_items": 80,
+        "unavailable_reason": null
+      },
+      {
+        "auc": 0.9340625,
+        "layer": 33,
+        "n_groups": 20,
+        "n_items": 80,
+        "unavailable_reason": null
+      },
+      {
+        "auc": 0.9303125,
+        "layer": 34,
+        "n_groups": 20,
+        "n_items": 80,
+        "unavailable_reason": null
+      },
+      {
+        "auc": 0.9265625,
+        "layer": 35,
+        "n_groups": 20,
+        "n_items": 80,
+        "unavailable_reason": null
+      },
+      {
+        "auc": 0.9221875,
+        "layer": 36,
+        "n_groups": 20,
+        "n_items": 80,
+        "unavailable_reason": null
+      },
+      {
+        "auc": 0.9153125,
+        "layer": 37,
+        "n_groups": 20,
+        "n_items": 80,
+        "unavailable_reason": null
+      },
+      {
+        "auc": 0.9171875,
+        "layer": 38,
+        "n_groups": 20,
+        "n_items": 80,
+        "unavailable_reason": null
+      },
+      {
+        "auc": 0.9171875,
+        "layer": 39,
+        "n_groups": 20,
+        "n_items": 80,
+        "unavailable_reason": null
+      },
+      {
+        "auc": 0.9240625,
+        "layer": 40,
+        "n_groups": 20,
+        "n_items": 80,
+        "unavailable_reason": null
+      },
+      {
+        "auc": 0.9228125,
+        "layer": 41,
+        "n_groups": 20,
+        "n_items": 80,
+        "unavailable_reason": null
+      },
+      {
+        "auc": 0.9153125,
+        "layer": 42,
+        "n_groups": 20,
+        "n_items": 80,
+        "unavailable_reason": null
+      }
+    ]
+  },
+  "discovery_loo_auc_at_chosen_layer": {
+    "tone": 1.0,
+    "validity": 0.8759375
+  },
+  "generated_at": "2026-08-18T02:54:06+0530",
+  "hidden_size": 3584,
+  "holdout_auc_at_chosen_layer": {
+    "tone": 1.0,
+    "validity": 0.878125
+  },
+  "holdout_correlation": {
+    "ci95_lower": -0.4309803832482577,
+    "ci95_upper": 0.15426305924383613,
+    "estimator": "probe score and M1 demeaned within cell, residuals pooled; 2,000-resample item-clustered percentile bootstrap re-demeaning inside each resample",
+    "m1_missing_endpoints": 7,
+    "n_cells": 8,
+    "n_items": 20,
+    "n_pairs": 73,
+    "rho": -0.15978649882759474,
+    "unavailable_reason": null
+  },
+  "interpretation_ceiling": "A probe plus induction result demonstrates a condition-linked internal variable with causal influence on the output signature. It is not evidence of experience.",
+  "item_counts": {
+    "discovery": 80,
+    "holdout": 80,
+    "note": "each task appears in the 4 cells matching its difficulty, so a split contributes 20 x 4 = 80 measured transcripts"
+  },
+  "layer_choice_rule": "argmax discovery leave-one-task-out tone AUC; ties to the lower layer",
+  "layer_norms": {
+    "0": 102.99510955810547,
+    "1": 74.43641815185546,
+    "10": 101.70502166748047,
+    "11": 107.151416015625,
+    "12": 108.12806701660156,
+    "13": 110.82616271972657,
+    "14": 120.35903930664062,
+    "15": 133.23016052246095,
+    "16": 144.6008331298828,
+    "17": 153.44095764160156,
+    "18": 191.20171508789062,
+    "19": 222.7201416015625,
+    "2": 59.72315139770508,
+    "20": 250.16049499511718,
+    "21": 290.5432434082031,
+    "22": 317.82342529296875,
+    "23": 299.8855346679687,
+    "24": 342.860009765625,
+    "25": 355.2825439453125,
+    "26": 380.5095642089844,
+    "27": 387.13531494140625,
+    "28": 413.2913391113281,
+    "29": 413.34599609375,
+    "3": 67.93821716308594,
+    "30": 444.06931762695314,
+    "31": 452.6911560058594,
+    "32": 488.9023864746094,
+    "33": 516.3526550292969,
+    "34": 554.1371826171875,
+    "35": 595.6168579101562,
+    "36": 619.440380859375,
+    "37": 668.2627685546875,
+    "38": 700.2446655273437,
+    "39": 783.822265625,
+    "4": 59.55801544189453,
+    "40": 860.5815795898437,
+    "41": 959.2889526367187,
+    "42": 146.66021728515625,
+    "5": 65.18031768798828,
+    "6": 78.58927459716797,
+    "7": 71.41755981445313,
+    "8": 80.72645416259766,
+    "9": 81.74031219482421
+  },
+  "layers_extracted": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26,
+    27,
+    28,
+    29,
+    30,
+    31,
+    32,
+    33,
+    34,
+    35,
+    36,
+    37,
+    38,
+    39,
+    40,
+    41,
+    42
+  ],
+  "model_id": "google/gemma-2-9b-it",
+  "preregistration": "notes/preregistration_v4_phase3.md",
+  "schema_version": "dgs-phase3-localization-v1",
+  "verdicts": [
+    {
+      "detail": {
+        "argmax_layer_in_middle_band": false,
+        "chosen_layer": 6,
+        "discovery_threshold": 0.8,
+        "holdout_auc_at_chosen_layer": 1.0,
+        "holdout_threshold": 0.75,
+        "middle_band": [
+          12,
+          30
+        ],
+        "peak_attained_in_middle_band": true,
+        "peak_discovery_auc": 1.0,
+        "peak_layer": 6,
+        "peak_layers": [
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          24,
+          25
+        ]
+      },
+      "prediction_id": "J1",
+      "statement": "Tone is linearly decodable from the pre-response state: peak LOO AUC >= 0.80 on discovery at some middle layer (12-30), and >= 0.75 on holdout at the discovery-chosen layer.",
+      "supported": true
+    },
+    {
+      "detail": {
+        "basis": "holdout",
+        "gap": 0.12187499999999996,
+        "layer": 6,
+        "required_gap": 0.05,
+        "tone_auc": 1.0,
+        "validity_above_chance": true,
+        "validity_auc": 0.878125
+      },
+      "prediction_id": "J2",
+      "statement": "Validity (false-failure vs accurate) is decodable but weaker than tone at the same layer (AUC lower by >= 0.05).",
+      "supported": true
+    },
+    {
+      "detail": {
+        "ci95_lower": -0.4309803832482577,
+        "ci95_upper": 0.15426305924383613,
+        "ci_excludes_zero": false,
+        "n_cells": 8,
+        "n_items": 20,
+        "n_pairs": 73,
+        "rho": -0.15978649882759474,
+        "threshold": -0.2,
+        "unavailable_reason": null
+      },
+      "prediction_id": "J3",
+      "statement": "Holdout tone-probe score correlates negatively with M1 within cell (pooled Spearman rho <= -0.2, item-bootstrap CI excluding 0).",
+      "supported": false
+    }
+  ]
+}

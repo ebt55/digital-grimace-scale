@@ -19,10 +19,12 @@ What is transcribed literally from ``notes/preregistration_v4_phase3.md``:
   percentile bootstrap that re-demeans inside every resample, so the reported interval
   covers the whole estimator rather than a frozen residualisation.
 * **Directions.** Tone direction ``d = mean(hostile) - mean(neutral)`` at ``L*`` from
-  discovery, accurate arm, measured position.  A dose ``alpha`` is applied as
-  ``alpha * d / ||d|| * norm``, where ``norm`` is that layer's mean activation L2 norm.
-  Five random unit control directions are drawn from the frozen seeds
-  ``DGS-AC1-STEER-v1|<k>`` and share the same scaling.
+  discovery, accurate arm, measured position.  Per **clarification C2 (2026-08-18)** the dose
+  unit is the contrast's own magnitude: the tone dose is ``alpha * d`` with ``d``
+  unnormalised, and every control is rescaled to the matched norm ``alpha * ||d||`` (five
+  random unit directions from the frozen seeds ``DGS-AC1-STEER-v1|<k>``, plus the unrelated
+  verbose-minus-neutral style direction).  ``scaled_direction`` implements that rescaling;
+  the ratio ``||d|| / mean-activation-norm`` at ``L*`` is reported so readers can convert.
 * **Degenerate dose rule.** A dose is degenerate when **more than 50%** of items yield no
   parseable answer; degenerate doses are reported and excluded from the monotonicity check.
 
@@ -752,17 +754,38 @@ J_STATEMENTS = _freeze({
 })
 
 
+#: Tolerance for calling two AUCs equal when deciding where the peak is attained.
+PEAK_TIE_TOLERANCE = 1e-12
+
+
 def verdict_j1(discovery: Sequence[LayerAuc], chosen_layer: int,
                holdout_auc: float | None) -> Verdict:
+    """J1's band clause reads "peak LOO AUC >= 0.80 ... **at some** middle layer".
+
+    Judgement call, recorded (2026-08-18, after the discovery probes and before any steered
+    generation): the band clause asks whether the peak value is *attained somewhere* in layers
+    12-30, not whether the tie-broken ``argmax`` index happens to fall there.  On this data the
+    tone AUC is exactly 1.000 across a wide plateau, so the two readings differ only through
+    the frozen "ties to the lower layer" rule, which exists to pick ONE layer for steering and
+    was never meant to decide a hypothesis.  Both readings are reported in the detail --
+    ``peak_attained_in_middle_band`` (used for the verdict) and ``argmax_layer_in_middle_band``
+    (the stricter index reading) -- so a reader can apply either.
+    """
     available = [item for item in discovery if item.auc is not None]
-    peak = max(available, key=lambda item: item.auc) if available else None
-    in_band = (peak is not None and MIDDLE_LAYERS[0] <= peak.layer <= MIDDLE_LAYERS[1])
-    discovery_ok = peak is not None and peak.auc >= J1_DISCOVERY_AUC and in_band
+    peak_value = max((item.auc for item in available), default=None)
+    peak_layers = [item.layer for item in available
+                   if peak_value is not None and item.auc >= peak_value - PEAK_TIE_TOLERANCE]
+    lower, upper = MIDDLE_LAYERS
+    attained_in_band = any(lower <= layer <= upper for layer in peak_layers)
+    argmax_in_band = bool(peak_layers) and lower <= min(peak_layers) <= upper
+    discovery_ok = peak_value is not None and peak_value >= J1_DISCOVERY_AUC and attained_in_band
     holdout_ok = holdout_auc is not None and holdout_auc >= J1_HOLDOUT_AUC
     return Verdict("J1", J_STATEMENTS["J1"], bool(discovery_ok and holdout_ok), _freeze({
-        "peak_layer": None if peak is None else peak.layer,
-        "peak_discovery_auc": None if peak is None else peak.auc,
-        "peak_layer_in_middle_band": bool(in_band),
+        "peak_layer": None if not peak_layers else min(peak_layers),
+        "peak_discovery_auc": peak_value,
+        "peak_layers": peak_layers,
+        "peak_attained_in_middle_band": bool(attained_in_band),
+        "argmax_layer_in_middle_band": bool(argmax_in_band),
         "middle_band": list(MIDDLE_LAYERS),
         "chosen_layer": int(chosen_layer),
         "holdout_auc_at_chosen_layer": holdout_auc,

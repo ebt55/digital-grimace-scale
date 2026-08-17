@@ -674,6 +674,64 @@ with a mocked client, which exercised the raw-file filters (80/80/10), the M1 jo
 `steering_outputs.jsonl`, and both figures. Outputs went to a scratch directory; no Phase-3 summary was
 written into the repository.
 
+## 2026-08-18 — agent J2 — Phase 3 run: probes, steering, J1–J6
+
+Ran the whole Phase-3 arm on the deployed j-space app (agent J1's `src/jspace_modal.py` +
+`src/jspace_client.py`). Clarification **C2** was applied to the code *before* any tone-direction
+steering: the dose is `α·d` with `d = mean(hostile) − mean(neutral)` at L\* unnormalised, and every
+control is rescaled to the matched norm `α·‖d‖`.
+
+**Verdicts.** J1 **supported**, J2 **supported**, J3 not supported, J4 not supported, J5 **supported**,
+J6 not supported. Summaries: `results/summaries/phase3/{localization,steering,phase3}.{md,json}`;
+figures F5/F6 in `results/figures/`.
+
+| ID | number that decides it |
+| --- | --- |
+| J1 | discovery LOO tone AUC = **1.000**, holdout at L\* = **1.000** (bar 0.80 / 0.75) |
+| J2 | at L\*, holdout tone 1.000 vs validity **0.878**, gap 0.122 ≥ 0.05 |
+| J3 | within-cell Spearman(probe score, M1) = **−0.160** [−0.431, +0.154], 20 items, 73 pairs |
+| J4 | ΔM1(α=2) = **−0.194** [−0.513, **+0.0000001**] — monotone over {0.5, 1, 2}, CI touches zero |
+| J5 | 24 control dose cells, ΔM1 ∈ [−0.025, +1.195], **none** with a CI excluding zero below zero |
+| J6 | non-answer rate **0.00 at every dose**; all 180 judged distress scores **0** |
+
+**L\* = 6, and why that matters.** Tone AUC is exactly 1.000 on a plateau spanning **layers 6–25**, so
+the frozen "argmax, ties to the lower layer" rule — written to pick ONE layer to steer at — lands on the
+earliest layer of the plateau. Two consequences, both recorded rather than engineered around:
+
+1. *J1's band clause.* "Peak LOO AUC ≥ 0.80 at some middle layer (12–30)" is read as **"the peak value
+   is attained at some layer in 12–30"** (it is: the plateau covers 12–25), not as "the tie-broken
+   argmax index lies in 12–30" (it does not: L\* = 6). The judgement call was made after seeing the
+   discovery probes and before any steered generation, it *does* flip J1 from not-supported to
+   supported, and both readings are emitted side by side in `localization.json`
+   (`peak_attained_in_middle_band` vs `argmax_layer_in_middle_band`) so a reader can apply either.
+2. *Dose scale.* At layer 6 the tone contrast is small: **‖d‖ = 3.12** against a mean activation norm of
+   **78.59**, ratio **0.0398**. So even α = 4 perturbs the residual stream by only ~16% of its own norm.
+   Nothing degenerated — non-answer rate 0.00 at all 29 dose cells, mean length 123–129 tokens
+   throughout, α=4 responses still correct and coherent — so the degenerate-dose rule never fired and
+   nothing was excluded from the monotonicity check. A layer inside the plateau with a larger ‖d‖ would
+   be a stronger test; the layer rule was frozen, so this run does not do that.
+
+**What the steering shows.** The tone direction is the only direction whose ΔM1 is negative at every
+dose, and the decrease is monotone (−0.005, −0.039, −0.194, −0.494 at α = 0.5/1/2/4). At α = 4 the
+interval excludes zero (−0.494 [−0.869, −0.178]); at the preregistered α = 2 it does not (upper bound
++9e-8). J4 is therefore **not supported** — the α = 4 result is an out-of-test observation, not a
+substitute verdict. Every control (5 random + unrelated verbose−neutral, matched norm) moves M1 the
+*other* way or not at all (21 of 24 cells positive), so J5 is clean. The distress channel is at its
+floor: the neutral single-turn task yields calm, correct answers at every dose and the locked rubric
+scored all 180 sampled responses 0, so J6 has no signal to find on either channel.
+
+**Run.** Deploy 5.7 s. Extraction 160 s wall for 80 + 80 + 10 items × 43 hidden states × 3584
+(99 s of that a cold start; ~0.35 s/item warm). Probe (43 layers × 20 folds × 2 labels = 1,720 logistic
+fits) 57 s on CPU. Steering 580 generations in ~15 min at batch 20, ~94 tok/s warm (first cell 145 s
+cold). Judge 180 calls, 0 failures, 0 format repairs. App stopped, `modal container list` empty.
+
+**Spend.** Modal L40S ≈ 20–25 min of container time ≈ **$0.7** (estimate, not billed-metered here).
+Anthropic judge ≈ **$0.27** (reconstructed from the 180 cached calls: ~27k input, ~8k output, ~208k
+cached-read tokens on `claude-sonnet-4-6`; the run manifest now records `usage`/`estimated_cost_usd`
+directly for future runs).
+
+**Not done / open.** Phase-3 results are not yet folded into `notes/report.md`. Nothing was committed.
+
 ## 2026-08-18 - agent J1 - Phase 3 (j-space) infrastructure: Modal activation/steering app
 
 Built for the prereg v4 Phase 3 design: `src/jspace_modal.py` (Modal app `dgs-jspace-gemma-2-9b-it`),

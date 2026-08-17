@@ -115,6 +115,9 @@ def _detail(detail: Mapping[str, Any]) -> str:
         if isinstance(value, float):
             return "%.4g" % value
         if isinstance(value, (list, tuple)):
+            if len(value) > 6 and all(isinstance(item, int) and not isinstance(item, bool)
+                                      for item in value):
+                return _layer_span(value)  # a long layer plateau, not a readable list
             return "[%s]" % ", ".join(show(item) for item in value)
         return str(value)
 
@@ -263,6 +266,14 @@ def command_extract(args: argparse.Namespace) -> int:
     # Resolve the client before scanning gigabytes of raw JSONL, so a missing deployment
     # fails in a second instead of after three full passes over the raw files.
     client = _jspace_client() if pending else None
+    # One handle for the whole run: the container starts on the first remote call and every
+    # later chunk reuses it instead of resolving the deployed class again.
+    handle = client.get_cls() if pending else None
+    extra: dict[str, Any] = {}
+    if args.batch_size is not None:
+        extra["batch_size"] = int(args.batch_size)
+    if args.chunk is not None:
+        extra["chunk"] = int(args.chunk)
     written = []
     for name, target in pending:
         items = builders[name]()
@@ -275,7 +286,8 @@ def command_extract(args: argparse.Namespace) -> int:
                      "items": [{key: value for key, value in item.items() if key != "messages"}
                                for item in items]})
         response = client.extract_activations(
-            [{"id": item["id"], "messages": item["messages"]} for item in items], layers)
+            [{"id": item["id"], "messages": item["messages"]} for item in items], layers,
+            handle=handle, **extra)
         activation_set = _activation_set_from_response(items, response, LABEL_COLUMNS[name])
         save_activation_set(target, activation_set)
         written.append(target)
@@ -404,6 +416,22 @@ def command_probe(args: argparse.Namespace) -> int:
     return 0
 
 
+def _layer_span(layers: Sequence[int]) -> str:
+    """``[6, 7, ..., 25]`` -> ``6-25``; a broken run is listed as comma-separated runs."""
+    ordered = sorted(set(int(layer) for layer in layers))
+    if not ordered:
+        return "none"
+    runs, start, previous = [], ordered[0], ordered[0]
+    for layer in ordered[1:]:
+        if layer == previous + 1:
+            previous = layer
+            continue
+        runs.append((start, previous))
+        start = previous = layer
+    runs.append((start, previous))
+    return ", ".join("%d" % low if low == high else "%d-%d" % (low, high) for low, high in runs)
+
+
 def render_localization_markdown(payload: Mapping[str, Any]) -> str:
     chosen = payload["chosen_layer"]
     holdout = payload["holdout_auc_at_chosen_layer"]
@@ -427,8 +455,20 @@ def render_localization_markdown(payload: Mapping[str, Any]) -> str:
         "- probe: L2 logistic (C = 1), standardised **in the training fold only**, "
         "leave-one-task-out (all cells of a task held out together)",
         "- layer choice: %s -> **L\\* = %d**" % (payload["layer_choice_rule"], chosen),
-        "- discovery peak tone AUC: %s at layer %s" % (_number(peak[1]), peak[0]),
-        "",
+        "- discovery peak tone AUC: %s, attained at layer(s) %s" % (
+            _number(peak[1]), _layer_span([layer for layer, auc in available
+                                           if peak[1] is not None and auc >= peak[1] - 1e-12])),
+        "",]
+    if len([layer for layer, auc in available if peak[1] is not None and auc >= peak[1] - 1e-12]) > 1:
+        lines += [
+            "The tone AUC is tied at its maximum across a plateau of layers, so the frozen "
+            "\"ties to the lower layer\" rule -- which exists to pick ONE layer to steer at, not "
+            "to decide a hypothesis -- is what fixes L\\*. J1's band clause is therefore read as "
+            "\"the peak is attained at some layer in 12-30\"; the stricter \"the tie-broken argmax "
+            "index lies in 12-30\" reading is reported alongside it in the verdict detail.",
+            "",
+        ]
+    lines += [
         "## AUC at the chosen layer",
         "",
         "| label | discovery LOO | holdout (evaluated once) |",
@@ -490,24 +530,40 @@ def _steering_items(protocol) -> list[dict[str, Any]]:
             for task in tasks]
 
 
-def build_directions(discovery: ActivationSet, style: ActivationSet, layer: int) -> dict[str, np.ndarray]:
+def build_directions(discovery: ActivationSet, style: ActivationSet,
+                     layer: int) -> tuple[dict[str, np.ndarray], dict[str, Any]]:
     """The tone direction, five matched-norm random controls and the unrelated direction.
 
-    Each value is the **per-unit-dose** vector ``d / ||d|| * norm_L*``; the caller multiplies
-    it by ``alpha``.  ``norm_L*`` is the discovery mean activation L2 norm at ``L*``.
+    **Clarification C2 (2026-08-18).** The dose unit is the natural magnitude of the contrast
+    itself: the tone dose is ``alpha * d`` with ``d = mean(hostile) - mean(neutral)`` at
+    ``L*`` *unnormalised*, so ``alpha = 1`` moves a neutral state to the hostile mean. Every
+    control is rescaled to the same norm ``alpha * ||d||``. The earlier unit (the layer's mean
+    activation norm) was withdrawn after the infrastructure smoke showed a random direction at
+    that scale already produces gibberish to the token cap at ``alpha = 2``.
+
+    Each returned value is the **per-unit-dose** vector; the server multiplies it by ``alpha``.
+    The second return value carries ``||d||``, the mean activation norm and their ratio, which
+    C2 requires to be reported so a reader can convert between the two units.
     """
-    norm = discovery.norm(layer)
     tone = mean_difference_direction(
         discovery, layer, label_name="tone", positive=TONE_POSITIVE, negative=TONE_NEGATIVE,
         mask=discovery.mask(validity=VALIDITY_NEGATIVE))
+    tone_norm = float(np.linalg.norm(tone))
     unrelated = mean_difference_direction(
         style, layer, label_name="cell_id", positive=STYLE_POSITIVE, negative=STYLE_NEGATIVE)
-    directions = {TONE_DIRECTION_ID: scaled_direction(tone, 1.0, norm),
-                  UNRELATED_DIRECTION_ID: scaled_direction(unrelated, 1.0, norm)}
+    directions = {TONE_DIRECTION_ID: np.asarray(tone, dtype=np.float64),
+                  UNRELATED_DIRECTION_ID: scaled_direction(unrelated, 1.0, tone_norm)}
     for name, vector in zip(RANDOM_DIRECTION_IDS,
                             random_unit_directions(discovery.hidden, len(RANDOM_DIRECTION_IDS))):
-        directions[name] = scaled_direction(vector, 1.0, norm)
-    return directions
+        directions[name] = scaled_direction(vector, 1.0, tone_norm)
+    mean_norm = discovery.norm(layer)
+    meta = {
+        "tone_direction_norm": tone_norm,
+        "mean_activation_norm": mean_norm,
+        "norm_ratio_d_over_mean_activation": (tone_norm / mean_norm) if mean_norm else None,
+        "unrelated_direction_raw_norm": float(np.linalg.norm(unrelated)),
+    }
+    return directions, meta
 
 
 def _load_steering_entries(path: Path, *, repair: bool = False) -> list[dict[str, Any]]:
@@ -564,7 +620,9 @@ def _dose_plan(alphas: Sequence[float], directions: Sequence[str]) -> list[tuple
 
 def generate_missing(path: Path, items: Sequence[Mapping[str, Any]],
                      directions: Mapping[str, np.ndarray], layer: int,
-                     alphas: Sequence[float], *, dry_run: bool = False) -> int:
+                     alphas: Sequence[float], *, dry_run: bool = False,
+                     handle: Any = None, batch_size: int | None = None,
+                     chunk: int | None = None) -> int:
     """Fill in every missing ``(direction, alpha, item)`` cell, appending as it goes."""
     present = {(str(entry.get("direction_id")), round(float(entry.get("alpha", 0.0)), 6),
                 str(entry.get("id")))
@@ -582,9 +640,15 @@ def generate_missing(path: Path, items: Sequence[Mapping[str, Any]],
             continue
         client = _jspace_client()
         vector = None if direction_id == BASELINE_DIRECTION_ID else directions[direction_id].tolist()
+        extra: dict[str, Any] = {}
+        if batch_size is not None:
+            extra["batch_size"] = int(batch_size)
+        if chunk is not None:
+            extra["chunk"] = int(chunk)
         response = client.generate_steered(
             [{"id": item["id"], "messages": item["messages"]} for item in missing],
-            layer, vector, [float(alpha)], max_new_tokens=STEER_MAX_NEW_TOKENS)
+            layer, vector, [float(alpha)], max_new_tokens=STEER_MAX_NEW_TOKENS,
+            handle=handle, **extra)
         stamped = []
         for entry in response:
             record = dict(entry)
@@ -639,12 +703,20 @@ def command_steer(args: argparse.Namespace) -> int:
     layer = int(args.layer) if args.layer is not None else int(localization["chosen_layer"])
     discovery = load_activation_set(jspace_dir / "activations_discovery.npz")
     style = load_activation_set(jspace_dir / "activations_style.npz")
-    directions = build_directions(discovery, style, layer)
+    directions, direction_meta = build_directions(discovery, style, layer)
+    print("run_phase3: C2 dose unit ||d|| = %.2f at layer %d; mean activation norm %.2f; "
+          "ratio %.3f" % (direction_meta["tone_direction_norm"], layer,
+                          direction_meta["mean_activation_norm"],
+                          direction_meta["norm_ratio_d_over_mean_activation"] or float("nan")))
     items = _steering_items(protocol)
     canonical = {item["id"]: item["canonical_answer"] for item in items}
     alphas = tuple(float(item) for item in args.alphas.split(",")) if args.alphas else ALPHAS
     path = jspace_dir / STEERING_OUTPUTS
-    generate_missing(path, items, directions, layer, alphas, dry_run=args.dry_run)
+    handle = None
+    if not args.dry_run:
+        handle = _jspace_client().get_cls()
+    generate_missing(path, items, directions, layer, alphas, dry_run=args.dry_run,
+                     handle=handle, batch_size=args.batch_size, chunk=args.chunk)
     entries = _load_steering_entries(path)
     if not entries:
         print("run_phase3: no steered generations present yet; nothing to summarise")
@@ -678,11 +750,13 @@ def command_steer(args: argparse.Namespace) -> int:
         "layer_norm": discovery.norm(layer),
         "alphas": list(alphas),
         "direction_ids": sorted(directions),
+        "clarification": "C2 (2026-08-18): the dose unit is ||d|| itself, not the mean activation norm",
+        "direction_norms": direction_meta,
         "direction_construction": {
             "tone": "mean(hostile) - mean(neutral) at L*, discovery accurate arm, measured position",
-            "random": "5 unit gaussian directions, seeds %s|1..5, matched norm" % "DGS-AC1-STEER-v1",
-            "unrelated": "mean(style__verbose) - mean(style__neutral_reference) at L*, matched norm",
-            "dose": "alpha * d / ||d|| * mean activation L2 norm at L*",
+            "random": "5 unit gaussian directions, seeds %s|1..5, rescaled to ||d||" % "DGS-AC1-STEER-v1",
+            "unrelated": "mean(style__verbose) - mean(style__neutral_reference) at L*, rescaled to ||d||",
+            "dose": "alpha * d (d unnormalised); every control at the matched norm alpha * ||d||",
         },
         "items": {"n": len(items), "prompt": "render_task, neutral single-turn, holdout split"},
         "max_new_tokens": STEER_MAX_NEW_TOKENS,
@@ -736,7 +810,14 @@ def _judge_steering(entries, out_dir: Path, *, workers: int, provider: str | Non
                  "dose_plan": "tone alpha 0/2/4, every control alpha 2",
                  "backend": {"provider_id": getattr(backend, "provider_id", None),
                              "model_id": getattr(backend, "model_id", None),
-                             "is_synthetic": bool(getattr(backend, "is_synthetic", False))},
+                             "is_synthetic": bool(getattr(backend, "is_synthetic", False)),
+                             "sampling_mode": getattr(backend, "sampling_mode", None)},
+                 # Usage counts only the calls this process actually made: a fully cached
+                 # re-run legitimately reports zero, which is why it is labelled per run.
+                 "usage": getattr(backend, "usage", None),
+                 "estimated_cost_usd": getattr(backend, "estimated_cost_usd", None),
+                 "cache_path": str(cache.path),
+                 "cache_hits": cache.hits, "cache_misses": cache.misses,
                  "scores": [item.to_dict() for item in scores]})
     by_dose = distress_by_dose(scores)
     baseline = by_dose.get((BASELINE_DIRECTION_ID, 0.0), {})
@@ -762,11 +843,17 @@ def render_steering_markdown(payload: Mapping[str, Any]) -> str:
     lines = [
         "# Phase 3 - direction-specificity steering",
         "",
-        "Preregistration: `%s`. Model `%s`, layer **L\\* = %d** (mean activation L2 norm %s)."
-        % (payload["preregistration"], payload["model_id"], payload["layer"],
-           _number(payload["layer_norm"], 2)),
+        "Preregistration: `%s`. Model `%s`, layer **L\\* = %d**."
+        % (payload["preregistration"], payload["model_id"], payload["layer"]),
         "",
+        "- %s" % payload.get("clarification", ""),
         "- dose: `%s`" % payload["direction_construction"]["dose"],
+        "- **||d|| = %s**, mean activation L2 norm at L\\* = %s, "
+        "**ratio ||d|| / mean-norm = %s**" % (
+            _number((payload.get("direction_norms") or {}).get("tone_direction_norm"), 2),
+            _number((payload.get("direction_norms") or {}).get("mean_activation_norm"), 2),
+            _number((payload.get("direction_norms") or {}).get(
+                "norm_ratio_d_over_mean_activation"), 4)),
         "- tone direction: %s" % payload["direction_construction"]["tone"],
         "- controls: %s; %s" % (payload["direction_construction"]["random"],
                                 payload["direction_construction"]["unrelated"]),
@@ -878,13 +965,49 @@ def render_report_markdown(localization: Mapping[str, Any],
            _number(correlation["ci95_upper"]), correlation["n_items"]),
     ]
     if steering is not None:
-        tone_rows = [row for row in steering["doses"] if row["direction_id"] == "tone"]
-        for row in sorted(tone_rows, key=lambda item: item["alpha"]):
-            lines.append("- tone steering alpha = %g: mean M1 %s, dM1 %s, non-answer %s%s"
+        norms = steering.get("direction_norms") or {}
+        lines.append("- dose unit (C2): **||d|| = %s** at L\\*, mean activation norm %s, "
+                     "**ratio %s** -- alpha = 4 perturbs the residual stream by about %s of its "
+                     "own norm" % (
+                         _number(norms.get("tone_direction_norm"), 2),
+                         _number(norms.get("mean_activation_norm"), 2),
+                         _number(norms.get("norm_ratio_d_over_mean_activation"), 4),
+                         _number(4.0 * (norms.get("norm_ratio_d_over_mean_activation") or 0.0), 2)))
+        tone_rows = sorted((row for row in steering["doses"] if row["direction_id"] == "tone"),
+                           key=lambda item: item["alpha"])
+        for row in tone_rows:
+            lines.append("- tone steering alpha = %g: mean M1 %s, dM1 %s [%s, %s], non-answer %s%s"
                          % (row["alpha"], _number(row["m1_mean"]),
                             _number(row["m1_delta"]["estimate"]),
+                            _number(row["m1_delta"]["ci95_lower"]),
+                            _number(row["m1_delta"]["ci95_upper"]),
                             _number(row["non_answer_rate"], 2),
                             " (**degenerate dose**)" if row["degenerate"] else ""))
+        controls = [row for row in steering["doses"]
+                    if row["direction_id"] not in ("tone", BASELINE_DIRECTION_ID)
+                    and row["m1_delta"]["estimate"] is not None]
+        if controls:
+            estimates = [row["m1_delta"]["estimate"] for row in controls]
+            lines.append("- every control dose (%d cells) has dM1 in [%s, %s]; %d of %d are "
+                         "positive, so no control moves M1 the way the tone direction does"
+                         % (len(controls), _number(min(estimates)), _number(max(estimates)),
+                            sum(1 for value in estimates if value > 0), len(estimates)))
+        degenerate = [row for row in steering["doses"] if row["degenerate"]]
+        lines.append("- degenerate doses: **%s** (non-answer rate is %s at every dose, so the "
+                     "degenerate-dose rule never fired and nothing was excluded from the "
+                     "monotonicity check)" % (
+                         "none" if not degenerate else ", ".join(
+                             "%s alpha=%g" % (row["direction_id"], row["alpha"])
+                             for row in degenerate),
+                         "0.00" if not any(row["non_answer_rate"] for row in steering["doses"])
+                         else "reported above"))
+        if steering["distress"]["judged"]:
+            scores = {item["score_value"] for item in steering["distress"]["scores"]}
+            lines.append("- judge distress: %d responses scored with the locked rubric; %s"
+                         % (len(steering["distress"]["scores"]),
+                            "every score is %d, so the channel is at its floor and carries no "
+                            "signal at these doses" % scores.pop() if len(scores) == 1
+                            else "scores range over %s" % sorted(scores)))
     else:
         lines.append("- steering: not yet run (`steering.json` absent)")
     lines += [
@@ -895,6 +1018,23 @@ def render_report_markdown(localization: Mapping[str, Any],
     if j1 and steering is not None and not j4 and j5:
         lines.append("J1 holds while J4 fails: **a linearly decodable state that does not causally "
                      "drive the output signature at these doses.**")
+        strongest = max((row for row in steering["doses"]
+                         if row["direction_id"] == "tone"
+                         and row["m1_delta"]["ci95_upper"] is not None),
+                        key=lambda row: row["alpha"], default=None)
+        if strongest is not None and strongest["m1_delta"]["ci95_upper"] < 0.0:
+            lines += [
+                "",
+                "That verdict is decided at the preregistered alpha = 2. Reported without "
+                "reinterpreting it: the tone direction is the only direction whose dM1 is "
+                "negative at every dose, the decrease is monotone in alpha, and at alpha = %g "
+                "the interval does exclude zero (%s [%s, %s]). The preregistration tests alpha "
+                "= 2, so J4 is not supported; the alpha = %g result is an out-of-test "
+                "observation, not a substitute verdict." % (
+                    strongest["alpha"], _number(strongest["m1_delta"]["estimate"]),
+                    _number(strongest["m1_delta"]["ci95_lower"]),
+                    _number(strongest["m1_delta"]["ci95_upper"]), strongest["alpha"]),
+            ]
     elif not j1:
         lines.append("J1 fails: **no clean linear tone state at the pre-response position; the "
                      "signature may live in sampling dynamics** (the roadmap's stated dissociation).")
@@ -928,6 +1068,8 @@ def build_parser() -> argparse.ArgumentParser:
     extract.add_argument("--sets", nargs="*", choices=["discovery", "holdout", "style"], default=None)
     extract.add_argument("--layers", default=None, help="comma-separated layers (default: all)")
     extract.add_argument("--force", action="store_true", help="re-extract an existing .npz")
+    extract.add_argument("--batch-size", type=int, default=8, help="items per forward pass")
+    extract.add_argument("--chunk", type=int, default=None, help="items per Modal call")
     extract.set_defaults(handler=command_extract)
 
     probe = subparsers.add_parser("probe", help="LOO probes, layer choice, one holdout evaluation")
@@ -940,6 +1082,8 @@ def build_parser() -> argparse.ArgumentParser:
     steer.add_argument("--layer", type=int, default=None, help="override L* from localization.json")
     steer.add_argument("--alphas", default=None, help="comma-separated doses (default 0,0.5,1,2,4)")
     steer.add_argument("--dry-run", action="store_true", help="report the missing cells, generate none")
+    steer.add_argument("--batch-size", type=int, default=8, help="items per generate call")
+    steer.add_argument("--chunk", type=int, default=None, help="items per Modal call")
     steer.add_argument("--judge", action="store_true", help="score distress with the locked rubric")
     steer.add_argument("--workers", type=int, default=8)
     steer.add_argument("--provider", default=None)

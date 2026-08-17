@@ -147,8 +147,11 @@ def figure_f6(steering, out_dir: Path):
                               textcoords="offset points", xytext=(-4, 8), fontsize=7,
                               ha="right", color=colour)
     axes.axhline(0.0, color="black", linewidth=0.8)
-    axes.set_xlabel("dose alpha  (activation added at L* = %d: alpha x d/||d|| x mean L2 norm)"
-                    % steering["layer"])
+    norms = steering.get("direction_norms") or {}
+    axes.set_xlabel("dose alpha  (added at L* = %d: alpha x d, ||d|| = %s; controls matched)"
+                    % (steering["layer"],
+                       "%.1f" % norms["tone_direction_norm"]
+                       if norms.get("tone_direction_norm") is not None else "n/a"))
     axes.set_ylabel("M1(alpha) - M1(0), nats  (paired by item)")
     axes.set_title("F6  Direction-specificity steering on neutral holdout items\n"
                    "error bars: 2,000-resample item-clustered 95% CI")

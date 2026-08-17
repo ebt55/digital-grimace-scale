@@ -457,6 +457,19 @@ class VerdictTests(unittest.TestCase):
         self.assertFalse(verdict_j1((LayerAuc(2, 0.95, 80, 20),), 2, 0.9).supported)  # outside 12-30
         self.assertFalse(verdict_j1((LayerAuc(20, 0.70, 80, 20),), 20, 0.9).supported)  # discovery bar
 
+    def test_j1_reads_a_tied_plateau_as_attaining_the_peak_in_the_band(self):
+        """The band clause asks where the peak is attained, not where argmax lands."""
+        plateau = tuple(LayerAuc(layer, 1.0 if 6 <= layer <= 25 else 0.9, 80, 20)
+                        for layer in range(43))
+        verdict = verdict_j1(plateau, 6, 0.95)
+        self.assertTrue(verdict.supported)
+        self.assertTrue(verdict.detail["peak_attained_in_middle_band"])
+        self.assertFalse(verdict.detail["argmax_layer_in_middle_band"])  # argmax is layer 6
+        self.assertEqual(verdict.detail["peak_layer"], 6)
+        # A plateau that ends before the band still fails both readings.
+        early = tuple(LayerAuc(layer, 1.0 if layer <= 5 else 0.9, 80, 20) for layer in range(43))
+        self.assertFalse(verdict_j1(early, 0, 0.95).supported)
+
     def test_j2_needs_above_chance_validity_that_is_weaker_than_tone(self):
         self.assertTrue(verdict_j2(0.90, 0.70, 20).supported)
         self.assertFalse(verdict_j2(0.90, 0.87, 20).supported)  # gap below 0.05
@@ -619,7 +632,7 @@ class ScriptTests(unittest.TestCase):
         self.assertEqual(activation_set.ids, ("b", "a"))
         np.testing.assert_allclose(activation_set.matrix(0), [[3.0], [1.0]])
 
-    def test_build_directions_produces_seven_matched_norm_directions(self):
+    def test_build_directions_uses_the_c2_dose_unit_with_matched_norm_controls(self):
         discovery = planted_activation_set(seed=13)
         style = ActivationSet(
             ("S1|style__verbose", "S1|style__neutral_reference"), discovery.layers,
@@ -628,12 +641,25 @@ class ScriptTests(unittest.TestCase):
             discovery.norms,
             {"task_id": ("S1", "S1"),
              "cell_id": ("style__verbose", "style__neutral_reference")})
-        directions = self.script.build_directions(discovery, style, 2)
+        directions, meta = self.script.build_directions(discovery, style, 2)
         self.assertEqual(sorted(directions), sorted(
             ["tone", "unrelated_style"] + ["random%d" % index for index in range(1, 6)]))
-        lengths = {name: float(np.linalg.norm(vector)) for name, vector in directions.items()}
-        for value in lengths.values():
-            self.assertAlmostEqual(value, discovery.norm(2), places=6)
+        # C2: the tone vector is the raw mean difference, NOT rescaled to the activation norm.
+        expected = mean_difference_direction(
+            discovery, 2, label_name="tone", positive=TONE_POSITIVE, negative=TONE_NEGATIVE,
+            mask=discovery.mask(validity=VALIDITY_NEGATIVE))
+        np.testing.assert_allclose(directions["tone"], expected, rtol=1e-12, atol=1e-12)
+        tone_norm = float(np.linalg.norm(expected))
+        self.assertAlmostEqual(meta["tone_direction_norm"], tone_norm, places=9)
+        self.assertAlmostEqual(meta["mean_activation_norm"], discovery.norm(2), places=9)
+        self.assertAlmostEqual(meta["norm_ratio_d_over_mean_activation"],
+                               tone_norm / discovery.norm(2), places=9)
+        self.assertNotAlmostEqual(tone_norm, discovery.norm(2), places=3)
+        for name, vector in directions.items():
+            if name == "tone":
+                continue
+            self.assertAlmostEqual(float(np.linalg.norm(vector)), tone_norm, places=6,
+                                   msg="%s is not matched to ||d||" % name)
 
     def test_markdown_renderers_run_on_synthetic_payloads(self):
         localization = {
