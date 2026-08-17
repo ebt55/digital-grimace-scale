@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import importlib.util
+import json
 import subprocess
 import sys
 import tempfile
@@ -34,6 +35,18 @@ class PreregistrationTests(unittest.TestCase):
                 else:
                     target.parent.mkdir(parents=True, exist_ok=True)
                     shutil.copy2(source, target)
+
+            # The no-artifacts sweep is the pre-generation firewall, so pin the copy to that
+            # state; the committed manifest has since moved on to generation_status "ready".
+            manifest_path = copied / "manifest.json"
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            manifest["generation_status"] = "not_started"
+            manifest["models"] = {"ids_in_order": manifest["models"]["ids_in_order"],
+                                  "revisions": "unresolved_before_generation",
+                                  "judge_provider": "unresolved_before_generation",
+                                  "judge_model": "unresolved_before_generation"}
+            manifest.pop("preflight", None)
+            manifest_path.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
 
             fake = copied / ".venv" / "lib" / "python3.12" / "tests" / "results" / "foo.csv"
             fake.parent.mkdir(parents=True)

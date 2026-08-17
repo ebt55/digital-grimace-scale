@@ -190,10 +190,21 @@ class PreflightTests(unittest.TestCase):
 
         self.run_preflight("--models", "google/gemma-2-2b-it", "--endpoint", "https://x.modal.run/v1",
                            probe=probe)
-        check = self.manifest()["preflight"]["letter_token_check"]
+        check = self.manifest()["preflight"]["letter_token_checks"]["google/gemma-2-2b-it"]
         self.assertEqual(seen, [("https://x.modal.run/v1", "google/gemma-2-2b-it", "EMPTY")])
         self.assertEqual(check["results"], {"A": True, "B": True, "C": True, "D": False})
         self.assertIs(check["all_single_tokens"], False)
+
+    def test_letter_token_checks_accumulate_across_runs_in_canonical_order(self):
+        for model_id in ("Qwen/Qwen2.5-7B-Instruct", "google/gemma-2-2b-it", "google/gemma-2-9b-it"):
+            self.run_preflight("--models", model_id, "--endpoint", "https://x.modal.run/v1",
+                               "--endpoint-model", model_id,
+                               probe=lambda *_: {"A": True, "B": True, "C": True, "D": True})
+        checks = self.manifest()["preflight"]["letter_token_checks"]
+        # Every checked model survives, ordered by the manifest's frozen model order.
+        self.assertEqual(list(checks), ["google/gemma-2-2b-it", "google/gemma-2-9b-it",
+                                        "Qwen/Qwen2.5-7B-Instruct"])
+        self.assertTrue(all(entry["all_single_tokens"] for entry in checks.values()))
 
     def test_non_access_resolution_failures_abort_without_writing(self) -> None:
         class Broken:

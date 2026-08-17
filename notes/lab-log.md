@@ -72,6 +72,38 @@ $0.000306/s ≈ **$0.20**. Image build was CPU-only. Total spend for this experi
 `stopped`, `modal container list` empty. The `dgs-hf-cache` volume is retained on purpose so the
 next deploy skips the weight download.
 
+## 2026-08-17 — agent A — RETRACTION: every app served gemma-2-2b-it
+
+**What was wrong.** `src/serve_modal.py` read its configuration into module-level globals:
+`MODEL_ID = os.environ.get("DGS_MODEL_ID") or "google/gemma-2-2b-it"`. Modal re-imports the
+module *inside the container*, where the deploying shell's environment does not exist, so every
+container fell through to the default. App names were derived during the deploy pass and so came
+out right — `dgs-vllm-qwen2-5-7b-instruct` — while the container served `google/gemma-2-2b-it`.
+Confirmed in production: `/v1/models` on the qwen-7b and gemma-9b endpoints returned gemma.
+
+**Why the smoke missed it.** The 2026-08-17 smoke only ever deployed the default model, so the
+buggy fallback and the intended value were the same string. A single-model smoke cannot
+distinguish "config propagated" from "config defaulted"; it needed a second model.
+
+**Fix.** Configuration now resolves through `resolve_config(env)`, which prefers `DGS_BAKED_*`
+values over the ambient `DGS_*` ones. The deploy pass bakes its resolved values into the image
+(`image.env(BAKED_ENVIRONMENT)`), so the container pass reads back exactly what was deployed.
+Added a hard startup guard, `_assert_serving_intended_model`: after launching vLLM the container
+polls its own `/v1/models` and raises if the served id is not the intended one, so a
+mis-configured server fails loudly instead of silently mislabelling every record.
+`tests/test_serve_modal.py` imports the module twice under controlled environments — once as the
+deploy pass, once as a container re-import with the deploy environment cleared — and asserts the
+baked value wins; it also keeps the old failure mode as an explicit test.
+
+**Also changed.** `manifest.preflight.letter_token_check` (single) became
+`preflight.letter_token_checks` (per-model dict, accumulating across runs, ordered by the
+manifest's frozen model order), so every generated model carries its own check.
+`verify_preregistration.py`'s no-artifacts sweep is now gated on
+`generation_status == "not_started"` — it is the *pre*-generation firewall, and Phase 0 has
+legitimately started filling `results/`. The `file_sha256`, split, and revision invariants still
+run at every status. `tests/test_preregistration.py` pins its temp copy back to `not_started`
+so it still exercises the sweep (minimal edit, noted here).
+
 ## 2026-08-17 — agent C — analysis glue: extraction, pipeline, G3/G4, scripts, figures
 
 **Built.** `src/extract.py` (raw JSONL -> endpoints -> one flat `metric_rows.csv`/`.jsonl` plus

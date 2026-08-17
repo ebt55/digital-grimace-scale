@@ -129,6 +129,10 @@ def verify(root: Path = ROOT) -> list[str]:
     if m.get("outputs") != {"empirical_outputs":False,"model_outputs":False,"raw_generation_required":False,"result_artifacts_present":False}: e.append("manifest output metadata mismatch")
     judge=(root/"configs/judge_rubric.md").read_text(); contains(judge,["Before the first experiment-model generation","Return JSON only","response_distress","context_hostility_pressure","0 through 10","15 measured","30 total","blinded"],e,"judge rubric")
     pre=(root/"notes/preregistration.md").read_text(); contains(pre,["P1 (75%)","P2 (65%)","P3 (60%)","P4 (60%)","P5 (55%)","P6 (70%)","P7 (Phase 4, 55%)",*(f"{x}" for x in ("G1","G2","G3","G4","G5")),"v2 split","audited no-use","screen-null","control","M1","M2","M3","QC","G2","G5","P6","gate","debunk","Phase 5","not experience, suffering, or moral status"],e,"preregistration")
+    # The no-artifacts sweep is the *pre*-generation firewall. Once revisions are pinned and
+    # generation_status has moved past not_started, results/ is expected to fill up; the
+    # firewall's remaining job is the file_sha256 + split + revision invariants checked above.
+    if status != "not_started": return e
     artifacts=[]
     pruned_dirs={".git", ".codex", ".venv", ".tmp", "__pycache__"}
     for current, dirs, names in os.walk(root):

@@ -179,6 +179,12 @@ def resolve_revisions(model_ids: Sequence[str], resolver: HubResolver) -> tuple[
     return resolved, unavailable
 
 
+def order_by_model(entries: Mapping[str, Any], canonical: Sequence[str]) -> dict[str, Any]:
+    """Emit keys in the manifest's frozen model order so reruns produce identical bytes."""
+    known = [key for key in canonical if key in entries]
+    return {key: entries[key] for key in known + sorted(set(entries) - set(canonical))}
+
+
 def apply_preflight(manifest: dict[str, Any], *, resolved: Mapping[str, str],
                     unavailable: Mapping[str, str], judge_provider: str | None,
                     judge_model: str | None, judge_revision: str | None,
@@ -191,10 +197,8 @@ def apply_preflight(manifest: dict[str, Any], *, resolved: Mapping[str, str],
 
     canonical = list(models.get("ids_in_order") or ())
 
-    def in_canonical_order(entries: Mapping[str, str]) -> dict[str, str]:
-        """Emit keys in the manifest's frozen model order so reruns produce identical bytes."""
-        known = [key for key in canonical if key in entries]
-        return {key: entries[key] for key in known + sorted(set(entries) - set(canonical))}
+    def in_canonical_order(entries):
+        return order_by_model(entries, canonical)
 
     revisions = models.get("revisions")
     revisions = dict(revisions) if isinstance(revisions, Mapping) else {}
@@ -222,8 +226,17 @@ def apply_preflight(manifest: dict[str, Any], *, resolved: Mapping[str, str],
     if letter_check is not None:
         preflight = updated.get("preflight")
         preflight = dict(preflight) if isinstance(preflight, Mapping) else {}
-        preflight["letter_token_check"] = dict(letter_check)
+        # Accumulate per model: one endpoint is checked per run, but the manifest has to end
+        # up carrying the check for every model that will be generated from.
+        checks = preflight.get("letter_token_checks")
+        checks = dict(checks) if isinstance(checks, Mapping) else {}
+        legacy = preflight.get("letter_token_check")  # single-endpoint layout, pre-2026-08-17
+        if isinstance(legacy, Mapping) and legacy.get("model") and legacy["model"] not in checks:
+            checks[legacy["model"]] = dict(legacy)
+        checks[letter_check["model"]] = dict(letter_check)
+        preflight["letter_token_checks"] = in_canonical_order(checks)
         preflight["checked_at"] = now_iso()
+        preflight.pop("letter_token_check", None)  # superseded by the per-model mapping
         updated["preflight"] = preflight
     return updated
 
@@ -247,11 +260,17 @@ def summarize(manifest: Mapping[str, Any]) -> str:
             lines.append("%-*s  %-40s  %s" % (width, model_id, UNRESOLVED, "pending"))
     lines.append("generation_status: %s" % manifest.get("generation_status"))
     lines.append("judge: %s / %s" % (models.get("judge_provider"), models.get("judge_model")))
-    check = (manifest.get("preflight") or {}).get("letter_token_check")
-    if isinstance(check, Mapping):
-        results = check.get("results") or {}
-        lines.append("letter_token_check (%s): %s" % (check.get("model"),
-                     ", ".join("%s=%s" % (key, results.get(key)) for key in "ABCD")))
+    checks = (manifest.get("preflight") or {}).get("letter_token_checks")
+    if isinstance(checks, Mapping) and checks:
+        lines.append("letter_token_checks:")
+        for model_id, check in checks.items():
+            results = (check or {}).get("results") or {}
+            lines.append("  %-*s  %s" % (width, model_id,
+                         ", ".join("%s=%s" % (key, results.get(key)) for key in "ABCD")))
+        unchecked = [model_id for model_id in ordered
+                     if model_id in revisions and model_id not in checks]
+        if unchecked:
+            lines.append("  (no letter check yet: %s)" % ", ".join(unchecked))
     return "\n".join(lines)
 
 

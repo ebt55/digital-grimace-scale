@@ -50,6 +50,7 @@ from __future__ import annotations
 import os
 import re
 import subprocess
+from typing import Mapping
 
 import modal
 
@@ -59,10 +60,40 @@ HF_CACHE = "/root/.cache/huggingface"
 MAX_LOGPROBS = 20
 MAX_MODEL_LEN = 8192
 
-MODEL_ID = (os.environ.get("DGS_MODEL_ID") or "google/gemma-2-2b-it").strip()
-REVISION = (os.environ.get("DGS_REVISION") or "").strip() or None
-VLLM_VERSION = (os.environ.get("DGS_VLLM_VERSION") or "0.26.0").strip()
-ATTENTION_BACKEND = (os.environ.get("DGS_ATTENTION_BACKEND") or "").strip() or None
+DEFAULT_MODEL_ID = "google/gemma-2-2b-it"
+DEFAULT_VLLM_VERSION = "0.26.0"
+# Names the deploy pass bakes into the image so the container pass can read them back.
+BAKED_PREFIX = "DGS_BAKED_"
+
+
+def resolve_config(env: Mapping[str, str]) -> dict[str, str]:
+    """Resolve the deployment's model configuration, preferring baked values over ambient ones.
+
+    Modal re-imports this module *inside* the container, where the deploying shell's
+    environment does not exist -- so a plain `os.environ.get("DGS_MODEL_ID")` silently falls
+    back to the default and every app serves the same model regardless of its name. The deploy
+    pass therefore bakes its resolved values into the image as DGS_BAKED_* variables, and the
+    container pass reads those instead of the ambient DGS_* names.
+    """
+    baked = (env.get("%sMODEL_ID" % BAKED_PREFIX) or "").strip()
+    if baked:
+        return {
+            "model_id": baked,
+            "revision": (env.get("%sREVISION" % BAKED_PREFIX) or "").strip(),
+            "gpu": (env.get("%sGPU" % BAKED_PREFIX) or "").strip(),
+            "vllm_version": (env.get("%sVLLM_VERSION" % BAKED_PREFIX) or DEFAULT_VLLM_VERSION).strip(),
+            "attention_backend": (env.get("%sATTENTION_BACKEND" % BAKED_PREFIX) or "").strip(),
+            "source": "baked",
+        }
+    model_id = (env.get("DGS_MODEL_ID") or DEFAULT_MODEL_ID).strip()
+    return {
+        "model_id": model_id,
+        "revision": (env.get("DGS_REVISION") or "").strip(),
+        "gpu": (env.get("DGS_GPU") or "").strip() or default_gpu(model_id),
+        "vllm_version": (env.get("DGS_VLLM_VERSION") or DEFAULT_VLLM_VERSION).strip(),
+        "attention_backend": (env.get("DGS_ATTENTION_BACKEND") or "").strip(),
+        "source": "environment",
+    }
 
 
 def app_name(model_id: str) -> str:
@@ -86,8 +117,22 @@ def default_gpu(model_id: str) -> str:
     return "A100-40GB"
 
 
-GPU = (os.environ.get("DGS_GPU") or "").strip() or default_gpu(MODEL_ID)
+CONFIG = resolve_config(os.environ)
+MODEL_ID = CONFIG["model_id"]
+REVISION = CONFIG["revision"] or None
+GPU = CONFIG["gpu"] or default_gpu(MODEL_ID)
+VLLM_VERSION = CONFIG["vllm_version"]
+ATTENTION_BACKEND = CONFIG["attention_backend"] or None
 APP_NAME = app_name(MODEL_ID)
+
+# Carried into the image so the container-side re-import resolves to these exact values.
+BAKED_ENVIRONMENT = {
+    "%sMODEL_ID" % BAKED_PREFIX: MODEL_ID,
+    "%sREVISION" % BAKED_PREFIX: REVISION or "",
+    "%sGPU" % BAKED_PREFIX: GPU,
+    "%sVLLM_VERSION" % BAKED_PREFIX: VLLM_VERSION,
+    "%sATTENTION_BACKEND" % BAKED_PREFIX: ATTENTION_BACKEND or "",
+}
 
 
 def _hugging_face_token() -> str:
@@ -130,6 +175,7 @@ image_environment = {
     "HF_HUB_CACHE": "%s/hub" % HF_CACHE,
     "HF_XET_HIGH_PERFORMANCE": "1",
     "VLLM_LOGGING_LEVEL": "INFO",
+    **BAKED_ENVIRONMENT,
 }
 if ATTENTION_BACKEND:
     # gemma-2 needs an attention backend with logit softcapping; recent vLLM picks one itself.
@@ -162,8 +208,44 @@ app = modal.App(APP_NAME)
 @modal.web_server(port=PORT, startup_timeout=15 * MINUTES)
 def serve() -> None:
     command = vllm_command()
+    print("serving model_id=%r revision=%r gpu=%r (config source: %s)"
+          % (MODEL_ID, REVISION, GPU, CONFIG["source"]))
     print("launching:", " ".join(command))
-    subprocess.Popen(command)
+    process = subprocess.Popen(command)
+    _assert_serving_intended_model(process)
+
+
+def _assert_serving_intended_model(process: "subprocess.Popen[bytes]",
+                                   timeout_s: float = 13 * MINUTES) -> None:
+    """Fail the container loudly if it came up serving a model other than the intended one.
+
+    A silently mis-configured server is the worst possible outcome here: the app name, the
+    endpoint URL and the recorded `model_id` would all say one thing while the weights say
+    another, and every downstream record would be mislabelled.
+    """
+    import json
+    import time
+    import urllib.error
+    import urllib.request
+
+    deadline = time.time() + timeout_s
+    url = "http://127.0.0.1:%d/v1/models" % PORT
+    while True:
+        if process.poll() is not None:
+            raise RuntimeError("vllm serve exited with code %s before becoming ready" % process.returncode)
+        try:
+            with urllib.request.urlopen(url, timeout=30) as response:
+                served = [item.get("id") for item in json.loads(response.read()).get("data", [])]
+            break
+        except (urllib.error.URLError, TimeoutError, OSError):
+            if time.time() >= deadline:
+                raise RuntimeError("vllm did not answer /v1/models within %ds" % timeout_s)
+            time.sleep(5)
+    if MODEL_ID not in served:
+        raise RuntimeError(
+            "served model mismatch: this container was deployed for %r but /v1/models reports %r. "
+            "The baked configuration did not reach the container." % (MODEL_ID, served))
+    print("startup check OK: /v1/models reports %r" % served)
 
 
 @app.local_entrypoint()
