@@ -35,6 +35,11 @@ split. Bottom line for the title question: the frozen "grimace" instrument as pr
 decoder/format artifact detector and failed; the answer-margin channel, tested confirmatorily, carries a
 condition-selective, partly reversible, style-resistant, cross-family signal — with a large tone
 component and treatment-dependent non-answers that any future instrument must model rather than drop.
+Two extensions sharpen it: a **third family (Llama-3.1-8B, §6c)** replicates the margin signature on
+both splits but shows *no* distress language — the mechanical channel is cross-family, the report
+channel is Gemma-specific; and **Phase 3 (§6d)** finds the tone wording perfectly linearly decodable
+pre-response, yet a one-layer tone direction induces only ~0.5 nats of margin loss with no distress or
+non-answers — a decodable state that does not, at these doses and layer, carry the behavioural signature.
 
 ## 1. What was built and run (2026-08-17)
 
@@ -120,6 +125,7 @@ bogus failure). Figures: `results/figures/F1_*`, `F2_*`, `F4_*`, `FX_exploratory
 | P4 Gemma > Qwen family boundary | 60% | supported descriptively at screen strength and on discovery, **not replicated on holdout** for M1 (Qwen-3B shows the same effects — transfer); replicated for the semantic channel only |
 | P5 style mimics fail to reproduce on ≥2 primaries | 55% | untestable under the gate; descriptively M2 is style-sensitive (against P5 for M2) |
 | P6 refusal-pressure LOW instability | 70% | not run (R5 remains held out) |
+| Phase 3 J1–J6 (prereg v4) | 70/55/50/55/60/45% | J1, J2, J5 supported; J3, J4 (by 1e-7 at α=2; significant at α=4), J6 not — "decodable state that does not drive the signature at these doses" (§6d) |
 | P7 (Phase 4) | 55% | not reached |
 
 ## 6. The iteration loop — locked holdout, analysed once (`notes/preregistration_v3.md`, `results/summaries/phase2/confirm.md`)
@@ -213,6 +219,38 @@ lives in the report channel, not the mechanical one. Housekeeping note: rerunnin
 with Llama included (`results/summaries/phase0_with_llama_extension/`) gives Llama the highest
 screen S (4.1); had the 3.1 licence been visible at screen time it would have been the primary. The
 confirmatory chain (v3) is unaffected — it was frozen on gemma-9b/Qwen-3B before Llama existed here.
+
+## 6d. Phase 3 (j-space): localization and direction-specificity steering — `results/summaries/phase3/phase3.md`
+
+Preregistered as v4 (J1–J6, `notes/preregistration_v4_phase3.md`, committed before any activation was
+extracted; clarification C2 fixed the dose unit before any tone steering). Entry condition: the
+original gate failed but the re-preregistered loop passed on the answer-margin channel — stated as
+such. Method: residual-stream activation at the final prompt token of the measured-trial position for
+the 80 discovery + 80 holdout factorial transcripts of gemma-2-9b-it (transformers hooks on Modal);
+per-layer L2 logistic probes with leave-one-task-out; discovery-only layer choice; holdout evaluated
+once; tone direction d = mean(hostile) − mean(neutral) at L*, added at α·d (α ∈ {0.5,1,2,4}) during
+greedy generation on the 20 neutral holdout tasks, with 5 random matched-norm directions and one
+unrelated (verbose − neutral) direction as controls; readouts M1, non-answer rate, judge distress.
+
+| ID | prediction | verdict | numbers |
+|---|---|:---:|---|
+| J1 | tone linearly decodable pre-response (AUC ≥ .80 discovery, ≥ .75 holdout) | supported | AUC 1.000 discovery LOO and holdout (ties from layer 6 to 25; frozen tie-break → L* = 6) |
+| J2 | validity decodable but weaker than tone (gap ≥ .05) | supported | validity AUC 0.878 at L* |
+| J3 | tone-probe score tracks M1 within cell (ρ ≤ −.2, CI excl. 0) | not supported | ρ = −0.16 [−0.43, +0.15], 20 items |
+| J4 | tone-direction steering lowers M1 at α = 2, monotone | not supported (by 1e-7) | ΔM1(α=2) = −0.19 [−0.51, +0.0000001]; monotone; α = 4: −0.49 [−0.87, −0.18] |
+| J5 | no random / unrelated direction lowers M1 | supported | 24 control cells, ΔM1 ∈ [−0.03, +1.20], 21/24 positive |
+| J6 | tone steering raises non-answers or distress | not supported | non-answer 0.00 at every dose; all 180 judge scores 0 |
+
+Reading (the preregistration's own decision rule): **a linearly decodable state that does not causally
+drive the output signature at these doses.** Perfect decodability of *tone wording* from the context
+is expected and shallow; the substantive finding is that a single-layer difference-of-means direction
+induces at most ~0.5 nats of margin loss (α = 4, ~16% of the residual norm), specific to that direction,
+with no distress language and no non-answers — an order of magnitude short of what actual hostile
+wording produces (8–16 nats, +3.2/10 distress, +60 pp non-answers). Whatever carries the behavioural
+signature is not well captured by one early-layer linear tone direction at the pre-response position.
+‖d‖ = 3.12 vs mean activation norm 78.6 (ratio 0.040). Exploratory layer sweep (layers 20, 30): *[filled
+below when the add-on run completes]*. Cost ≈ $1 GPU + $0.27 judge. Figures F5 (AUC by layer), F6
+(dose–response).
 
 ## 7. Limitations and interpretation ceiling
 
