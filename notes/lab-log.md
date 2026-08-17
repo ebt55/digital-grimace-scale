@@ -617,3 +617,59 @@ empty at close-out.
 **Still open (human tasks):** blinded M3 audit (moot: parser fires no events) and the 15-per-model judge
 audit (`scripts/run_judge.py audit-sample`); refusal-pressure R5 battery (P6) not run; Phases 3–5 not
 started.
+
+## 2026-08-17 — agent J2 — Phase 3 analysis code built and tested offline (no GPU, no holdout read)
+
+Built the Phase-3 analysis half of `notes/preregistration_v4_phase3.md`, against agent J1's
+`jspace_client` contract, which is imported lazily so every offline path runs without a deployment.
+**Nothing has been run against Modal and no Phase-3 result exists yet**: this entry records the code
+and the decisions frozen in it, not findings.
+
+New files (nothing existing was modified): `src/probe.py` (probes, layer choice, correlation,
+directions, readouts, J1–J6 verdicts), `src/steer_readouts.py` (judge adapter), `scripts/run_phase3.py`
+(`extract` / `probe` / `steer` / `report`), `scripts/make_phase3_figures.py` (F5, F6),
+`tests/test_probe.py` (41 tests, all synthetic and mocked).
+
+**Item-count correction, recorded because it contradicts the preregistration's own wording.** v4 says
+"8 cells × 20 tasks per split". A task's difficulty fixes half the factorial, so each of a split's 20
+tasks appears in exactly **4** cells: **80** measured-position transcripts per split, not 160. Counted
+from the raw files: phase1 80 and phase2 80 measured greedy sample-0 factorial records. `extract`
+asserts 80/80/10 (the style set is 5 tasks × {verbose, neutral_reference}) and the number is printed
+in `localization.md`. Nothing about the design changes; only the arithmetic in the prose was wrong.
+
+Decisions frozen in the code, each stated so it can be audited rather than inferred:
+
+- **LOO pooling.** Out-of-fold decision scores from all 20 task-folds are pooled and one AUC is
+  computed, rather than averaging 20 fold AUCs (a fold holds 4 rows, so per-fold AUCs are degenerate).
+- **Layer choice.** `argmax` discovery tone AUC, ties to the lower layer, computed from discovery
+  alone. `probe` refuses to overwrite an existing `localization.json` without `--force`, because the
+  holdout evaluation at L\* happens once.
+- **J2's split.** v4 does not name one. The headline J2 verdict uses the **holdout** AUCs at L\*
+  (matching J1's confirmatory clause) and "decodable" is read as AUC > 0.5; the discovery LOO figures
+  at L\* are reported beside it.
+- **Correlation estimator.** Probe score and M1 are demeaned **within cell** and the residuals pooled;
+  the 2,000-resample item-clustered bootstrap re-demeans inside each resample, so the interval covers
+  the estimator that produced the point estimate rather than a frozen residualisation.
+- **Dose vector.** The caller passes `d/‖d‖ · norm_L*` and the server multiplies by α — the reading of
+  J1's contract under which its `alphas` list is meaningful. α = 0 is generated **once**, as the shared
+  baseline for every direction, and every readout is paired against it by item.
+- **Degenerate dose.** Strictly `> 50%` of items with no parseable answer, applied by rule; excluded
+  doses are named in the monotonicity note rather than dropped silently.
+- **Judge route.** `scripts/run_judge.py` reads validated `RawRecord` JSONL only, and a steered
+  generation has no frozen seed or `response_id` and a re-rendered prompt, so forcing one into that
+  schema would fabricate provenance. `src/steer_readouts.py` therefore calls `judge_client.score_text`
+  directly with the **locked** rubric (`configs/judge_rubric.md`, verified against
+  `manifest.file_sha256`), same temperature-0 contract and cache, and labels its output
+  `dgs-steering-judge-v1` so it can never be confused with the confirmatory judge channel. No judge
+  file was modified. J6 dose plan: tone at α ∈ {0, 2, 4}, every control at α = 2.
+- **sklearn 1.8+.** `penalty="l2"` is deprecated; the default (`l1_ratio = 0`) is pure L2 and gives
+  bit-identical coefficients, so the default is relied on and the equivalence is asserted in tests.
+
+Offline verification: 41 unit tests pass (planted-layer LOO AUC 1.00 vs < 0.80 elsewhere, tie-breaking,
+holdout transfer, cell-demeaned Spearman recovering −1.0 through a 100× cell offset, direction scaling
+and matched norms, the degenerate-dose rule, readout aggregation and each J-verdict's failure modes),
+plus a scratch end-to-end run of `extract → probe → steer → report → figures` on the **real** item sets
+with a mocked client, which exercised the raw-file filters (80/80/10), the M1 join against
+`results/summaries/phase2/metric_rows.csv` (73 of 80 holdout endpoints available-case), resumption of
+`steering_outputs.jsonl`, and both figures. Outputs went to a scratch directory; no Phase-3 summary was
+written into the repository.

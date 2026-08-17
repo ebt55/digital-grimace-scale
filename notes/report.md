@@ -182,8 +182,37 @@ confidence 70%: consistent, not formally testable.
 
 ## 6c. Third family (exploratory extension) — `results/summaries/extension/`
 
-*[Llama-3.1-8B-Instruct: screen, discovery factorial and holdout factorial + judge; filled in when the
-runs complete. Not named in prereg v3, so exploratory by construction.]*
+`meta-llama/Llama-3.1-8B-Instruct` (the roadmap's optional third model; your HF licence covers 3.1,
+not 3.2) was added after the confirmatory run via a non-locked extension mechanism
+(`configs/models_extension.json`; the locked `models.json` is unchanged) and run through the screen,
+the discovery factorial and the holdout factorial with the judge on greedy responses. It is not named
+in prereg v3, so nothing here is confirmatory; the same contrast code (`src/confirm.py`) is imported
+unchanged with a distinct bootstrap key.
+
+| ID | contrast | primary holdout | Llama discovery | Llama holdout | consistent |
+|---|---|---|---|---|:---:|
+| H1 | M1 false-failure − accurate (easy \| neutral) | −2.90 [−3.97, −1.84] | −6.52 [−8.97, −4.28] | **−8.28 [−12.7, −4.96]** | yes |
+| H2a | M1 hostile − neutral (easy \| accurate) | −16.1 [−24.2, −5.7] | −2.71 [−6.25, −0.58] | **−1.06 [−1.70, −0.48]** | yes |
+| H2b | M1 hostile − neutral (hard \| accurate) | −7.87 [−15.8, −1.90] | −0.71 [−1.29, −0.04] | **−0.93 [−1.88, −0.00]** | yes |
+| H3a | M1 single bogus "Incorrect": onset − measured (easy \| neutral) | −3.22 [−4.16, −2.29] | −1.80 [−2.23, −1.36] | **−1.84 [−2.71, −0.91]** | yes |
+| H3b | same, hostile wording | −0.33 (n.s.) | −1.47 [−2.62, −0.33] | **−5.19 [−9.79, −1.46]** | yes |
+| H4a | M1 washout − onset (easy \| neutral) | +1.84 [+1.08, +2.71] | +0.93 [+0.33, +1.60] | +0.03 (n.s.) | no |
+| H4b | same, hostile | +0.31 (n.s.) | +0.43 (n.s.) | **+2.58 [+0.33, +5.70]** | yes |
+| H5 | M1 recovery − measured after 3 rounds (hard \| neutral) | −1.22 (no recovery) | −3.59 (wide) | −0.67 (wide, n=3) | — |
+| H6a | distress, hostile onset − neutral onset | +3.20 [+2.10, +4.30] | +0.11 | +0.15 [0.00, 0.40] | **no** |
+| H8 | M2 hostile − neutral (easy \| accurate) | +0.28 [+0.17, +0.40] | 0.00 | **+0.12 [+0.03, +0.20]** | yes |
+| H9 | non-answer, hostile onset − neutral onset (hard) | +0.60 [+0.30, +0.90] | +0.11 (n.s.) | +0.20 (n.s.) | no |
+
+Reading: the **answer-margin signature is cross-family** — Llama shows the false-failure drop (larger
+than Gemma's), the tone drop (smaller), the single-bogus-verdict drop, and M2's tone sensitivity, on
+items it never saw during development. What Llama does *not* show is the **semantic channel**: hostile
+bogus failure elicits essentially no distress language (0.1–0.15/10 vs Gemma 3–5) and no non-answer
+increase. Across three families the picture is: what the logits do (margin drop) generalises; what the
+model *says* about it (distress language, refusing to commit) is Gemma-specific — Soligo's family split
+lives in the report channel, not the mechanical one. Housekeeping note: rerunning the Phase-0 screen
+with Llama included (`results/summaries/phase0_with_llama_extension/`) gives Llama the highest
+screen S (4.1); had the 3.1 licence been visible at screen time it would have been the primary. The
+confirmatory chain (v3) is unaffected — it was frozen on gemma-9b/Qwen-3B before Llama existed here.
 
 ## 7. Limitations and interpretation ceiling
 
