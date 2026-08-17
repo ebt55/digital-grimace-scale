@@ -1,0 +1,39 @@
+﻿run_phase3: layer 20: ||d|| = 31.17, mean activation norm 250.16, ratio 0.1246
+run_phase3: layer 30: ||d|| = 157.77, mean activation norm 444.07, ratio 0.3553
+  steering chunk 1/1 (20 items x 1 alphas) 191.2s, 2822 tokens (14.8 tok/s)
+  steering: 20 generations in 191.2s
+run_phase3: tone_L20 alpha=1 -> 20 generation(s)
+  steering chunk 1/1 (20 items x 1 alphas) 70.2s, 3264 tokens (46.5 tok/s)
+  steering: 20 generations in 70.2s
+run_phase3: tone_L20 alpha=2 -> 20 generation(s)
+  steering chunk 1/1 (20 items x 1 alphas) 65.0s, 3564 tokens (54.8 tok/s)
+  steering: 20 generations in 65.0s
+run_phase3: tone_L20 alpha=4 -> 20 generation(s)
+  steering chunk 1/1 (20 items x 1 alphas) 56.0s, 2481 tokens (44.3 tok/s)
+  steering: 20 generations in 56.0s
+run_phase3: tone_L30 alpha=1 -> 20 generation(s)
+  steering chunk 1/1 (20 items x 1 alphas) 55.6s, 3305 tokens (59.5 tok/s)
+  steering: 20 generations in 55.6s
+run_phase3: tone_L30 alpha=2 -> 20 generation(s)
+  steering chunk 1/1 (20 items x 1 alphas) 151.9s, 10240 tokens (67.4 tok/s)
+  steering: 20 generations in 151.9s
+run_phase3: tone_L30 alpha=4 -> 20 generation(s)
+  steering chunk 1/1 (20 items x 1 alphas) 59.7s, 2563 tokens (43.0 tok/s)
+  steering: 20 generations in 59.7s
+run_phase3: random_L20_1 alpha=4 -> 20 generation(s)
+  steering chunk 1/1 (20 items x 1 alphas) 64.6s, 2653 tokens (41.1 tok/s)
+  steering: 20 generations in 64.6s
+run_phase3: random_L20_2 alpha=4 -> 20 generation(s)
+  steering chunk 1/1 (20 items x 1 alphas) 144.8s, 10240 tokens (70.7 tok/s)
+  steering: 20 generations in 144.8s
+run_phase3: random_L30_1 alpha=4 -> 20 generation(s)
+  steering chunk 1/1 (20 items x 1 alphas) 161.9s, 10240 tokens (63.3 tok/s)
+  steering: 20 generations in 161.9s
+run_phase3: random_L30_2 alpha=4 -> 20 generation(s)
+run_phase3: exploratory sweep -> C:\Users\ebin\claude-ground\Digital Grimace Scale\.claude\worktrees\digital-grimace-scale-experiment-f825fc\results\summaries\phase3\steering_layer_sweep_exploratory.json
+  tone_L20 alpha=1: dM1 0.380 [-0.366, 1.355], non-answer 0.00
+  tone_L20 alpha=2: dM1 0.711 [-0.447, 2.574], non-answer 0.05
+  tone_L20 alpha=4: dM1 -1.634 [-3.783, 0.072], non-answer 0.00
+  tone_L30 alpha=1: dM1 -0.531 [-4.161, 3.214], non-answer 0.00
+  tone_L30 alpha=2: dM1 -2.481 [-4.477, 0.384], non-answer 0.05
+  tone_L30 alpha=4: dM1 n/a [n/a, n/a], non-answer 1.00
