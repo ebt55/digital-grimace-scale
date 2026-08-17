@@ -235,9 +235,26 @@ def record_from_dict(value: Mapping[str, Any], protocol: Protocol | None = None)
     if dict(settings) != dict(expected_settings):
         raise RecordError("generation settings do not match frozen configuration")
     _require_strings(provenance, ("manifest_semantic_hash", "manifest_reference"))
-    if provenance["manifest_semantic_hash"] != manifest_semantic_hash(protocol) or provenance["manifest_reference"] != "manifest.json":
+    # Shape-only on load: binding a stored record to the manifest bytes currently on disk would
+    # invalidate every archived record the moment the manifest is legitimately updated (for
+    # example when model revisions are pinned). Use verify_manifest_provenance for that check.
+    if not re.fullmatch(r"[0-9a-fA-F]{64}", provenance["manifest_semantic_hash"]) or provenance["manifest_reference"] != "manifest.json":
         raise RecordError("invalid manifest provenance")
     return RawRecord(value["schema_version"], value["run_id"], value["run_kind"], value["phase"], value["model_id"], value["immutable_revision"], value["backend"], value["task_id"], value.get("split"), value.get("difficulty"), value.get("domain"), value["cell_id"], validity, tone, value["trajectory_kind"], sample_index, value["turn_label"], seed, value["response_id"], value["prompt_sha256"], tuple(dict(message) for message in messages), value["response_text"], tokens, parsed.valid, parsed.letter, expected_correct, value.get("feedback_history_false_negative"), dict(settings), dict(provenance))
+
+
+def verify_manifest_provenance(record: RawRecord | Mapping[str, Any], protocol: Protocol | None = None) -> bool:
+    """Check a record's recorded provenance against the manifest bytes currently on disk.
+
+    Kept separate from `record_from_dict` so that loading archived records never depends on
+    the manifest's mutable state; audits call this explicitly when they need the binding.
+    """
+    protocol = protocol or load_protocol()
+    provenance = record.provenance if isinstance(record, RawRecord) else record.get("provenance")
+    if not isinstance(provenance, Mapping):
+        raise RecordError("record provenance must be an object")
+    return (provenance.get("manifest_semantic_hash") == manifest_semantic_hash(protocol)
+            and provenance.get("manifest_reference") == "manifest.json")
 
 
 def compact_json(record: RawRecord | Mapping[str, Any], protocol: Protocol | None = None) -> str:

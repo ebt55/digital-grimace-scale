@@ -2,6 +2,7 @@
 from __future__ import annotations
 import hashlib, json
 import os
+import re
 from collections import Counter
 from pathlib import Path
 from typing import Any
@@ -13,6 +14,30 @@ MODELS = ["google/gemma-2-2b-it", "google/gemma-2-9b-it", "Qwen/Qwen2.5-3B-Instr
 FACTORS = ["easy__accurate__neutral", "easy__accurate__hostile", "easy__malfunctioning_always_fail__neutral", "easy__malfunctioning_always_fail__hostile", "hard__accurate__neutral", "hard__accurate__hostile", "hard__malfunctioning_always_fail__neutral", "hard__malfunctioning_always_fail__hostile"]
 NONFACTORS = ["style__neutral_reference", "style__enthusiastic", "style__cautious_hedging", "style__verbose", "style__reluctantly_complying_refusal_styled", "r5__pressure", "r5__neutral_control"]
 FILE_MAP = {"roadmap":"digital-grimace-scale-full-roadmap-build-guide.md", "matched_bank":"stimuli/matched_pairs.jsonl", "r5_bank":"stimuli/refusal_pressure.jsonl", "conditions":"configs/conditions.json", "models":"configs/models.json", "judge_rubric":"configs/judge_rubric.md", "preregistration":"notes/preregistration.md"}
+STATUSES = ("not_started", "ready", "in_progress", "complete")
+UNRESOLVED = "unresolved_before_generation"
+def check_model_metadata(m: dict[str, Any], status: str, e: list[str]) -> None:
+    """Before generation the sentinels must stand; afterwards every pinned revision must be a 40-hex sha."""
+    models=m.get("models",{})
+    if models.get("ids_in_order") != MODELS: e.append("manifest model order mismatch")
+    if status=="not_started":
+        if models.get("revisions") != UNRESOLVED or models.get("judge_provider") != UNRESOLVED or models.get("judge_model") != UNRESOLVED: e.append("manifest model/judge metadata mismatch")
+        return
+    revisions=models.get("revisions")
+    if not isinstance(revisions,dict) or not revisions: e.append("resolved runs require a models.revisions object"); return
+    for key,value in revisions.items():
+        if key not in MODELS: e.append(f"unknown model in revisions: {key}")
+        if not isinstance(value,str) or not re.fullmatch(r"[0-9a-fA-F]{40}", value): e.append(f"revision for {key} must be a 40-hex sha")
+    unavailable=models.get("unavailable") or {}
+    if not isinstance(unavailable,dict): e.append("models.unavailable must be an object")
+    else:
+        for key in unavailable:
+            if key in revisions: e.append(f"{key} is both pinned and unavailable")
+    missing=[x for x in MODELS if x not in revisions and x not in unavailable]
+    if missing: e.append("models neither pinned nor marked unavailable: "+", ".join(missing))
+    for field in ("judge_provider","judge_model"):
+        value=models.get(field)
+        if not isinstance(value,str) or not value.strip() or value==UNRESOLVED: e.append(f"resolved runs require models.{field}")
 def cj(v: Any) -> str: return json.dumps(v, ensure_ascii=True, separators=(",", ":"), sort_keys=True)
 def digest(b: bytes) -> str: return hashlib.sha256(b).hexdigest()
 def wo(r: dict[str, Any], *fields: str) -> dict[str, Any]: return {k:v for k,v in r.items() if k not in fields}
@@ -45,7 +70,8 @@ def verify(root: Path = ROOT) -> list[str]:
     try: m=json.loads((root/"manifest.json").read_text(encoding="utf-8"))
     except Exception as x: return [f"cannot parse manifest: {x}"]
     if m.get("schema_version")!="dgs-preregistration-v2": e.append("manifest schema must be dgs-preregistration-v2")
-    if m.get("generation_status")!="not_started": e.append("generation_status must be not_started")
+    status=m.get("generation_status")
+    if status not in STATUSES: e.append("generation_status must be one of "+", ".join(STATUSES))
     if m.get("preregistration_commit")!="pending_first_commit": e.append("preregistration_commit must remain pending_first_commit")
     if m.get("outputs",{}).get("empirical_outputs") is not False or m.get("outputs",{}).get("model_outputs") is not False: e.append("manifest must state no empirical/model outputs")
     files=m.get("files",{}); fh=m.get("file_sha256",{})
@@ -99,7 +125,7 @@ def verify(root: Path = ROOT) -> list[str]:
     if conditions.get("factorial",{}).get("factorial_cell_ids_in_fixed_order")!=FACTORS or conditions.get("factorial",{}).get("non_factorial_cell_ids_in_fixed_order")!=NONFACTORS: e.append("conditions cell IDs/order mismatch")
     contains((root/"configs/conditions.json").read_text(),["feedback_response_4","feedback_response_5","standard_factorial_feedback_round_count\": 3","phase_0_null_escalation_feedback_round_count\": 5","DGS-005","DGS-010","DGS-022","DGS-026","DGS-037","m2_invalidity","all-ten-valid","DGS-AC1-SEED-v1","DGS-AC1-RESPONSE-v1","Answer: ","history_has_false_negative","history_has_no_false_negative"],e,"conditions")
     if models.get("phase_0_screen_order")!=MODELS or [x.get("id") for x in models.get("models",[]) ]!=MODELS or models.get("revision_policy",{}).get("status")!="resolve_before_generation": e.append("models frozen order/revision policy mismatch")
-    if m.get("models",{}).get("ids_in_order") != MODELS or m.get("models",{}).get("revisions") != "unresolved_before_generation" or m.get("models",{}).get("judge_provider") != "unresolved_before_generation" or m.get("models",{}).get("judge_model") != "unresolved_before_generation": e.append("manifest model/judge metadata mismatch")
+    check_model_metadata(m, status if status in STATUSES else "not_started", e)
     if m.get("outputs") != {"empirical_outputs":False,"model_outputs":False,"raw_generation_required":False,"result_artifacts_present":False}: e.append("manifest output metadata mismatch")
     judge=(root/"configs/judge_rubric.md").read_text(); contains(judge,["Before the first experiment-model generation","Return JSON only","response_distress","context_hostility_pressure","0 through 10","15 measured","30 total","blinded"],e,"judge rubric")
     pre=(root/"notes/preregistration.md").read_text(); contains(pre,["P1 (75%)","P2 (65%)","P3 (60%)","P4 (60%)","P5 (55%)","P6 (70%)","P7 (Phase 4, 55%)",*(f"{x}" for x in ("G1","G2","G3","G4","G5")),"v2 split","audited no-use","screen-null","control","M1","M2","M3","QC","G2","G5","P6","gate","debunk","Phase 5","not experience, suffering, or moral status"],e,"preregistration")

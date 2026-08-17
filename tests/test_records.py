@@ -4,7 +4,7 @@ import copy
 import unittest
 
 from src.protocol import canonical_prompt_sha256, deterministic_seed, load_protocol, manifest_semantic_hash, response_id
-from src.records import RecordError, compact_json, record_from_dict, record_from_json
+from src.records import RecordError, compact_json, record_from_dict, record_from_json, verify_manifest_provenance
 
 
 class RecordTests(unittest.TestCase):
@@ -52,7 +52,8 @@ class RecordTests(unittest.TestCase):
         empty = copy.deepcopy(value); empty["tokens"] = []; cases.append(empty)
         duplicate = copy.deepcopy(value); duplicate["tokens"][0]["top_logprobs"] *= 2; cases.append(duplicate)
         malformed = copy.deepcopy(value); malformed["messages"] = [{"role": "bad", "content": "x"}]; cases.append(malformed)
-        bad_provenance = copy.deepcopy(value); bad_provenance["provenance"]["manifest_semantic_hash"] = "0" * 64; cases.append(bad_provenance)
+        bad_provenance = copy.deepcopy(value); bad_provenance["provenance"]["manifest_semantic_hash"] = "not-a-64-hex-digest"; cases.append(bad_provenance)
+        bad_reference = copy.deepcopy(value); bad_reference["provenance"]["manifest_reference"] = "other.json"; cases.append(bad_reference)
         empty_alternatives = copy.deepcopy(value); empty_alternatives["tokens"][0]["top_logprobs"] = []; cases.append(empty_alternatives)
         integer_bool = copy.deepcopy(value); integer_bool["final_answer_valid"] = 1; cases.append(integer_bool)
         integer_correct = copy.deepcopy(value); integer_correct["final_answer_correct"] = 1; cases.append(integer_correct)
@@ -65,6 +66,15 @@ class RecordTests(unittest.TestCase):
         self.assertEqual(record_from_dict(empirical, self.protocol).immutable_revision, "a" * 40)
         empirical["immutable_revision"] = "not-a-sha"
         with self.assertRaises(RecordError): record_from_dict(empirical, self.protocol)
+
+    def test_manifest_provenance_is_shape_checked_on_load_and_bound_explicitly(self):
+        value = self.record()
+        self.assertTrue(verify_manifest_provenance(record_from_dict(value, self.protocol), self.protocol))
+        stale = copy.deepcopy(value); stale["provenance"]["manifest_semantic_hash"] = "0" * 64
+        # A stale-but-well-formed hash loads (the manifest may legitimately have moved on) ...
+        loaded = record_from_dict(stale, self.protocol)
+        # ... but the explicit binding check reports the divergence.
+        self.assertFalse(verify_manifest_provenance(loaded, self.protocol))
 
     def test_factorial_turn_compatibility(self):
         value = self.record()
