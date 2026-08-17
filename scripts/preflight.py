@@ -51,7 +51,12 @@ def now_iso() -> str:
 
 
 def dump_manifest(manifest: Mapping[str, Any]) -> str:
-    """Serialize with the manifest's existing style: 2-space top level, compact inner objects."""
+    """Serialize with the manifest's existing style: 2-space top level, compact inner objects.
+
+    Every top-level key is emitted in place, including ones preflight knows nothing about
+    (`holdout_unlock` and anything added later): keys are never dropped, reordered, or
+    rewritten, and nested objects keep their own insertion order.
+    """
     items = list(manifest.items())
     lines = ["{"]
     for index, (key, value) in enumerate(items):

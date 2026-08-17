@@ -111,6 +111,31 @@ class PreflightTests(unittest.TestCase):
         original = (ROOT / "manifest.json").read_text(encoding="utf-8")
         self.assertEqual(PREFLIGHT.dump_manifest(json.loads(original)), original)
 
+    def test_dump_manifest_preserves_top_level_keys_preflight_does_not_own(self) -> None:
+        # holdout_unlock is written by another tool; the canonical writer must carry it through
+        # untouched rather than dropping or reordering it.
+        original = json.loads((ROOT / "manifest.json").read_text(encoding="utf-8"))
+        self.assertIn("holdout_unlock", original)
+        extended = dict(original)
+        extended["zz_future_block"] = {"b": 1, "a": [2, 3], "c": None}
+        rendered = PREFLIGHT.dump_manifest(extended)
+        round_tripped = json.loads(rendered)
+        self.assertEqual(round_tripped, extended)
+        self.assertEqual(list(round_tripped), list(extended))
+        for key, value in extended.items():
+            if isinstance(value, dict):
+                self.assertEqual(list(round_tripped[key]), list(value), key)
+        self.assertEqual(PREFLIGHT.dump_manifest(round_tripped), rendered)  # idempotent
+
+    def test_preflight_leaves_foreign_top_level_blocks_alone(self) -> None:
+        manifest_path = self.root / "manifest.json"
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        manifest["holdout_unlock"] = {"frozen_analysis_commit": "a" * 40, "note": "keep me"}
+        manifest_path.write_text(PREFLIGHT.dump_manifest(manifest), encoding="utf-8", newline="\n")
+        self.run_preflight("--models", *RESOLVABLE, "--generation-status", "ready")
+        self.assertEqual(self.manifest()["holdout_unlock"],
+                         {"frozen_analysis_commit": "a" * 40, "note": "keep me"})
+
     def test_resolves_revisions_records_unavailable_and_leaves_locked_files_alone(self) -> None:
         code, output = self.run_preflight("--models", *RESOLVABLE, GATED, "--generation-status", "ready")
         self.assertEqual(code, 0, output)

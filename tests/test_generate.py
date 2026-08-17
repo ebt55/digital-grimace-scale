@@ -249,6 +249,8 @@ class HoldoutCliTests(unittest.TestCase):
                      "stimuli/matched_pairs.jsonl", "stimuli/refusal_pressure.jsonl"):
             shutil.copyfile(REPO_ROOT / name, root / name)
         manifest = json.loads((REPO_ROOT / "manifest.json").read_text(encoding="utf-8"))
+        # the repo manifest now legitimately carries an unlock block, so `None` must strip it
+        manifest.pop("holdout_unlock", None)
         if unlock is not None:
             manifest["holdout_unlock"] = unlock
         (root / "manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
@@ -297,6 +299,24 @@ class HoldoutCliTests(unittest.TestCase):
                 with self.subTest(command=command):
                     with self.assertRaises(SystemExit):
                         self.cli.build_parser().parse_args(self.base(command, out) + ["--unlock-holdout"])
+
+    def test_repo_manifest_unlock_block_is_accepted(self):
+        """Mirror case: the real manifest is unlocked, so the flag alone must now suffice."""
+        unlock = json.loads((REPO_ROOT / "manifest.json").read_text(encoding="utf-8")).get("holdout_unlock")
+        self.assertIsInstance(unlock, dict)
+        for field in self.cli.UNLOCK_FIELDS:
+            self.assertIsInstance(unlock.get(field), str)
+        self.assertRegex(unlock["frozen_analysis_commit"], r"\A[0-9a-fA-F]{40}\Z")
+        with tempfile.TemporaryDirectory() as directory:
+            out = Path(directory) / "out"
+            for command, jobs in (("phase2", 80), ("style-battery", 100)):
+                with self.subTest(command=command):
+                    code, printed = self.run_cli(self.base(command, out) + ["--unlock-holdout", "--dry-run"])
+                    self.assertEqual(code, 0)
+                    self.assertIn("jobs %d " % jobs, printed)
+                    self.assertIn("HOLDOUT UNLOCKED", printed)
+                    self.assertIn(unlock["frozen_analysis_commit"], printed)
+            self.assertFalse(out.exists())
 
     def test_unlocked_phase2_and_style_battery_plan_and_write_holdout_records(self):
         unlock = {"frozen_analysis_commit": "b" * 40, "unlocked_at": "2026-08-18T09:00:00+05:30",
