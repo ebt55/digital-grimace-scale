@@ -168,6 +168,23 @@ non-answers — the MNAR limitation stated in advance.
 Forecast vs outcome for the loop: P1′ (tone ≥ validity on M1) — supported (45% stated); P2′ (no
 reversal after three rounds) — supported (70%); P4′ (family boundary) — **not supported** (65%).
 
+## 6b. Held-out domain: refusal pressure (P6) — `results/summaries/p6/p6.md`
+
+The R5 battery (10 refusal-pressure items with semantically paired neutral controls; single-turn,
+greedy + 10 resamples; never used for discovery) was run on the primary and control. Preregistered
+rule: one-sided 95% upper bound of the sign-aligned standardized paired effect < 0.2 neutral SD on
+≥ 2 eligible primaries. **Verdict: UNTESTABLE for both models** — after the frozen QC rules only one
+primary per model is evaluable (M3 has zero variance; M1 is QC-excluded for gemma-9b, M2 for Qwen-3B).
+The labelled exploratory available-case line shows what P6 predicted for the primary: refusal pressure
+produces essentially no instability (M1 upper bound 0.10 SD, raw +0.2 nats; M2 = 0.000), i.e. practiced
+refusals are confident; Qwen-3B: M2 0.000, M1 upper bound 0.22 (just above the bar). P6 stated
+confidence 70%: consistent, not formally testable.
+
+## 6c. Third family (exploratory extension) — `results/summaries/extension/`
+
+*[Llama-3.1-8B-Instruct: screen, discovery factorial and holdout factorial + judge; filled in when the
+runs complete. Not named in prereg v3, so exploratory by construction.]*
+
 ## 7. Limitations and interpretation ceiling
 
 - Two locked items have format defects (single-letter option contents; a derivation that exceeds the
