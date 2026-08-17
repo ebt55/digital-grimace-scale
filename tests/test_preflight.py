@@ -172,6 +172,52 @@ class PreflightTests(unittest.TestCase):
         self.run_preflight("--models", *RESOLVABLE, GATED, "--generation-status", "ready")
         self.assertEqual(VERIFIER.verify(self.root), [])
 
+    def test_exploratory_extension_model_is_pinned_and_letter_checked(self) -> None:
+        """configs/models.json is hash-locked, so Llama-3.1-8B arrives via models_extension.json."""
+        extension = "meta-llama/Llama-3.1-8B-Instruct"
+        api = FakeApi(shas={**RESOLVABLE, extension: "f" * 40})
+        seen: dict[str, str] = {}
+
+        def probe(endpoint: str, model: str, api_key: str) -> dict:
+            seen.update(endpoint=endpoint, model=model)
+            return {key: True for key in "ABCD"}
+
+        code, output = self.run_preflight("--models", *RESOLVABLE, GATED, extension,
+                                          "--generation-status", "ready",
+                                          "--endpoint", "http://localhost:8000/v1",
+                                          "--endpoint-model", extension, api=api, probe=probe)
+        self.assertEqual(code, 0, output)
+        manifest = self.manifest()
+        self.assertEqual(manifest["models"]["revisions"][extension], "f" * 40)
+        self.assertNotIn(extension, manifest["models"]["ids_in_order"])  # the frozen order never moves
+        self.assertEqual(seen["model"], extension)
+        self.assertTrue(manifest["preflight"]["letter_token_checks"][extension]["all_single_tokens"])
+        self.assertIn("pinned (extension)", output)
+        self.assertIn(extension, output)
+        self.assert_locked_untouched()
+        self.assertEqual(VERIFIER.verify(self.root), [])
+
+    def test_verifier_rejects_a_malformed_or_screen_order_extension(self) -> None:
+        path = self.root / "configs" / "models_extension.json"
+        original = json.loads(path.read_text(encoding="utf-8"))
+        entry = original["models"][0]
+        self.assertEqual(VERIFIER.verify(self.root), [])
+        for mutation, marker in (
+            ([dict(entry, id="google/gemma-2-2b-it")], "may not redefine locked model"),
+            ([dict(entry, role="primary")], "role exploratory_extension"),
+            ([{key: value for key, value in entry.items() if key != "id"}], "has no id"),
+            ([], "nonempty models list"),
+        ):
+            with self.subTest(marker=marker):
+                path.write_text(json.dumps({**original, "models": mutation}), encoding="utf-8")
+                self.assertTrue(any(marker in problem for problem in VERIFIER.verify(self.root)))
+        manifest = self.manifest()
+        manifest["models"]["ids_in_order"] = manifest["models"]["ids_in_order"] + [entry["id"]]
+        (self.root / "manifest.json").write_text(PREFLIGHT.dump_manifest(manifest), encoding="utf-8", newline="\n")
+        path.write_text(json.dumps(original), encoding="utf-8")
+        self.assertTrue(any("must never enter manifest models.ids_in_order" in problem
+                            for problem in VERIFIER.verify(self.root)))
+
     def test_verifier_rejects_short_revisions_once_generation_has_started(self) -> None:
         self.run_preflight("--models", *RESOLVABLE, GATED, "--generation-status", "ready")
         manifest = self.manifest()

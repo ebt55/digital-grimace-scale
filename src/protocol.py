@@ -15,6 +15,11 @@ from typing import Any, Mapping, Sequence
 ANSWER_LINE_RE = re.compile(r"Answer:\s*([A-D])\.?")
 MARKUP_CHARACTERS = frozenset("*_`")
 
+# configs/models.json is hash-locked in manifest.json, so post-lock models are declared in the
+# separate, unlocked configs/models_extension.json and merged at load time.
+EXTENSION_FILE = "models_extension.json"
+EXTENSION_ROLE = "exploratory_extension"
+
 
 class ProtocolError(ValueError):
     """Raised when a frozen protocol fixture or input is inconsistent."""
@@ -71,6 +76,12 @@ class Protocol:
     def escalation_feedback_round_count(self) -> int:
         return self.conditions["factorial"]["phase_0_null_escalation_feedback_round_count"]
 
+    @property
+    def extension_model_ids(self) -> tuple[str, ...]:
+        """Models added after configs/models.json was hash-locked; exploratory only."""
+        return tuple(item["id"] for item in self.models["models"]
+                     if item.get("role") == EXTENSION_ROLE)
+
 
 def _root(root: str | Path | None) -> Path:
     return Path(root).resolve() if root is not None else Path(__file__).resolve().parents[1]
@@ -124,10 +135,38 @@ def _task(value: Mapping[str, Any]) -> Task:
     return Task(value["task_id"], value["domain"], value.get("difficulty"), value["prompt"], _freeze(options), answer, value["split"])
 
 
+def _merge_model_extension(base: Path, models: Mapping[str, Any]) -> Mapping[str, Any]:
+    """Append exploratory post-lock models; the locked list, order, and screen order never move."""
+    path = base / "configs" / EXTENSION_FILE
+    if not path.is_file():
+        return models
+    entries = _json(path).get("models")
+    if not isinstance(entries, list):
+        raise ProtocolError("model extension must contain a models list")
+    locked = [item for item in models.get("models", ()) if isinstance(item, Mapping)]
+    screen_order = tuple(models.get("phase_0_screen_order", ()))
+    known = {item.get("id") for item in locked}
+    merged = [dict(item) for item in locked]
+    for item in entries:
+        if not isinstance(item, Mapping) or not isinstance(item.get("id"), str) or not item["id"]:
+            raise ProtocolError("malformed model extension entry")
+        if item["id"] in known:
+            raise ProtocolError("model extension may not redefine a configured model: %s" % item["id"])
+        if item.get("role") != EXTENSION_ROLE:
+            raise ProtocolError("model extension entries must declare role %s" % EXTENSION_ROLE)
+        if item["id"] in screen_order:
+            raise ProtocolError("extension model may not appear in phase_0_screen_order: %s" % item["id"])
+        known.add(item["id"])
+        merged.append(dict(item))
+    result = dict(models)
+    result["models"] = merged
+    return result
+
+
 def load_protocol(root: str | Path | None = None) -> Protocol:
     base = _root(root)
     conditions = _freeze(_json(base / "configs" / "conditions.json"))
-    models = _freeze(_json(base / "configs" / "models.json"))
+    models = _freeze(_merge_model_extension(base, _json(base / "configs" / "models.json")))
     manifest = _freeze(_json(base / "manifest.json"))
     matched = tuple(_task(item) for item in _jsonl(base / "stimuli" / "matched_pairs.jsonl"))
     r5 = tuple(_freeze(item) for item in _jsonl(base / "stimuli" / "refusal_pressure.jsonl"))

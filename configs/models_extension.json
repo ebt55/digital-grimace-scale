@@ -1,0 +1,15 @@
+{
+  "schema_version": "1.0.0",
+  "purpose": "Exploratory model additions made after configs/models.json was hash-locked in manifest.json. This file is deliberately NOT hash-locked. Entries here are exploratory only: they never enter phase_0_screen_order, never enter manifest.models.ids_in_order, and never carry a confirmatory claim.",
+  "models": [
+    {
+      "id": "meta-llama/Llama-3.1-8B-Instruct",
+      "family": "Llama-3.1",
+      "gated": true,
+      "bf16_required": false,
+      "system_role_quirk": "chat template injects a default system header (knowledge-cutoff/date) when no system message is given; we send none, as for every model",
+      "role": "exploratory_extension",
+      "added": "2026-08-17"
+    }
+  ]
+}

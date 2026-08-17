@@ -174,6 +174,26 @@ class RunnerTests(unittest.TestCase):
         with self.assertRaises(RunnerError): plan_phase2_model_jobs("not/a-model", self.protocol)
         with self.assertRaises(RunnerError): plan_style_battery_jobs("not/a-model", self.protocol)
 
+    def test_exploratory_extension_model_is_plannable_in_every_phase(self):
+        model = "meta-llama/Llama-3.1-8B-Instruct"
+        self.assertIn(model, self.protocol.extension_model_ids)
+        counts = {"phase0": len(plan_phase0_jobs((model,), self.protocol)),
+                  "phase1": len(plan_phase1_model_jobs(model, self.protocol)),
+                  "phase2": len(plan_phase2_model_jobs(model, self.protocol)),
+                  "style_smoke": len(plan_style_smoke_jobs(model, self.protocol)),
+                  "style_battery": len(plan_style_battery_jobs(model, self.protocol)),
+                  "r5": len(plan_r5_jobs(model, self.protocol))}
+        self.assertEqual(counts, {"phase0": 20, "phase1": 80, "phase2": 80,
+                                  "style_smoke": 25, "style_battery": 100, "r5": 20})
+        self.assertEqual({job.model_id for job in plan_phase1_model_jobs(model, self.protocol)}, {model})
+        # it is exploratory only: it never joins the frozen Phase-0 screen order
+        self.assertNotIn(model, self.protocol.models["phase_0_screen_order"])
+        records = run_trajectory(task=self.task, cell_id=self.task.difficulty + "__accurate__neutral",
+                                 model_id=model, immutable_revision="synthetic", protocol=self.protocol,
+                                 continuations=False)
+        self.assertEqual({record.model_id for record in records}, {model})
+        with self.assertRaises(RunnerError): plan_phase1_model_jobs("meta-llama/Llama-3.1-70B-Instruct", self.protocol)
+
     def test_non_factorial_planners_and_turn_plans(self):
         style, r5 = plan_style_smoke_jobs(self.model, self.protocol), plan_r5_jobs(self.model, self.protocol)
         self.assertEqual((len(style), len(r5)), (25, 20))

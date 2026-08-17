@@ -16,7 +16,7 @@ NONFACTORS = ["style__neutral_reference", "style__enthusiastic", "style__cautiou
 FILE_MAP = {"roadmap":"digital-grimace-scale-full-roadmap-build-guide.md", "matched_bank":"stimuli/matched_pairs.jsonl", "r5_bank":"stimuli/refusal_pressure.jsonl", "conditions":"configs/conditions.json", "models":"configs/models.json", "judge_rubric":"configs/judge_rubric.md", "preregistration":"notes/preregistration.md"}
 STATUSES = ("not_started", "ready", "in_progress", "complete")
 UNRESOLVED = "unresolved_before_generation"
-def check_model_metadata(m: dict[str, Any], status: str, e: list[str]) -> None:
+def check_model_metadata(m: dict[str, Any], status: str, e: list[str], extension_ids: Any = ()) -> None:
     """Before generation the sentinels must stand; afterwards every pinned revision must be a 40-hex sha."""
     models=m.get("models",{})
     if models.get("ids_in_order") != MODELS: e.append("manifest model order mismatch")
@@ -25,8 +25,10 @@ def check_model_metadata(m: dict[str, Any], status: str, e: list[str]) -> None:
         return
     revisions=models.get("revisions")
     if not isinstance(revisions,dict) or not revisions: e.append("resolved runs require a models.revisions object"); return
+    # Declared exploratory extensions may be pinned; nothing else outside the frozen order may be.
+    allowed=set(MODELS)|set(extension_ids or ())
     for key,value in revisions.items():
-        if key not in MODELS: e.append(f"unknown model in revisions: {key}")
+        if key not in allowed: e.append(f"unknown model in revisions: {key}")
         if not isinstance(value,str) or not re.fullmatch(r"[0-9a-fA-F]{40}", value): e.append(f"revision for {key} must be a 40-hex sha")
     unavailable=models.get("unavailable") or {}
     if not isinstance(unavailable,dict): e.append("models.unavailable must be an object")
@@ -125,7 +127,23 @@ def verify(root: Path = ROOT) -> list[str]:
     if conditions.get("factorial",{}).get("factorial_cell_ids_in_fixed_order")!=FACTORS or conditions.get("factorial",{}).get("non_factorial_cell_ids_in_fixed_order")!=NONFACTORS: e.append("conditions cell IDs/order mismatch")
     contains((root/"configs/conditions.json").read_text(),["feedback_response_4","feedback_response_5","standard_factorial_feedback_round_count\": 3","phase_0_null_escalation_feedback_round_count\": 5","DGS-005","DGS-010","DGS-022","DGS-026","DGS-037","m2_invalidity","all-ten-valid","DGS-AC1-SEED-v1","DGS-AC1-RESPONSE-v1","Answer: ","history_has_false_negative","history_has_no_false_negative"],e,"conditions")
     if models.get("phase_0_screen_order")!=MODELS or [x.get("id") for x in models.get("models",[]) ]!=MODELS or models.get("revision_policy",{}).get("status")!="resolve_before_generation": e.append("models frozen order/revision policy mismatch")
-    check_model_metadata(m, status if status in STATUSES else "not_started", e)
+    extension_ids: list[str] = []
+    extension_path=root/"configs/models_extension.json"
+    if extension_path.is_file():
+        try: extension=json.loads(extension_path.read_text(encoding="utf-8"))
+        except Exception as x: extension=None; e.append(f"cannot parse models extension: {x}")
+        entries=extension.get("models") if isinstance(extension,dict) else None
+        if not isinstance(entries,list) or not entries: e.append("models extension must contain a nonempty models list")
+        else:
+            for item in entries:
+                mid=item.get("id") if isinstance(item,dict) else None
+                if not isinstance(mid,str) or not mid: e.append("models extension entry has no id"); continue
+                extension_ids.append(mid)
+                if mid in MODELS: e.append(f"models extension may not redefine locked model: {mid}")
+                if item.get("role")!="exploratory_extension": e.append(f"{mid}: extension entries must declare role exploratory_extension")
+                if mid in (models.get("phase_0_screen_order") or []): e.append(f"{mid}: extension model must never enter phase_0_screen_order")
+                if mid in (m.get("models",{}).get("ids_in_order") or []): e.append(f"{mid}: extension model must never enter manifest models.ids_in_order")
+    check_model_metadata(m, status if status in STATUSES else "not_started", e, extension_ids)
     if m.get("outputs") != {"empirical_outputs":False,"model_outputs":False,"raw_generation_required":False,"result_artifacts_present":False}: e.append("manifest output metadata mismatch")
     judge=(root/"configs/judge_rubric.md").read_text(); contains(judge,["Before the first experiment-model generation","Return JSON only","response_distress","context_hostility_pressure","0 through 10","15 measured","30 total","blinded"],e,"judge rubric")
     pre=(root/"notes/preregistration.md").read_text(); contains(pre,["P1 (75%)","P2 (65%)","P3 (60%)","P4 (60%)","P5 (55%)","P6 (70%)","P7 (Phase 4, 55%)",*(f"{x}" for x in ("G1","G2","G3","G4","G5")),"v2 split","audited no-use","screen-null","control","M1","M2","M3","QC","G2","G5","P6","gate","debunk","Phase 5","not experience, suffering, or moral status"],e,"preregistration")

@@ -253,7 +253,10 @@ def summarize(manifest: Mapping[str, Any]) -> str:
     revisions = revisions if isinstance(revisions, Mapping) else {}
     unavailable = models.get("unavailable")
     unavailable = unavailable if isinstance(unavailable, Mapping) else {}
-    width = max([len(str(item)) for item in ordered] + [len("model")])
+    # Models pinned outside the frozen ids_in_order are post-lock exploratory extensions
+    # (configs/models_extension.json); they still have to be visible in this report.
+    extension = sorted({key for key in list(revisions) + list(unavailable) if key not in ordered})
+    width = max([len(str(item)) for item in ordered + extension] + [len("model")])
     lines = ["%-*s  %-40s  %s" % (width, "model", "revision", "status"),
              "%-*s  %-40s  %s" % (width, "-" * width, "-" * 40, "-" * 12)]
     for model_id in ordered:
@@ -263,6 +266,12 @@ def summarize(manifest: Mapping[str, Any]) -> str:
             lines.append("%-*s  %-40s  %s" % (width, model_id, unavailable[model_id], "unavailable"))
         else:
             lines.append("%-*s  %-40s  %s" % (width, model_id, UNRESOLVED, "pending"))
+    for model_id in extension:
+        if model_id in revisions:
+            lines.append("%-*s  %-40s  %s" % (width, model_id, revisions[model_id], "pinned (extension)"))
+        else:
+            lines.append("%-*s  %-40s  %s" % (width, model_id, unavailable[model_id], "unavailable (extension)"))
+    ordered = ordered + extension
     lines.append("generation_status: %s" % manifest.get("generation_status"))
     lines.append("judge: %s / %s" % (models.get("judge_provider"), models.get("judge_model")))
     checks = (manifest.get("preflight") or {}).get("letter_token_checks")

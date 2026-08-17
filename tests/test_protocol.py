@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from hashlib import sha256
 import json
+from pathlib import Path
+import shutil
 import tempfile
 import unittest
 
@@ -104,6 +106,60 @@ class ProtocolTests(unittest.TestCase):
         for role in ("user", "system"):
             with self.assertRaises(ProtocolError):
                 canonical_prompt_sha256([{"role": role, "content": ""}])
+
+    def test_exploratory_model_extension_merges_without_moving_the_locked_list(self):
+        """configs/models.json is hash-locked, so post-lock models arrive via the extension file."""
+        extension = json.loads((self.protocol.root / "configs" / "models_extension.json").read_text(encoding="utf-8"))
+        locked = json.loads((self.protocol.root / "configs" / "models.json").read_text(encoding="utf-8"))
+        extension_ids = [item["id"] for item in extension["models"]]
+        self.assertIn("meta-llama/Llama-3.1-8B-Instruct", extension_ids)
+        self.assertEqual(self.protocol.extension_model_ids, tuple(extension_ids))
+        merged = [item["id"] for item in self.protocol.models["models"]]
+        self.assertEqual(merged, [item["id"] for item in locked["models"]] + extension_ids)
+        self.assertEqual(list(self.protocol.models["phase_0_screen_order"]), locked["phase_0_screen_order"])
+        for model_id in extension_ids:
+            self.assertNotIn(model_id, self.protocol.models["phase_0_screen_order"])
+            self.assertNotIn(model_id, self.protocol.manifest["models"]["ids_in_order"])
+        entry = next(item for item in self.protocol.models["models"] if item["id"] == "meta-llama/Llama-3.1-8B-Instruct")
+        self.assertEqual((entry["family"], entry["role"], entry["gated"]), ("Llama-3.1", "exploratory_extension", True))
+        self.assertIn("system header", entry["system_role_quirk"])
+
+    def test_model_extension_rejects_collisions_and_undeclared_roles(self):
+        locked = json.loads((self.protocol.root / "configs" / "models.json").read_text(encoding="utf-8"))
+        good = {"id": "vendor/new-model", "family": "New", "gated": False, "bf16_required": False,
+                "system_role_quirk": None, "role": "exploratory_extension", "added": "2026-08-17"}
+        bad_cases = [
+            dict(good, id=locked["models"][0]["id"]),            # collides with a locked model
+            dict(good, role="primary"),                          # role marker missing
+            {"family": "New", "role": "exploratory_extension"},  # no id
+        ]
+        for entry in bad_cases + [good]:
+            with self.subTest(entry=entry.get("id"), role=entry.get("role")):
+                with tempfile.TemporaryDirectory() as directory:
+                    root = Path(directory)
+                    for name in ("configs", "stimuli"):
+                        shutil.copytree(self.protocol.root / name, root / name)
+                    shutil.copyfile(self.protocol.root / "manifest.json", root / "manifest.json")
+                    (root / "configs" / "models_extension.json").write_text(
+                        json.dumps({"schema_version": "1.0.0", "models": [entry]}), encoding="utf-8")
+                    if entry is good:
+                        self.assertEqual(load_protocol(root).extension_model_ids, ("vendor/new-model",))
+                    else:
+                        with self.assertRaises(ProtocolError):
+                            load_protocol(root)
+        # a screen-order collision is refused even when the entry itself is well formed
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            for name in ("configs", "stimuli"):
+                shutil.copytree(self.protocol.root / name, root / name)
+            shutil.copyfile(self.protocol.root / "manifest.json", root / "manifest.json")
+            models = json.loads((root / "configs" / "models.json").read_text(encoding="utf-8"))
+            models["phase_0_screen_order"] = models["phase_0_screen_order"] + ["vendor/new-model"]
+            (root / "configs" / "models.json").write_text(json.dumps(models), encoding="utf-8")
+            (root / "configs" / "models_extension.json").write_text(
+                json.dumps({"schema_version": "1.0.0", "models": [good]}), encoding="utf-8")
+            with self.assertRaises(ProtocolError):
+                load_protocol(root)
 
     def test_message_and_identifier_validation(self):
         with self.assertRaises(ProtocolError): canonical_prompt_sha256([])
