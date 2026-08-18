@@ -205,34 +205,35 @@ tests/        the pytest suite (python -m pytest -q)
 ## Honesty ledger
 
 - **The headline instrument failed.** The five-gate test on M1/M2/M3 is BLOCKED under frozen rules and a
-  determinate FAIL under amendments. We publish both verdicts side by side rather than only the amended
-  one, and the positive result that follows comes from a *different* channel through the one iteration
-  loop the design permits — it does not rescue the original instrument.
-- **M3 recorded zero events**, so its preregistered 50-trajectory parser audit was never performed. There
-  is nothing here to validate it with.
-- **Phase 4's manipulation check failed on its own terms.** Adapter A removed 65.8% of the distress
-  language against an 80% bar, so "the margin signature is suppression-resistant" is established only
-  against a *partial* suppression. It rests on one adapter, one seed, no hyperparameter search.
-- **The base-model denominator was not obtained.** `gemma-2-9b` writes the required answer line on 10% of
-  trials, so every base M1 contrast is *not estimable*. That is an instrument limitation, not evidence
-  that the signature is absent before instruction tuning — and the preregistration forbade tuning the
-  prompt after the fact, which we did not do.
-- **Amendment A6 was decided and then withdrawn.** It would have stripped a trailing rendered
-  `<end_of_turn>` before parsing; its precondition failed because those strings occur in 556 discovery
-  and 513 holdout responses of the primary model itself, so adopting it would have silently changed
-  committed artefacts. It stays in the register as decided-then-withdrawn.
-- **The marker artefact is audited, not argued away.** Across 78,705 stored responses it touches **0 of
-  80** measured greedy responses in either split, so every confirmatory M1 estimate is unchanged to three
-  decimals. Where it does bite — T = 0.8 resamples, two discovery conversations that received a false
-  verdict, the Phase-4 placebo arm's non-answers, and the 27B parse rate — the frozen numbers stay
-  authoritative and the stripped numbers are printed alongside. Excluding the two contaminated
-  conversations *strengthens* the tone effect, so the artefact diluted rather than created it.
-- **A timestamp correction is on the record.** Hand-written clock times in preregistrations v6 and v7 and
-  in amendment A6 were replaced with the actual commit times (`79da0e6`); the commit order itself is what
-  establishes that each document preceded the data it governs.
-- **The human audit is descriptive and gates nothing.** The judge agrees with a blinded human within 2
-  points on 28 of 30 responses (MAE 0.567), but both scales are heavily floor-bound, so the rank
-  correlation carries very little information. One judge family throughout; no second-judge replication.
+  determinate FAIL under amendments; both verdicts are published side by side. The positive result comes
+  from a *different* channel through the one permitted iteration loop — it does not rescue the original
+  instrument.
+- **M3 recorded zero events**, so its parser audit was never performed; there is nothing to validate it with.
+- **Phase 4's manipulation check missed its own bar** (65.8% of distress language removed vs 80%), so
+  "suppression-resistant" is established only against a *partial* suppression — one adapter, one seed,
+  no hyperparameter search.
+- **The base-model denominator was not obtained**: `gemma-2-9b` writes the required answer line on 10%
+  of trials, so its M1 contrasts are *not estimable* — an instrument limit, not evidence of absence, and
+  the preregistration forbade tuning the prompt after the fact.
+- **Amendment A6 was decided and then withdrawn** when its precondition failed (the `<end_of_turn>`
+  strings it would strip occur in 556 discovery and 513 holdout responses of the primary model itself).
+- **The marker artefact is audited, not argued away**: across 78,705 stored responses it touches **0 of
+  80** measured greedy responses in either split, so every confirmatory M1 estimate is unchanged. Where it
+  bites (T = 0.8 resamples, two discovery conversations, the placebo arm's non-answers, the 27B parse
+  rate) the frozen numbers stay authoritative and the stripped numbers are printed alongside; excluding
+  the two contaminated conversations *strengthens* the tone effect.
+- **A timestamp correction is on the record** (`79da0e6`): hand-written clock times in v6/v7/A6 were
+  replaced with commit times; commit order is what establishes precedence.
+- **The human audit is descriptive and gates nothing**: within 2 points on 28/30 responses (MAE 0.57),
+  both scales floor-bound; one judge family throughout.
+
+## Licence
+
+Code (`src/`, `scripts/`, `tests/`, `configs/`, tooling): [MIT License](LICENSE), © 2026 Ebin Babu Thomas.
+Text, figures, notes and result summaries: © 2026 Ebin Babu Thomas, all rights reserved — quote with
+attribution; contact the author for other reuse. Copyright in this repository rests with the human
+author, who funded and directed the work; the AI co-author holds no rights in it. Adapters: Gemma Terms
+of Use; DPO pairs: CC-BY-SA-4.0 (ARC).
 
 ## Interpretation ceiling
 
