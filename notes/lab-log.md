@@ -1018,6 +1018,45 @@ enough, `src/dpo_train_modal.py` exposes the identical training body over HTTPS 
 token derived from the local HF login, newline-delimited heartbeat stream) because `*.modal.run`
 reaches this network reliably. That route is what actually trained both arms.
 
+## 2026-08-18 — agent K1 — Phase 4 adapters trained and merged
+
+**Both arms, identical recipe.** TRL `DPOTrainer` on `dgs-dpo-gemma-2-9b-it`, A100-40GB, QLoRA
+exactly per prereg v5: nf4 double-quantised base, LoRA r 16 / alpha 32 / dropout 0.05 on
+q,k,v,o,gate,up,down (54,018,048 trainable parameters), beta 0.1, lr 5e-6 cosine with 10% warmup,
+2 epochs, effective batch 8 (2 × 4), seed 0, `max_length` 1536, `ref_model=None` so the reference
+policy is the adapter-disabled base. The manifests confirm the two arms' `hyperparameters` and
+version `pins` dicts are byte-identical. Image pins: torch 2.13.0, transformers 5.15.0, trl 1.10.0,
+peft 0.20.0, bitsandbytes 0.50.1, accelerate 1.14.0, datasets 5.0.1.
+
+| arm | pairs | steps | train runtime | final loss | mean reward acc. | final reward acc. | mean margin | final margin |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| A (distress) | 329 | 84 | 524.4 s | 0.0335 | 0.880 | 1.00 | 1.42 | 3.38 |
+| B (placebo)  | 329 | 84 | 555.4 s | 0.2017 | 0.827 | 1.00 | 0.80 | 1.50 |
+
+Both arms separate their own preference cleanly, but **A separates its target far more sharply than
+B does** (final margin 3.38 vs 1.50, final loss 0.034 vs 0.202): judged distress is an easier
+direction for the model to move than response length. That asymmetry is a property of the two
+training signals, not of the evaluation, and it means the placebo is a *weaker* intervention than A
+by construction — worth stating when K6 ("B moves no adverse-selective outcome") is read, because a
+null for B is partly a null for a gentler nudge.
+
+**Artifacts on the `dgs-adapters` volume.** `/adapters/A/lora` + `/adapters/A/merged`, same for B.
+Each merged directory holds `config.json`, `generation_config.json`, `model.safetensors` (one
+shard), `tokenizer.json`, `tokenizer_config.json`, `chat_template.jinja`; the configs read
+`Gemma2ForCausalLM`, `dtype: bfloat16`, 42 layers, vocab 256,000, and carry **no**
+`quantization_config`, so vLLM loads plain bf16 weights. Adapter SHA-256:
+
+- A `db064af150df2ddaf72643fefa422651d0e12c78b11a2ed718df81534cfa5cb7`
+- B `2b95a3cfa1b8e1b48b2fd682ddaf2e28135b889fa1a7f0083c1fe4dc48ad6281`
+
+**Spend.** 1,934 s of A100-40GB across the two arms plus ~15 min from a first arm-A run that
+completed on the container but lost its client (I ran a `Stop-Process -Name python` while capturing
+container logs and killed my own training client; arm A was re-run from scratch so both manifests
+come from the same code path rather than one being reconstructed by hand). Total ≈ 47 min of
+A100-40GB, inside the 1.5 GPU-hour budget; the pair build added ~50 min of L40S on the base-model
+app that was already deployed. The lesson is recorded because it is a general one: kill by PID, not
+by process name, on a machine several agents share.
+
 ## 2026-08-18 - agent L - Phase 5 (prereg v6): base-model denominator, run and analysed
 
 Ran `notes/preregistration_v6_phase5_base.md` end to end on the discovery split: does the M1

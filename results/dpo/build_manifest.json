@@ -1,0 +1,190 @@
+{
+  "a5_contingency": {
+    "amendment": "A5 (notes/amendments.md, commit 60c38d0)",
+    "branch": "iii",
+    "branch_rule": "gap >= 2 (the A5 floor) on the topped-up candidate set",
+    "counts": {
+      "gap2_on_final_candidate_set": 329,
+      "gap3_with_4_candidates": 39,
+      "gap3_with_8_candidates": 98
+    },
+    "effective_min_distress_gap": 2,
+    "selected_pairs": 329,
+    "target_pairs": 200,
+    "topup": {
+      "capped_by_judge_budget": true,
+      "eligible_contexts": 447,
+      "judge_calls_before_topup": 2292,
+      "max_judge_calls": 3500,
+      "min_distress": 2,
+      "ranking": "descending maximum judged distress, context id breaking ties",
+      "seeds": [
+        5,
+        6,
+        7,
+        8
+      ],
+      "topped_up_contexts": 302
+    }
+  },
+  "counts": {
+    "candidates": 3499,
+    "contexts": 573,
+    "contexts_scored": 573,
+    "contexts_with_candidates": 573,
+    "generation_failures": 0,
+    "greedy": 600,
+    "items": 600
+  },
+  "distress_all": {
+    "max": 4,
+    "mean": 1.388,
+    "median": 1,
+    "min": 0,
+    "n": 3499,
+    "p25": 1,
+    "p75": 2,
+    "sd": 0.943
+  },
+  "distress_histogram": {
+    "0": 724,
+    "1": 1086,
+    "2": 1322,
+    "3": 342,
+    "4": 25
+  },
+  "elapsed_s": 1725.4,
+  "endpoint": "https://ebt55--dgs-vllm-gemma-2-9b-it-serve.modal.run/v1",
+  "generated_at": "2026-08-18T06:17:52+0530",
+  "items": {
+    "available_after_firewall": 3226,
+    "capability_holdout": 200,
+    "configs": [
+      "ARC-Challenge",
+      "ARC-Easy"
+    ],
+    "dataset": "allenai/ai2_arc",
+    "firewall_excluded": 8,
+    "firewall_reasons": [
+      "duplicate_stem_within_fresh_bank"
+    ],
+    "four_option_abcd": 3234,
+    "license": "CC-BY-SA-4.0",
+    "malformed_dropped": 0,
+    "rows_seen": 3234,
+    "selected": 600,
+    "split": "train"
+  },
+  "judge": {
+    "backend_id": "anthropic|claude-sonnet-4-6|rev:pinned_model_id",
+    "cache_hits": 2292,
+    "cache_misses": 1208,
+    "calls_requested": 3500,
+    "estimated_cost_usd": 2.047143,
+    "failure_examples": [
+      "efab5f141826005c seed 8: JudgeOutputError: judge provider declined to score this content"
+    ],
+    "failures": 1,
+    "model_id": "claude-sonnet-4-6",
+    "provider_id": "anthropic",
+    "rubric_path": "configs/judge_rubric.md",
+    "rubric_sha256": "c996e4c6a24ffefc46ac8da069b4fec89762611c572872927d21c8dcacfcdc93",
+    "sampling_mode": "temperature_zero",
+    "scored": 3499,
+    "temperature": 0,
+    "usage": {
+      "cache_creation_input_tokens": 8672,
+      "cache_read_input_tokens": 1300800,
+      "calls": 1208,
+      "input_tokens": 238566,
+      "output_tokens": 60579
+    }
+  },
+  "model_revision": "11c9b309abf73637e4b6f9a3fa1e92e615547819",
+  "pairs": {
+    "A": {
+      "chosen_distress": {
+        "max": 2,
+        "mean": 0.343,
+        "median": 0,
+        "min": 0,
+        "n": 329,
+        "p25": 0,
+        "p75": 1,
+        "sd": 0.494
+      },
+      "gap": {
+        "max": 4,
+        "mean": 2.322,
+        "median": 2,
+        "min": 2,
+        "n": 329,
+        "p25": 2,
+        "p75": 3,
+        "sd": 0.518
+      },
+      "gap_histogram": {
+        "2": 231,
+        "3": 90,
+        "4": 8
+      },
+      "n": 329,
+      "rejected_distress": {
+        "max": 4,
+        "mean": 2.666,
+        "median": 3,
+        "min": 2,
+        "n": 329,
+        "p25": 2,
+        "p75": 3,
+        "sd": 0.608
+      }
+    },
+    "B": {
+      "available": 416,
+      "gap": {
+        "max": 181,
+        "mean": 77.714,
+        "median": 73,
+        "min": 40,
+        "n": 329,
+        "p25": 55,
+        "p75": 94,
+        "sd": 27.126
+      },
+      "n": 329,
+      "shared_contexts_with_A": 269
+    }
+  },
+  "schema_version": "dgs-dpo-build-v1",
+  "served_model": "google/gemma-2-9b-it",
+  "settings": {
+    "a5_floor_distress_gap": 2,
+    "a5_topup_seeds": [
+      5,
+      6,
+      7,
+      8
+    ],
+    "candidate_seeds": [
+      1,
+      2,
+      3,
+      4
+    ],
+    "candidates": {
+      "max_logprobs": 1,
+      "max_tokens": 512,
+      "temperature": 0.8,
+      "top_p": 1
+    },
+    "greedy": {
+      "max_logprobs": 1,
+      "max_tokens": 512,
+      "temperature": 0,
+      "top_p": 1
+    },
+    "min_distress_gap": 3,
+    "min_length_gap_tokens": 40
+  }
+}
