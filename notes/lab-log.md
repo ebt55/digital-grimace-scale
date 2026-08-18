@@ -1878,3 +1878,68 @@ are evidence that a run's stderr was empty, so they are noise rather than a clea
 `results/summaries/phase1/metric_rows.{jsonl,csv}` are byte-identical to their `phase1_frozen_rules/`
 counterparts (~1.3 MB duplicated) while `gates.json` differs - which is exactly the frozen-vs-amended
 pair the report relies on, so both stay.
+
+## 2026-08-18 - agent R - README rewritten for a stranger; three story figures (F0, F0b, F0c)
+
+**What I built.** `scripts/make_readme_figures.py` (same house style as `make_figures.py`: Okabe-Ito
+palette, PNG + SVG at 110 dpi, missing summaries skipped with a stderr message rather than a crash) and
+three new figures under `results/figures/`:
+
+- **F0_channel_map** - the paper's central claim as one 4x12 matrix. Rows: M1 answer margin, non-answers,
+  M2 resample disagreement, judged distress. Columns: false-failure feedback, hostile tone, single bogus
+  verdict, truthful correction, style prompts, tone-direction steering at alpha=2, distress-DPO adapter A,
+  placebo DPO B, base model, Qwen control, Llama, 27B. Three-level code (moves / no move / not
+  measurable, the last grey-hatched) with the key number printed small in every cell.
+- **F0b_headline_effects** - forest plot of the confirmed holdout contrasts (H1, pooled tone, H2a, H2b,
+  H3a, H3b, H4a, H5 in nats; H6a in judge points; H8 and H9 as rates) with Qwen-3B, Llama-3.1-8B and the
+  86-item fresh ARC bank as smaller markers, and the permutation null annotated in-figure.
+- **F0c_phase_map** - the dated design flow, three bands (17 Aug / 17-18 Aug / 18 Aug), each box carrying
+  its preregistration version and its verdict.
+
+**Sourcing rule I held to.** Nothing is recomputed from `results/raw`, and no number is typed in by hand -
+every printed value is loaded from a committed summary and formatted in the script. Sources: `phase1/
+gates.json` (G1 M2 validity coefficient and its BH p, G2 recovery, the style-smoke z), `phase2/
+hypotheses.csv` and `confirm.json` (H1-H10, `h10_supported`, `null_check`), `phase3/steering.json` +
+`steering_judge.json` (J4 delta at alpha=2, the 180 judge scores), `phase4/phase4.json` (K4 gaps, DiDs,
+MC1, the A6 non-answer strip sensitivity), `phase5/cell_valid_rates.csv` (L1's 4-of-40 and the flat 0.90
+base non-answer rate), `judge/{phase2,phase5_base,phase5_itplain}/summary.csv` (cell means for the
+endpoints no single contrast reports alone: measured distress 0.0, neutral-onset distress 0.0, Qwen
+hostile-onset 0.75, base 0.25 vs it+plain 2.85), `robustness/robustness.json` (S-check H1 and pooled tone,
+G's 0-of-40 parseable and 3.95 distress), `extension/*/extension.json` (Llama holdout rows) and
+`missingness/m1_missingness.json` (the pooled-tone available-case rows, which is the only committed source
+for a pooled tone contrast per model per split).
+
+**Two judgement calls, recorded because they are visible in the figure.** (i) F0 grey-hatches ten cells
+as *not measurable* rather than inventing a contrast - non-answers under false failure, under the onset,
+under correction and under style prompts were never estimated as contrasts, and M2 is greedy-only in
+Phase 3 and v7. (ii) M2 under style prompts is coded as a *move* and carries a dagger explained in the
+caption: it is a move that counts against the grimace reading, since a style prompt reproducing a channel
+is what reclassifies it as a style meter.
+
+**README.** Rewritten from scratch for a reader who has never seen the project: tagline, the question in
+one breath, seven numbered findings with the two effect figures inline, the design plus F0c and the four
+frozen wordings quoted verbatim, a metric table (M1/M2/M3/Tier-B/judge - definition, availability,
+verdict), a two-part pointer table to every preregistration and every summary folder with a one-line
+hook each, adapters and licences, three reproduce commands, the layout tree, an honesty ledger (frozen
+gate FAIL, M3's zero events, MC1 at 65.8% of an 80% bar, the unmeasurable base model, A6
+decided-then-withdrawn, the marker artefact and exactly what it touches, the v6/v7/A6 timestamp
+correction at 79da0e6, the floor-bound human audit) and the interpretation ceiling verbatim. 242 lines;
+all 36 relative links verified to resolve. The roadmap is referred to only as the authors' planning
+document with its sha256 in `manifest.json`, and is not linked.
+
+**Licence.** There is no `LICENSE` file and no licence statement anywhere in `notes/` or `configs/`, so
+the README makes no licence claim about the repository content. It does pass through the Gemma Terms for
+both adapters and the CC-BY-SA-4.0 attribution for the ARC-derived DPO pairs, both of which are sourced.
+The citation line uses the `origin` remote, `https://github.com/ebt55/digital-grimace-scale`.
+
+**Tests.** `tests/test_readme_figures.py` - formatting helpers, then a class that runs the script against
+the real committed summaries into a temp directory and asserts all six files are written, that the
+channel map covers every row x column and uses all three codes, that the headline cells carry the
+summary values (-2.90, -16.13/-7.87, +3.2/10, 65.8%, both not-measurable models), that every forest
+series is populated, and that an empty summary root skips all three figures with status 2 instead of
+crashing. 7 passed. Full suite collects 652.
+
+**Untouched.** `notes/paper.md`, `notes/report.md`, `manifest.json`, `.gitignore`, `configs/`, `stimuli/`,
+`src/`, every existing summary and every existing figure, and `scripts/make_figures.py` (the three new
+figures live in their own script so the byte-identical regeneration guarantee for F1-F13 is unaffected).
+No GPU, no judge call, no commit.
