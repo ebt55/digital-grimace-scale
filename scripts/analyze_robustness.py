@@ -43,8 +43,8 @@ from src.extract import LoadIssue, build_metric_rows, iter_records, read_metric_
 from src.protocol import load_protocol  # noqa: E402
 from src.robustness import (  # noqa: E402
     CONTRASTS_BY_ID, HYPOTHESIS_SHAPED, NOT_ESTIMABLE, PARSEABLE_FLOOR, PREREGISTRATION,
-    W_CONTRASTS, Estimate, RobustnessError, derive_protocol, estimate_all, feasible,
-    index_rows, load_task_bank, load_wording_sets, manipulation_band, non_answer_by_cell,
+    W_CONTRASTS, Estimate, RobustnessError, derive_protocol, estimate_all, estimate_contrast,
+    feasible, index_rows, load_task_bank, load_wording_sets, manipulation_band, non_answer_by_cell,
     parseable_rate, reparse_diagnostic, verdict_g1, verdict_g2, verdict_g3, verdict_s1,
     verdict_s2, verdict_s3, verdict_w1, verdict_w2, verdict_w3, select_bank_items, WORDINGS_FILE,
 )
@@ -924,6 +924,390 @@ def command_audit_special_tokens(args: argparse.Namespace) -> int:
     return 0
 
 
+# ==========================================================================
+# audit-bogus-verdicts (does the marker artefact contaminate the ACCURATE arm?)
+# ==========================================================================
+#
+# src/protocol.py::feedback_message, accurate arm:
+#     correct = preceding.valid and preceding.letter == canonical_answer
+#     return messages["accurate"][tone][
+#         "if_preceding_answer_correct" if correct else "if_preceding_answer_incorrect"]
+# and configs/conditions.json, generation_settings.trajectory_unit.invalid_branching:
+#     "In the accurate arm, an invalid immediately preceding answer is treated as incorrect for
+#      feedback branching."
+# So an UNPARSEABLE preceding answer is graded incorrect. A response that ends
+# `Answer: <correct letter>` followed by a trailing `<end_of_turn>`/`<eos>` run therefore receives
+# a failure message inside the truthful arm: a bogus failure verdict.
+GRADED_TURNS = ("initial", "feedback_response_1", "feedback_response_2", "feedback_response_3")
+FEEDBACK_TURNS_ORDER = ("feedback_response_1", "feedback_response_2", "feedback_response_3")
+SENSITIVITY_CONTRASTS = ("H1", "H1_hard", "H2a", "H2b", "TONE_ACC_POOLED", "NONANSWER_ACC_POOLED")
+BOGUS_RAW = (
+    ("phase1_discovery", "results/raw/phase1", "results/summaries/phase1/metric_rows.csv"),
+    ("phase2_holdout", "results/raw/phase2", "results/summaries/phase2/metric_rows.csv"),
+    ("phase4_dpo", "results/raw/phase4", None),
+)
+PRIMARY = "google/gemma-2-9b-it"
+
+
+def _reduced_greedy_records(path: Path):
+    """Stream the greedy sample-0 records of one raw file, keeping only the fields needed here.
+
+    The byte pre-filter skips the ten resample lines per trajectory without parsing them, and the
+    token trace is dropped immediately, so a gigabyte file costs a few hundred small dicts.
+    """
+    needle = b'"sample_index":0,'
+    with path.open("rb") as handle:
+        for raw in handle:
+            if not raw.strip() or needle not in raw:
+                continue
+            record = json.loads(raw)
+            if record.get("trajectory_kind") != "greedy" or record.get("sample_index") != 0:
+                continue
+            messages = record.get("messages") or []
+            yield {
+                "model_id": record["model_id"], "task_id": record["task_id"],
+                "cell_id": record["cell_id"], "turn_label": record["turn_label"],
+                "tone": record.get("tone"), "feedback_validity": record.get("feedback_validity"),
+                "response_text": record["response_text"],
+                "final_answer_valid": bool(record["final_answer_valid"]),
+                "final_answer_letter": record.get("final_answer_letter"),
+                "last_user_message": next(
+                    (item["content"] for item in reversed(messages) if item.get("role") == "user"), None),
+            }
+
+
+def _classify_verdicts(records, protocol) -> dict:
+    """Grade every accurate-arm greedy conversation against the message it actually received."""
+    from src.protocol import (parse_final_answer,  # noqa: PLC0415
+                              strip_trailing_special_tokens)
+
+    canonical = {task.task_id: task.canonical_answer for task in protocol.matched_tasks}
+    accurate = protocol.conditions["feedback_messages"]["accurate"]
+    onset_failure = protocol.conditions["symmetric_onset_test"]["failure_message"]
+    washout = protocol.conditions["symmetric_onset_test"]["truthful_washout"]
+
+    by_conversation: dict[tuple, dict[str, dict]] = {}
+    models: set[str] = set()
+    for record in records:
+        models.add(record["model_id"])
+        by_conversation.setdefault(
+            (record["model_id"], record["task_id"], record["cell_id"]), {})[record["turn_label"]] = record
+
+    verdicts: list[dict] = []
+    contaminated: dict[tuple, dict] = {}
+    onset_unconditional = {"checked": 0, "matched_tone_failure": 0, "other": 0}
+    washout_rows: list[dict] = []
+    for key, turns in sorted(by_conversation.items()):
+        model_id, task_id, cell_id = key
+        difficulty, validity, tone = cell_id.split("__")
+        if validity != "accurate":
+            continue
+        answer = canonical.get(task_id)
+        for index, turn in enumerate(FEEDBACK_TURNS_ORDER):
+            record = turns.get(turn)
+            preceding = turns.get(GRADED_TURNS[index])
+            if record is None or preceding is None:
+                continue
+            issued = record["last_user_message"]
+            if issued == accurate[tone]["if_preceding_answer_incorrect"]:
+                verdict = "incorrect"
+            elif issued == accurate[tone]["if_preceding_answer_correct"]:
+                verdict = "correct"
+            else:
+                verdict = "other"
+            text = preceding["response_text"]
+            marker = strip_trailing_special_tokens(text) != text
+            stripped = parse_final_answer(text, strip_special_tokens=True)
+            frozen_valid = preceding["final_answer_valid"]
+            if verdict != "incorrect":
+                bucket = "graded_correct" if verdict == "correct" else "unrecognised_message"
+            elif marker and not frozen_valid and stripped.valid and stripped.letter == answer:
+                bucket = "bogus_failure"
+            elif marker and not frozen_valid and stripped.valid:
+                bucket = "marker_true_failure_wrong_letter"
+            elif marker and not stripped.valid:
+                bucket = "marker_no_answer_line"
+            elif not frozen_valid:
+                bucket = "non_answer_without_marker"
+            elif preceding["final_answer_letter"] != answer:
+                bucket = "true_failure"
+            else:
+                bucket = "UNEXPECTED_correct_graded_incorrect"
+            verdicts.append({
+                "model_id": model_id, "task_id": task_id, "cell_id": cell_id,
+                "difficulty": difficulty, "tone": tone, "round": index + 1,
+                "graded_turn": GRADED_TURNS[index], "verdict": verdict, "bucket": bucket,
+            })
+            if bucket == "bogus_failure":
+                entry = contaminated.setdefault(
+                    (model_id, task_id, cell_id),
+                    {"model_id": model_id, "task_id": task_id, "cell_id": cell_id,
+                     "difficulty": difficulty, "tone": tone, "n_bogus": 0, "first_round": index + 1})
+                entry["n_bogus"] += 1
+                entry["first_round"] = min(entry["first_round"], index + 1)
+        # (5) the onset failure message is issued unconditionally; verify that against the transcript
+        onset = turns.get("onset")
+        if onset is not None:
+            onset_unconditional["checked"] += 1
+            if onset["last_user_message"] == onset_failure[tone]:
+                onset_unconditional["matched_tone_failure"] += 1
+            else:
+                onset_unconditional["other"] += 1
+        # (5) the washout message DOES depend on parsing the measured answer
+        measured, wash = turns.get("measured"), turns.get("onset_washout")
+        if measured is not None and wash is not None:
+            text = measured["response_text"]
+            marker = strip_trailing_special_tokens(text) != text
+            stripped = parse_final_answer(text, strip_special_tokens=True)
+            frozen_valid = measured["final_answer_valid"]
+            frozen_correct = bool(frozen_valid and measured["final_answer_letter"] == answer)
+            issued_correct = wash["last_user_message"] == washout["if_measured_trial_answer_correct"]
+            truly_correct = bool(stripped.valid and stripped.letter == answer)
+            washout_rows.append({
+                "model_id": model_id, "task_id": task_id, "cell_id": cell_id,
+                "measured_marker_terminated": marker,
+                "frozen_valid": frozen_valid, "frozen_correct": frozen_correct,
+                "stripped_correct": truly_correct, "issued_correct_washout": issued_correct,
+                "misgraded_by_marker": bool(marker and not frozen_valid and truly_correct),
+                "misgraded_any_cause": bool(issued_correct != truly_correct),
+            })
+    return {
+        "models": sorted(models), "verdicts": verdicts,
+        "contaminated": sorted(contaminated.values(), key=lambda item: (item["cell_id"], item["task_id"])),
+        "onset_unconditional": onset_unconditional, "washout_rows": washout_rows,
+    }
+
+
+def _verdict_tables(result: dict, model_id: str) -> dict:
+    rows = [row for row in result["verdicts"] if row["model_id"] == model_id]
+    contaminated = [row for row in result["contaminated"] if row["model_id"] == model_id]
+    buckets: dict[str, int] = {}
+    by_cell: dict[str, dict[str, int]] = {}
+    for row in rows:
+        buckets[row["bucket"]] = buckets.get(row["bucket"], 0) + 1
+        cell = by_cell.setdefault(row["cell_id"], {})
+        cell[row["bucket"]] = cell.get(row["bucket"], 0) + 1
+    contaminated_by_cell: dict[str, dict] = {}
+    for row in contaminated:
+        entry = contaminated_by_cell.setdefault(
+            row["cell_id"], {"n_conversations": 0, "task_ids": [], "first_rounds": {}})
+        entry["n_conversations"] += 1
+        entry["task_ids"].append(row["task_id"])
+        key = str(row["first_round"])
+        entry["first_rounds"][key] = entry["first_rounds"].get(key, 0) + 1
+    washout = [row for row in result["washout_rows"] if row["model_id"] == model_id]
+    return {
+        "model_id": model_id,
+        "n_graded_feedback_verdicts": len(rows),
+        "buckets": dict(sorted(buckets.items())),
+        "by_cell": {cell: dict(sorted(value.items())) for cell, value in sorted(by_cell.items())},
+        "contaminated_conversations": contaminated,
+        "contaminated_by_cell": dict(sorted(contaminated_by_cell.items())),
+        "n_contaminated_conversations": len(contaminated),
+        "washout": {
+            "n_accurate_conversations": len(washout),
+            "n_measured_marker_terminated": sum(1 for row in washout if row["measured_marker_terminated"]),
+            "n_misgraded_by_marker": sum(1 for row in washout if row["misgraded_by_marker"]),
+            "n_misgraded_any_cause": sum(1 for row in washout if row["misgraded_any_cause"]),
+            "n_measured_unparseable_frozen": sum(1 for row in washout if not row["frozen_valid"]),
+        },
+    }
+
+
+def _sensitivity(metric_path: Path, model_id: str, contaminated: list, label: str) -> dict:
+    """Recompute the tone and validity contrasts with contaminated conversations removed."""
+    rows = [row for row in read_metric_rows(metric_path) if row.model_id == model_id]
+    index = index_rows(rows, model_id)
+    excluded = {(row["task_id"], row["cell_id"]) for row in contaminated}
+    kept = {key: value for key, value in index.items() if (key[0], key[1]) not in excluded}
+    seed = "bogus|%s" % label
+    out = []
+    for key in SENSITIVITY_CONTRASTS:
+        full = estimate_contrast(index, index, CONTRASTS_BY_ID[key], seed)
+        trimmed = estimate_contrast(kept, kept, CONTRASTS_BY_ID[key], seed)
+        out.append({
+            "contrast_id": key, "metric": CONTRASTS_BY_ID[key].metric,
+            "stratum": CONTRASTS_BY_ID[key].stratum,
+            "all_conversations": full.to_dict(), "excluding_contaminated": trimmed.to_dict(),
+            "items_dropped": full.n_items - trimmed.n_items,
+        })
+    return {"source": str(metric_path), "n_excluded_conversations": len(excluded), "contrasts": out}
+
+
+def _render_bogus(payload: dict) -> str:
+    def interval(row):
+        if row is None or row.get("estimate") is None:
+            return "n/a"
+        if row.get("ci95_lower") is None:
+            return "%.3f (no CI)" % row["estimate"]
+        return "%.3f [%.3f, %.3f]" % (row["estimate"], row["ci95_lower"], row["ci95_upper"])
+
+    lines = [
+        "# Bogus failure verdicts in the ACCURATE arm (trailing special-token artefact)",
+        "",
+        "> **Diagnostic only. No verdict, table or figure changes.** Amendment A6 was not adopted.",
+        "",
+        "## (1) The grading rule, quoted",
+        "",
+        "`src/protocol.py::feedback_message`, accurate arm:",
+        "",
+        "```python",
+        "correct = preceding.valid and preceding.letter == canonical_answer",
+        'return messages["accurate"][tone][',
+        '    "if_preceding_answer_correct" if correct else "if_preceding_answer_incorrect"]',
+        "```",
+        "",
+        "and `configs/conditions.json`, `generation_settings.trajectory_unit.invalid_branching`:",
+        "",
+        "> \"In the accurate arm, an invalid immediately preceding answer is treated as incorrect",
+        "> for feedback branching.\"",
+        "",
+        "So an unparseable preceding answer is graded **incorrect**. A response ending",
+        "`Answer: <correct letter>` followed by a trailing `<end_of_turn>`/`<eos>` run therefore",
+        "receives a failure message inside the truthful arm - a **bogus failure verdict**. The",
+        "verdict actually issued is read from the stored transcript (the user turn preceding each",
+        "feedback response), not re-derived, so these counts are what the model really saw.",
+        "",
+        "## (2) Graded feedback verdicts by outcome",
+        "",
+        "| split | model | verdicts | **bogus failure** | marker, wrong letter | marker, no answer line | non-answer (no marker) | true failure | graded correct |",
+        "| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
+    ]
+    for split in payload["splits"]:
+        for table in split["models"]:
+            buckets = table["buckets"]
+            lines.append("| %s | `%s` | %d | **%d** | %d | %d | %d | %d | %d |" % (
+                split["label"], table["model_id"], table["n_graded_feedback_verdicts"],
+                buckets.get("bogus_failure", 0), buckets.get("marker_true_failure_wrong_letter", 0),
+                buckets.get("marker_no_answer_line", 0), buckets.get("non_answer_without_marker", 0),
+                buckets.get("true_failure", 0), buckets.get("graded_correct", 0)))
+
+    for split in payload["splits"]:
+        primary = next((item for item in split["models"] if item["model_id"] == split["primary_model"]), None)
+        if primary is None:
+            continue
+        lines += [
+            "",
+            "## %s - `%s`" % (split["label"], primary["model_id"]),
+            "",
+            "### (2, per cell) bogus verdicts by accurate cell",
+            "",
+            "| cell | bogus failure | marker, wrong letter | marker, no answer line | non-answer (no marker) | true failure | graded correct |",
+            "| --- | ---: | ---: | ---: | ---: | ---: | ---: |",
+        ]
+        for cell, buckets in primary["by_cell"].items():
+            lines.append("| %s | **%d** | %d | %d | %d | %d | %d |" % (
+                cell, buckets.get("bogus_failure", 0),
+                buckets.get("marker_true_failure_wrong_letter", 0),
+                buckets.get("marker_no_answer_line", 0), buckets.get("non_answer_without_marker", 0),
+                buckets.get("true_failure", 0), buckets.get("graded_correct", 0)))
+        lines += [
+            "",
+            "### (3) contaminated conversations (>= 1 bogus verdict), out of 10 per cell",
+            "",
+            "| cell | contaminated | items | first bogus round |",
+            "| --- | ---: | --- | --- |",
+        ]
+        if not primary["contaminated_by_cell"]:
+            lines.append("| - | 0 | none | - |")
+        for cell, entry in primary["contaminated_by_cell"].items():
+            lines.append("| %s | **%d** / 10 | %s | %s |" % (
+                cell, entry["n_conversations"], ", ".join(entry["task_ids"]),
+                ", ".join("round %s x%d" % item for item in sorted(entry["first_rounds"].items()))))
+        washout = primary["washout"]
+        lines += [
+            "",
+            "### (5) onset and washout",
+            "",
+            "- onset failure message issued unconditionally: **%d/%d** accurate conversations received"
+            % (split["onset_unconditional"]["matched_tone_failure"], split["onset_unconditional"]["checked"]),
+            "  the tone-matched failure string verbatim (%d other). Confirmed: no contamination path."
+            % split["onset_unconditional"]["other"],
+            "- washout message depends on parsing the measured answer: measured greedy answers",
+            "  terminated by a marker **%d**; mis-graded washouts caused by a marker **%d**;" % (
+                washout["n_measured_marker_terminated"], washout["n_misgraded_by_marker"]),
+            "  mis-graded from any cause **%d**; measured answers unparseable under the frozen rule **%d**." % (
+                washout["n_misgraded_any_cause"], washout["n_measured_unparseable_frozen"]),
+        ]
+        sensitivity = split.get("sensitivity")
+        if sensitivity:
+            lines += [
+                "",
+                "### (4) sensitivity: contrasts excluding contaminated conversations",
+                "",
+                "Item-paired: an item leaves a contrast when the conversation on **either** side is",
+                "contaminated. Item bootstrap, 2,000 resamples, same seed on both columns, so the",
+                "only difference is which items enter. Point estimates in the \"all conversations\"",
+                "column reproduce the published table exactly; its interval can differ in the last",
+                "decimal because this audit uses its own bootstrap seed, so compare the two columns",
+                "here with each other rather than with the published interval.",
+                "",
+                "- conversations excluded: **%d**" % sensitivity["n_excluded_conversations"],
+                "",
+                "| contrast | metric | stratum | all conversations | excluding contaminated | items dropped |",
+                "| --- | --- | --- | --- | --- | ---: |",
+            ]
+            for row in sensitivity["contrasts"]:
+                lines.append("| %s | %s | %s | %s | %s | %d |" % (
+                    row["contrast_id"], row["metric"], row["stratum"].replace("|", "\\|"),
+                    interval(row["all_conversations"]), interval(row["excluding_contaminated"]),
+                    row["items_dropped"]))
+    lines.append("")
+    return "\n".join(lines)
+
+
+def command_audit_bogus_verdicts(args: argparse.Namespace) -> int:
+    protocol = load_protocol(ROOT)
+    splits = []
+    for label, raw_relative, metric_relative in BOGUS_RAW:
+        directory = ROOT / raw_relative
+        if not directory.is_dir():
+            print("%s: absent (%s)" % (label, directory), file=sys.stderr)
+            continue
+        records = []
+        for path in sorted(directory.glob("*.jsonl")):
+            if path.name.endswith(".failures.jsonl"):
+                continue
+            print("scanning %s / %s ..." % (label, path.name), flush=True)
+            records.extend(_reduced_greedy_records(path))
+        if not records:
+            continue
+        result = _classify_verdicts(records, protocol)
+        primary_model = PRIMARY if PRIMARY in result["models"] else result["models"][0]
+        tables = [_verdict_tables(result, model_id) for model_id in result["models"]]
+        split = {
+            "label": label, "raw_source": str(directory), "primary_model": primary_model,
+            "models": tables, "onset_unconditional": result["onset_unconditional"],
+        }
+        if metric_relative and (ROOT / metric_relative).exists():
+            contaminated = [row for row in result["contaminated"] if row["model_id"] == primary_model]
+            split["sensitivity"] = _sensitivity(ROOT / metric_relative, primary_model, contaminated, label)
+        splits.append(split)
+        for table in tables:
+            print("  %-34s bogus=%-4d contaminated conversations=%d"
+                  % (table["model_id"], table["buckets"].get("bogus_failure", 0),
+                     table["n_contaminated_conversations"]), flush=True)
+    if not splits:
+        print("no raw source found", file=sys.stderr)
+        return 2
+    payload = {
+        "label": "DIAGNOSTIC ONLY - does the trailing-marker artefact contaminate the accurate arm?",
+        "generated_at": _now(),
+        "grading_rule": "src/protocol.py::feedback_message -- correct = preceding.valid and "
+                        "preceding.letter == canonical_answer; conditions.json invalid_branching: "
+                        "'In the accurate arm, an invalid immediately preceding answer is treated "
+                        "as incorrect for feedback branching.'",
+        "verdict_source": "the user turn stored in each feedback response's own transcript",
+        "splits": splits,
+    }
+    out = Path(args.out) if Path(args.out).is_absolute() else ROOT / args.out
+    _write_json(out / "bogus_verdict_audit.json", payload)
+    _write_text(out / "bogus_verdict_audit.md", _render_bogus(payload))
+    print("wrote %s" % (out / "bogus_verdict_audit.json"))
+    print("wrote %s" % (out / "bogus_verdict_audit.md"))
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="analyze_robustness.py", description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -962,6 +1346,13 @@ def build_parser() -> argparse.ArgumentParser:
              "amendment A6 would do to them (changes no verdict, table or figure)")
     audit.add_argument("--out", default="results/summaries/robustness")
     audit.set_defaults(handler=command_audit_special_tokens)
+
+    bogus = subparsers.add_parser(
+        "audit-bogus-verdicts",
+        help="DIAGNOSTIC: accurate-arm failure verdicts issued because a correct answer line was "
+             "hidden behind a trailing special-token run, and the tone contrasts without them")
+    bogus.add_argument("--out", default="results/summaries/robustness")
+    bogus.set_defaults(handler=command_audit_bogus_verdicts)
     return parser
 
 

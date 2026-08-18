@@ -1525,3 +1525,75 @@ SENSITIVITY block in `phase4.md` plus `a6_special_token_audit.csv`.
 **Spend.** ~75 min of L40S across the two adapter apps plus a short base-model tail; judge $0.60.
 Files: `results/raw/phase4/`, `results/raw/phase4_capability/`, `results/summaries/phase4/`,
 `results/summaries/judge/phase4_{A,B}/`, figures F8-F10. Manifest touched only by `preflight --pin`.
+
+## 2026-08-18 - agent N - bogus failure verdicts in the accurate arm: 2 on discovery, 0 on the holdout
+
+`scripts/analyze_robustness.py audit-bogus-verdicts` ->
+`results/summaries/robustness/bogus_verdict_audit.{md,json}`. Diagnostic only; no verdict, table or
+figure moved, no A6 wiring, no manifest write. Suite **595 passed, 1 skipped**.
+
+**(1) The rule.** `src/protocol.py::feedback_message`, accurate arm:
+`correct = preceding.valid and preceding.letter == canonical_answer`, and
+`configs/conditions.json` `generation_settings.trajectory_unit.invalid_branching`: *"In the accurate
+arm, an invalid immediately preceding answer is treated as incorrect for feedback branching."* So a
+response ending `Answer: <correct letter>` behind a trailing marker run is graded **incorrect** and
+receives a failure message inside the *truthful* arm. The verdict counted is the one actually issued,
+read out of each feedback response's own stored transcript rather than re-derived.
+
+**(2)/(3) It almost never happens, and never on the holdout.** Of 120 graded feedback verdicts per
+model per split:
+
+| split | model | bogus failure | marker, wrong letter | marker, no answer line | non-answer (no marker) | true failure | contaminated conversations |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| discovery | **`google/gemma-2-9b-it`** | **2** | 1 | 6 | 10 | 14 | **2** of 40 |
+| holdout | **`google/gemma-2-9b-it`** | **0** | 2 | 7 | 10 | 16 | **0** of 40 |
+| discovery | `google/gemma-2-9b-it+plain` | 8 | 1 | 1 | 10 | 18 | 8 of 40 |
+| phase4 | `google/gemma-2-9b-it+dpo-B` | 5 | 1 | 0 | 1 | 26 | 5 of 40 |
+| phase4 | `google/gemma-2-9b-it+dpo-A` | 0 | 0 | 1 | 11 | 26 | 0 of 40 |
+
+Zero for gemma-2-2b-it, gemma-2-9b (base), both Qwens and Llama-3.1-8B on discovery, and for
+Qwen-3B and Llama on the holdout. The primary's two discovery cases are **DGS-010**
+(`easy__accurate__hostile`) and **DGS-038** (`hard__accurate__hostile`), both first firing at
+**round 3**, i.e. on the last graded turn, so each cost that conversation one bogus verdict out of
+three - and both are hostile cells, consistent with the artefact's tone correlation. `+plain` is the
+interesting outlier: 3 of its 8 contaminated conversations are **neutral** cells.
+
+**(4) Sensitivity - the tone findings do not depend on it.** Dropping the contaminated conversations
+item-paired (an item leaves a contrast when either arm's conversation is contaminated), 2,000-resample
+item bootstrap, same seed on both columns:
+
+| contrast | stratum | all conversations | excluding contaminated | items dropped |
+| --- | --- | --- | --- | ---: |
+| H1 | easy \| neutral | -3.800 [-5.291, -2.378] | -3.800 [-5.291, -2.378] | 0 |
+| H1_hard | hard \| neutral | -1.230 [-2.937, +0.410] | -1.230 [-2.937, +0.410] | 0 |
+| H2a | easy \| accurate | -2.275 [-3.881, -1.012] | **-2.253 [-4.139, -0.917]** | 1 |
+| H2b | hard \| accurate | -8.781 [-17.537, -1.121] | **-9.714 [-19.469, -0.776]** | 1 |
+| pooled tone | easy+hard \| accurate | -4.954 [-9.307, -1.634] | **-5.237 [-10.092, -1.439]** | 2 |
+| non-answer | easy+hard \| accurate | +0.050 [0.000, +0.150] | +0.056 [0.000, +0.167] | 2 |
+
+Every tone estimate keeps its sign, keeps a CI excluding zero, and if anything gets **larger** when
+the contaminated items are removed - the contamination was diluting the effect, not creating it.
+H1 and H1_hard are bit-identical (0 items dropped), as expected: the neutral accurate cells have no
+bogus verdict. On the **holdout every one of these six contrasts is bit-identical** with 0 items
+dropped, so the confirmatory tone result is untouched. Point estimates in the "all conversations"
+column reproduce the published table exactly; intervals can differ in the last decimal only because
+this audit uses its own bootstrap seed.
+
+**(5) Onset and washout.** The onset failure message is issued unconditionally, and the transcripts
+confirm it: **280/280** accurate conversations on discovery (7 models x 40) and **120/120** on the
+holdout received the tone-matched failure string verbatim, 0 deviations - no contamination path, as
+expected from `onset_messages`, which selects the failure string by tone alone. The washout message
+*does* depend on parsing the measured answer, but for the primary model **0** measured greedy answers
+are marker-terminated in either split, so **0** washouts are mis-graded by the artefact (and 0
+mis-graded from any cause). The 5 (discovery) / 4 (holdout) measured answers that are unparseable
+under the frozen rule are genuine non-answers, and their "your answer was incorrect" washout is what
+the frozen protocol specifies. `+plain` and `dpo-B` each have exactly one marker-terminated measured
+answer; only `+plain`'s produces a mis-graded washout.
+
+**Reading.** The accurate arm is very nearly clean: 2 bogus verdicts on discovery, 0 on the holdout,
+and removing the affected conversations does not move H2a, H2b, the pooled tone effect or the
+non-answer difference in any direction that matters. **The tone findings need no caveat.** Combined
+with the previous entry - 0 affected measured greedy trials, so the non-answer channel is exact - the
+trailing-marker artefact touches resamples and mid-conversation turns and leaves every confirmatory
+M1 estimate intact. The one number that would move under A6 is H8/M2 (4 item-cells across the two
+splits, all hostile).

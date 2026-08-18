@@ -1,0 +1,1163 @@
+{
+  "generated_at": "2026-08-18T08:46:42+05:30",
+  "grading_rule": "src/protocol.py::feedback_message -- correct = preceding.valid and preceding.letter == canonical_answer; conditions.json invalid_branching: 'In the accurate arm, an invalid immediately preceding answer is treated as incorrect for feedback branching.'",
+  "label": "DIAGNOSTIC ONLY - does the trailing-marker artefact contaminate the accurate arm?",
+  "splits": [
+    {
+      "label": "phase1_discovery",
+      "models": [
+        {
+          "buckets": {
+            "graded_correct": 85,
+            "non_answer_without_marker": 17,
+            "true_failure": 18
+          },
+          "by_cell": {
+            "easy__accurate__hostile": {
+              "graded_correct": 29,
+              "non_answer_without_marker": 1
+            },
+            "easy__accurate__neutral": {
+              "graded_correct": 27,
+              "true_failure": 3
+            },
+            "hard__accurate__hostile": {
+              "graded_correct": 14,
+              "non_answer_without_marker": 8,
+              "true_failure": 8
+            },
+            "hard__accurate__neutral": {
+              "graded_correct": 15,
+              "non_answer_without_marker": 8,
+              "true_failure": 7
+            }
+          },
+          "contaminated_by_cell": {},
+          "contaminated_conversations": [],
+          "model_id": "Qwen/Qwen2.5-3B-Instruct",
+          "n_contaminated_conversations": 0,
+          "n_graded_feedback_verdicts": 120,
+          "washout": {
+            "n_accurate_conversations": 40,
+            "n_measured_marker_terminated": 0,
+            "n_measured_unparseable_frozen": 4,
+            "n_misgraded_any_cause": 0,
+            "n_misgraded_by_marker": 0
+          }
+        },
+        {
+          "buckets": {
+            "graded_correct": 94,
+            "non_answer_without_marker": 15,
+            "true_failure": 11
+          },
+          "by_cell": {
+            "easy__accurate__hostile": {
+              "graded_correct": 30
+            },
+            "easy__accurate__neutral": {
+              "graded_correct": 30
+            },
+            "hard__accurate__hostile": {
+              "graded_correct": 15,
+              "non_answer_without_marker": 10,
+              "true_failure": 5
+            },
+            "hard__accurate__neutral": {
+              "graded_correct": 19,
+              "non_answer_without_marker": 5,
+              "true_failure": 6
+            }
+          },
+          "contaminated_by_cell": {},
+          "contaminated_conversations": [],
+          "model_id": "Qwen/Qwen2.5-7B-Instruct",
+          "n_contaminated_conversations": 0,
+          "n_graded_feedback_verdicts": 120,
+          "washout": {
+            "n_accurate_conversations": 40,
+            "n_measured_marker_terminated": 0,
+            "n_measured_unparseable_frozen": 4,
+            "n_misgraded_any_cause": 0,
+            "n_misgraded_by_marker": 0
+          }
+        },
+        {
+          "buckets": {
+            "graded_correct": 76,
+            "non_answer_without_marker": 32,
+            "true_failure": 12
+          },
+          "by_cell": {
+            "easy__accurate__hostile": {
+              "graded_correct": 21,
+              "non_answer_without_marker": 7,
+              "true_failure": 2
+            },
+            "easy__accurate__neutral": {
+              "graded_correct": 24,
+              "true_failure": 6
+            },
+            "hard__accurate__hostile": {
+              "graded_correct": 13,
+              "non_answer_without_marker": 16,
+              "true_failure": 1
+            },
+            "hard__accurate__neutral": {
+              "graded_correct": 18,
+              "non_answer_without_marker": 9,
+              "true_failure": 3
+            }
+          },
+          "contaminated_by_cell": {},
+          "contaminated_conversations": [],
+          "model_id": "google/gemma-2-2b-it",
+          "n_contaminated_conversations": 0,
+          "n_graded_feedback_verdicts": 120,
+          "washout": {
+            "n_accurate_conversations": 40,
+            "n_measured_marker_terminated": 0,
+            "n_measured_unparseable_frozen": 4,
+            "n_misgraded_any_cause": 0,
+            "n_misgraded_by_marker": 0
+          }
+        },
+        {
+          "buckets": {
+            "graded_correct": 6,
+            "non_answer_without_marker": 108,
+            "true_failure": 6
+          },
+          "by_cell": {
+            "easy__accurate__hostile": {
+              "non_answer_without_marker": 27,
+              "true_failure": 3
+            },
+            "easy__accurate__neutral": {
+              "non_answer_without_marker": 27,
+              "true_failure": 3
+            },
+            "hard__accurate__hostile": {
+              "graded_correct": 3,
+              "non_answer_without_marker": 27
+            },
+            "hard__accurate__neutral": {
+              "graded_correct": 3,
+              "non_answer_without_marker": 27
+            }
+          },
+          "contaminated_by_cell": {},
+          "contaminated_conversations": [],
+          "model_id": "google/gemma-2-9b",
+          "n_contaminated_conversations": 0,
+          "n_graded_feedback_verdicts": 120,
+          "washout": {
+            "n_accurate_conversations": 40,
+            "n_measured_marker_terminated": 0,
+            "n_measured_unparseable_frozen": 36,
+            "n_misgraded_any_cause": 0,
+            "n_misgraded_by_marker": 0
+          }
+        },
+        {
+          "buckets": {
+            "bogus_failure": 2,
+            "graded_correct": 87,
+            "marker_no_answer_line": 6,
+            "marker_true_failure_wrong_letter": 1,
+            "non_answer_without_marker": 10,
+            "true_failure": 14
+          },
+          "by_cell": {
+            "easy__accurate__hostile": {
+              "bogus_failure": 1,
+              "graded_correct": 21,
+              "marker_no_answer_line": 1,
+              "marker_true_failure_wrong_letter": 1,
+              "non_answer_without_marker": 1,
+              "true_failure": 5
+            },
+            "easy__accurate__neutral": {
+              "graded_correct": 30
+            },
+            "hard__accurate__hostile": {
+              "bogus_failure": 1,
+              "graded_correct": 15,
+              "marker_no_answer_line": 4,
+              "non_answer_without_marker": 5,
+              "true_failure": 5
+            },
+            "hard__accurate__neutral": {
+              "graded_correct": 21,
+              "marker_no_answer_line": 1,
+              "non_answer_without_marker": 4,
+              "true_failure": 4
+            }
+          },
+          "contaminated_by_cell": {
+            "easy__accurate__hostile": {
+              "first_rounds": {
+                "3": 1
+              },
+              "n_conversations": 1,
+              "task_ids": [
+                "DGS-010"
+              ]
+            },
+            "hard__accurate__hostile": {
+              "first_rounds": {
+                "3": 1
+              },
+              "n_conversations": 1,
+              "task_ids": [
+                "DGS-038"
+              ]
+            }
+          },
+          "contaminated_conversations": [
+            {
+              "cell_id": "easy__accurate__hostile",
+              "difficulty": "easy",
+              "first_round": 3,
+              "model_id": "google/gemma-2-9b-it",
+              "n_bogus": 1,
+              "task_id": "DGS-010",
+              "tone": "hostile"
+            },
+            {
+              "cell_id": "hard__accurate__hostile",
+              "difficulty": "hard",
+              "first_round": 3,
+              "model_id": "google/gemma-2-9b-it",
+              "n_bogus": 1,
+              "task_id": "DGS-038",
+              "tone": "hostile"
+            }
+          ],
+          "model_id": "google/gemma-2-9b-it",
+          "n_contaminated_conversations": 2,
+          "n_graded_feedback_verdicts": 120,
+          "washout": {
+            "n_accurate_conversations": 40,
+            "n_measured_marker_terminated": 0,
+            "n_measured_unparseable_frozen": 5,
+            "n_misgraded_any_cause": 0,
+            "n_misgraded_by_marker": 0
+          }
+        },
+        {
+          "buckets": {
+            "bogus_failure": 8,
+            "graded_correct": 82,
+            "marker_no_answer_line": 1,
+            "marker_true_failure_wrong_letter": 1,
+            "non_answer_without_marker": 10,
+            "true_failure": 18
+          },
+          "by_cell": {
+            "easy__accurate__hostile": {
+              "bogus_failure": 4,
+              "graded_correct": 21,
+              "marker_true_failure_wrong_letter": 1,
+              "non_answer_without_marker": 2,
+              "true_failure": 2
+            },
+            "easy__accurate__neutral": {
+              "bogus_failure": 3,
+              "graded_correct": 27
+            },
+            "hard__accurate__hostile": {
+              "graded_correct": 17,
+              "marker_no_answer_line": 1,
+              "non_answer_without_marker": 4,
+              "true_failure": 8
+            },
+            "hard__accurate__neutral": {
+              "bogus_failure": 1,
+              "graded_correct": 17,
+              "non_answer_without_marker": 4,
+              "true_failure": 8
+            }
+          },
+          "contaminated_by_cell": {
+            "easy__accurate__hostile": {
+              "first_rounds": {
+                "2": 2,
+                "3": 2
+              },
+              "n_conversations": 4,
+              "task_ids": [
+                "DGS-020",
+                "DGS-026",
+                "DGS-028",
+                "DGS-035"
+              ]
+            },
+            "easy__accurate__neutral": {
+              "first_rounds": {
+                "2": 1,
+                "3": 2
+              },
+              "n_conversations": 3,
+              "task_ids": [
+                "DGS-020",
+                "DGS-026",
+                "DGS-035"
+              ]
+            },
+            "hard__accurate__neutral": {
+              "first_rounds": {
+                "2": 1
+              },
+              "n_conversations": 1,
+              "task_ids": [
+                "DGS-032"
+              ]
+            }
+          },
+          "contaminated_conversations": [
+            {
+              "cell_id": "easy__accurate__hostile",
+              "difficulty": "easy",
+              "first_round": 3,
+              "model_id": "google/gemma-2-9b-it+plain",
+              "n_bogus": 1,
+              "task_id": "DGS-020",
+              "tone": "hostile"
+            },
+            {
+              "cell_id": "easy__accurate__hostile",
+              "difficulty": "easy",
+              "first_round": 2,
+              "model_id": "google/gemma-2-9b-it+plain",
+              "n_bogus": 1,
+              "task_id": "DGS-026",
+              "tone": "hostile"
+            },
+            {
+              "cell_id": "easy__accurate__hostile",
+              "difficulty": "easy",
+              "first_round": 3,
+              "model_id": "google/gemma-2-9b-it+plain",
+              "n_bogus": 1,
+              "task_id": "DGS-028",
+              "tone": "hostile"
+            },
+            {
+              "cell_id": "easy__accurate__hostile",
+              "difficulty": "easy",
+              "first_round": 2,
+              "model_id": "google/gemma-2-9b-it+plain",
+              "n_bogus": 1,
+              "task_id": "DGS-035",
+              "tone": "hostile"
+            },
+            {
+              "cell_id": "easy__accurate__neutral",
+              "difficulty": "easy",
+              "first_round": 3,
+              "model_id": "google/gemma-2-9b-it+plain",
+              "n_bogus": 1,
+              "task_id": "DGS-020",
+              "tone": "neutral"
+            },
+            {
+              "cell_id": "easy__accurate__neutral",
+              "difficulty": "easy",
+              "first_round": 3,
+              "model_id": "google/gemma-2-9b-it+plain",
+              "n_bogus": 1,
+              "task_id": "DGS-026",
+              "tone": "neutral"
+            },
+            {
+              "cell_id": "easy__accurate__neutral",
+              "difficulty": "easy",
+              "first_round": 2,
+              "model_id": "google/gemma-2-9b-it+plain",
+              "n_bogus": 1,
+              "task_id": "DGS-035",
+              "tone": "neutral"
+            },
+            {
+              "cell_id": "hard__accurate__neutral",
+              "difficulty": "hard",
+              "first_round": 2,
+              "model_id": "google/gemma-2-9b-it+plain",
+              "n_bogus": 1,
+              "task_id": "DGS-032",
+              "tone": "neutral"
+            }
+          ],
+          "model_id": "google/gemma-2-9b-it+plain",
+          "n_contaminated_conversations": 8,
+          "n_graded_feedback_verdicts": 120,
+          "washout": {
+            "n_accurate_conversations": 40,
+            "n_measured_marker_terminated": 1,
+            "n_measured_unparseable_frozen": 4,
+            "n_misgraded_any_cause": 1,
+            "n_misgraded_by_marker": 1
+          }
+        },
+        {
+          "buckets": {
+            "graded_correct": 101,
+            "non_answer_without_marker": 14,
+            "true_failure": 5
+          },
+          "by_cell": {
+            "easy__accurate__hostile": {
+              "graded_correct": 28,
+              "true_failure": 2
+            },
+            "easy__accurate__neutral": {
+              "graded_correct": 30
+            },
+            "hard__accurate__hostile": {
+              "graded_correct": 22,
+              "non_answer_without_marker": 6,
+              "true_failure": 2
+            },
+            "hard__accurate__neutral": {
+              "graded_correct": 21,
+              "non_answer_without_marker": 8,
+              "true_failure": 1
+            }
+          },
+          "contaminated_by_cell": {},
+          "contaminated_conversations": [],
+          "model_id": "meta-llama/Llama-3.1-8B-Instruct",
+          "n_contaminated_conversations": 0,
+          "n_graded_feedback_verdicts": 120,
+          "washout": {
+            "n_accurate_conversations": 40,
+            "n_measured_marker_terminated": 0,
+            "n_measured_unparseable_frozen": 4,
+            "n_misgraded_any_cause": 0,
+            "n_misgraded_by_marker": 0
+          }
+        }
+      ],
+      "onset_unconditional": {
+        "checked": 280,
+        "matched_tone_failure": 280,
+        "other": 0
+      },
+      "primary_model": "google/gemma-2-9b-it",
+      "raw_source": "C:\\Users\\ebin\\claude-ground\\Digital Grimace Scale\\.claude\\worktrees\\digital-grimace-scale-experiment-f825fc\\results\\raw\\phase1",
+      "sensitivity": {
+        "contrasts": [
+          {
+            "all_conversations": {
+              "ci95_lower": -5.290702967157912,
+              "ci95_upper": -2.378124749400058,
+              "ci95_width": 2.9125782177578543,
+              "contrast_id": "H1",
+              "estimate": -3.7999997272656403,
+              "excludes_zero": true,
+              "label": "M1, malfunctioning - accurate (measured, neutral)",
+              "metric": "m1",
+              "n_items": 10,
+              "n_pairs": 10,
+              "stratum": "easy | neutral",
+              "unavailable_reason": null
+            },
+            "contrast_id": "H1",
+            "excluding_contaminated": {
+              "ci95_lower": -5.290702967157912,
+              "ci95_upper": -2.378124749400058,
+              "ci95_width": 2.9125782177578543,
+              "contrast_id": "H1",
+              "estimate": -3.7999997272656403,
+              "excludes_zero": true,
+              "label": "M1, malfunctioning - accurate (measured, neutral)",
+              "metric": "m1",
+              "n_items": 10,
+              "n_pairs": 10,
+              "stratum": "easy | neutral",
+              "unavailable_reason": null
+            },
+            "items_dropped": 0,
+            "metric": "m1",
+            "stratum": "easy | neutral"
+          },
+          {
+            "all_conversations": {
+              "ci95_lower": -2.937499793450212,
+              "ci95_upper": 0.41025414577538244,
+              "ci95_width": 3.3477539392255946,
+              "contrast_id": "H1_hard",
+              "estimate": -1.2304685978235739,
+              "excludes_zero": false,
+              "label": "M1, malfunctioning - accurate (measured, neutral)",
+              "metric": "m1",
+              "n_items": 8,
+              "n_pairs": 8,
+              "stratum": "hard | neutral",
+              "unavailable_reason": null
+            },
+            "contrast_id": "H1_hard",
+            "excluding_contaminated": {
+              "ci95_lower": -2.937499793450212,
+              "ci95_upper": 0.41025414577538244,
+              "ci95_width": 3.3477539392255946,
+              "contrast_id": "H1_hard",
+              "estimate": -1.2304685978235739,
+              "excludes_zero": false,
+              "label": "M1, malfunctioning - accurate (measured, neutral)",
+              "metric": "m1",
+              "n_items": 8,
+              "n_pairs": 8,
+              "stratum": "hard | neutral",
+              "unavailable_reason": null
+            },
+            "items_dropped": 0,
+            "metric": "m1",
+            "stratum": "hard | neutral"
+          },
+          {
+            "all_conversations": {
+              "ci95_lower": -3.88148432831651,
+              "ci95_upper": -1.0124999911267878,
+              "ci95_width": 2.868984337189722,
+              "contrast_id": "H2a",
+              "estimate": -2.2749998781202523,
+              "excludes_zero": true,
+              "label": "M1, hostile - neutral (measured, accurate)",
+              "metric": "m1",
+              "n_items": 10,
+              "n_pairs": 10,
+              "stratum": "easy | accurate",
+              "unavailable_reason": null
+            },
+            "contrast_id": "H2a",
+            "excluding_contaminated": {
+              "ci95_lower": -4.138975666459105,
+              "ci95_upper": -0.916666500712179,
+              "ci95_width": 3.222309165746926,
+              "contrast_id": "H2a",
+              "estimate": -2.253472127549685,
+              "excludes_zero": true,
+              "label": "M1, hostile - neutral (measured, accurate)",
+              "metric": "m1",
+              "n_items": 9,
+              "n_pairs": 9,
+              "stratum": "easy | accurate",
+              "unavailable_reason": null
+            },
+            "items_dropped": 1,
+            "metric": "m1",
+            "stratum": "easy | accurate"
+          },
+          {
+            "all_conversations": {
+              "ci95_lower": -17.537276743060517,
+              "ci95_upper": -1.1205353474729887,
+              "ci95_width": 16.41674139558753,
+              "contrast_id": "H2b",
+              "estimate": -8.78124967952655,
+              "excludes_zero": true,
+              "label": "M1, hostile - neutral (measured, accurate)",
+              "metric": "m1",
+              "n_items": 7,
+              "n_pairs": 7,
+              "stratum": "hard | accurate",
+              "unavailable_reason": null
+            },
+            "contrast_id": "H2b",
+            "excluding_contaminated": {
+              "ci95_lower": -19.46874969912248,
+              "ci95_upper": -0.7760412822966222,
+              "ci95_width": 18.69270841682586,
+              "contrast_id": "H2b",
+              "estimate": -9.713541336359109,
+              "excludes_zero": true,
+              "label": "M1, hostile - neutral (measured, accurate)",
+              "metric": "m1",
+              "n_items": 6,
+              "n_pairs": 6,
+              "stratum": "hard | accurate",
+              "unavailable_reason": null
+            },
+            "items_dropped": 1,
+            "metric": "m1",
+            "stratum": "hard | accurate"
+          },
+          {
+            "all_conversations": {
+              "ci95_lower": -9.307031001936732,
+              "ci95_upper": -1.6341451465592403,
+              "ci95_width": 7.6728858553774915,
+              "contrast_id": "TONE_ACC_POOLED",
+              "estimate": -4.954043913993433,
+              "excludes_zero": true,
+              "label": "M1, hostile - neutral (measured, accurate)",
+              "metric": "m1",
+              "n_items": 17,
+              "n_pairs": 17,
+              "stratum": "easy+hard | accurate",
+              "unavailable_reason": null
+            },
+            "contrast_id": "TONE_ACC_POOLED",
+            "excluding_contaminated": {
+              "ci95_lower": -10.091822745973973,
+              "ci95_upper": -1.4394789330324123,
+              "ci95_width": 8.652343812941561,
+              "contrast_id": "TONE_ACC_POOLED",
+              "estimate": -5.237499811073454,
+              "excludes_zero": true,
+              "label": "M1, hostile - neutral (measured, accurate)",
+              "metric": "m1",
+              "n_items": 15,
+              "n_pairs": 15,
+              "stratum": "easy+hard | accurate",
+              "unavailable_reason": null
+            },
+            "items_dropped": 2,
+            "metric": "m1",
+            "stratum": "easy+hard | accurate"
+          },
+          {
+            "all_conversations": {
+              "ci95_lower": 0.0,
+              "ci95_upper": 0.15,
+              "ci95_width": 0.15,
+              "contrast_id": "NONANSWER_ACC_POOLED",
+              "estimate": 0.05,
+              "excludes_zero": false,
+              "label": "Non-answer rate, hostile - neutral (measured, accurate)",
+              "metric": "non_answer_rate",
+              "n_items": 20,
+              "n_pairs": 20,
+              "stratum": "easy+hard | accurate",
+              "unavailable_reason": null
+            },
+            "contrast_id": "NONANSWER_ACC_POOLED",
+            "excluding_contaminated": {
+              "ci95_lower": 0.0,
+              "ci95_upper": 0.16666666666666666,
+              "ci95_width": 0.16666666666666666,
+              "contrast_id": "NONANSWER_ACC_POOLED",
+              "estimate": 0.05555555555555555,
+              "excludes_zero": false,
+              "label": "Non-answer rate, hostile - neutral (measured, accurate)",
+              "metric": "non_answer_rate",
+              "n_items": 18,
+              "n_pairs": 18,
+              "stratum": "easy+hard | accurate",
+              "unavailable_reason": null
+            },
+            "items_dropped": 2,
+            "metric": "non_answer_rate",
+            "stratum": "easy+hard | accurate"
+          }
+        ],
+        "n_excluded_conversations": 2,
+        "source": "C:\\Users\\ebin\\claude-ground\\Digital Grimace Scale\\.claude\\worktrees\\digital-grimace-scale-experiment-f825fc\\results\\summaries\\phase1\\metric_rows.csv"
+      }
+    },
+    {
+      "label": "phase2_holdout",
+      "models": [
+        {
+          "buckets": {
+            "graded_correct": 104,
+            "non_answer_without_marker": 11,
+            "true_failure": 5
+          },
+          "by_cell": {
+            "easy__accurate__hostile": {
+              "graded_correct": 25,
+              "true_failure": 5
+            },
+            "easy__accurate__neutral": {
+              "graded_correct": 30
+            },
+            "hard__accurate__hostile": {
+              "graded_correct": 24,
+              "non_answer_without_marker": 6
+            },
+            "hard__accurate__neutral": {
+              "graded_correct": 25,
+              "non_answer_without_marker": 5
+            }
+          },
+          "contaminated_by_cell": {},
+          "contaminated_conversations": [],
+          "model_id": "Qwen/Qwen2.5-3B-Instruct",
+          "n_contaminated_conversations": 0,
+          "n_graded_feedback_verdicts": 120,
+          "washout": {
+            "n_accurate_conversations": 40,
+            "n_measured_marker_terminated": 0,
+            "n_measured_unparseable_frozen": 1,
+            "n_misgraded_any_cause": 0,
+            "n_misgraded_by_marker": 0
+          }
+        },
+        {
+          "buckets": {
+            "graded_correct": 85,
+            "marker_no_answer_line": 7,
+            "marker_true_failure_wrong_letter": 2,
+            "non_answer_without_marker": 10,
+            "true_failure": 16
+          },
+          "by_cell": {
+            "easy__accurate__hostile": {
+              "graded_correct": 16,
+              "marker_no_answer_line": 2,
+              "marker_true_failure_wrong_letter": 2,
+              "non_answer_without_marker": 5,
+              "true_failure": 5
+            },
+            "easy__accurate__neutral": {
+              "graded_correct": 30
+            },
+            "hard__accurate__hostile": {
+              "graded_correct": 12,
+              "marker_no_answer_line": 5,
+              "non_answer_without_marker": 5,
+              "true_failure": 8
+            },
+            "hard__accurate__neutral": {
+              "graded_correct": 27,
+              "true_failure": 3
+            }
+          },
+          "contaminated_by_cell": {},
+          "contaminated_conversations": [],
+          "model_id": "google/gemma-2-9b-it",
+          "n_contaminated_conversations": 0,
+          "n_graded_feedback_verdicts": 120,
+          "washout": {
+            "n_accurate_conversations": 40,
+            "n_measured_marker_terminated": 0,
+            "n_measured_unparseable_frozen": 4,
+            "n_misgraded_any_cause": 0,
+            "n_misgraded_by_marker": 0
+          }
+        },
+        {
+          "buckets": {
+            "graded_correct": 102,
+            "non_answer_without_marker": 13,
+            "true_failure": 5
+          },
+          "by_cell": {
+            "easy__accurate__hostile": {
+              "graded_correct": 29,
+              "true_failure": 1
+            },
+            "easy__accurate__neutral": {
+              "graded_correct": 29,
+              "true_failure": 1
+            },
+            "hard__accurate__hostile": {
+              "graded_correct": 21,
+              "non_answer_without_marker": 6,
+              "true_failure": 3
+            },
+            "hard__accurate__neutral": {
+              "graded_correct": 23,
+              "non_answer_without_marker": 7
+            }
+          },
+          "contaminated_by_cell": {},
+          "contaminated_conversations": [],
+          "model_id": "meta-llama/Llama-3.1-8B-Instruct",
+          "n_contaminated_conversations": 0,
+          "n_graded_feedback_verdicts": 120,
+          "washout": {
+            "n_accurate_conversations": 40,
+            "n_measured_marker_terminated": 0,
+            "n_measured_unparseable_frozen": 5,
+            "n_misgraded_any_cause": 0,
+            "n_misgraded_by_marker": 0
+          }
+        }
+      ],
+      "onset_unconditional": {
+        "checked": 120,
+        "matched_tone_failure": 120,
+        "other": 0
+      },
+      "primary_model": "google/gemma-2-9b-it",
+      "raw_source": "C:\\Users\\ebin\\claude-ground\\Digital Grimace Scale\\.claude\\worktrees\\digital-grimace-scale-experiment-f825fc\\results\\raw\\phase2",
+      "sensitivity": {
+        "contrasts": [
+          {
+            "all_conversations": {
+              "ci95_lower": -3.997187385535817,
+              "ci95_upper": -1.881171891126283,
+              "ci95_width": 2.1160154944095337,
+              "contrast_id": "H1",
+              "estimate": -2.8999998737637727,
+              "excludes_zero": true,
+              "label": "M1, malfunctioning - accurate (measured, neutral)",
+              "metric": "m1",
+              "n_items": 10,
+              "n_pairs": 10,
+              "stratum": "easy | neutral",
+              "unavailable_reason": null
+            },
+            "contrast_id": "H1",
+            "excluding_contaminated": {
+              "ci95_lower": -3.997187385535817,
+              "ci95_upper": -1.881171891126283,
+              "ci95_width": 2.1160154944095337,
+              "contrast_id": "H1",
+              "estimate": -2.8999998737637727,
+              "excludes_zero": true,
+              "label": "M1, malfunctioning - accurate (measured, neutral)",
+              "metric": "m1",
+              "n_items": 10,
+              "n_pairs": 10,
+              "stratum": "easy | neutral",
+              "unavailable_reason": null
+            },
+            "items_dropped": 0,
+            "metric": "m1",
+            "stratum": "easy | neutral"
+          },
+          {
+            "all_conversations": {
+              "ci95_lower": -4.131944398616108,
+              "ci95_upper": -2.235937423719306,
+              "ci95_width": 1.8960069748968018,
+              "contrast_id": "H1_hard",
+              "estimate": -3.138888940359013,
+              "excludes_zero": true,
+              "label": "M1, malfunctioning - accurate (measured, neutral)",
+              "metric": "m1",
+              "n_items": 9,
+              "n_pairs": 9,
+              "stratum": "hard | neutral",
+              "unavailable_reason": null
+            },
+            "contrast_id": "H1_hard",
+            "excluding_contaminated": {
+              "ci95_lower": -4.131944398616108,
+              "ci95_upper": -2.235937423719306,
+              "ci95_width": 1.8960069748968018,
+              "contrast_id": "H1_hard",
+              "estimate": -3.138888940359013,
+              "excludes_zero": true,
+              "label": "M1, malfunctioning - accurate (measured, neutral)",
+              "metric": "m1",
+              "n_items": 9,
+              "n_pairs": 9,
+              "stratum": "hard | neutral",
+              "unavailable_reason": null
+            },
+            "items_dropped": 0,
+            "metric": "m1",
+            "stratum": "hard | neutral"
+          },
+          {
+            "all_conversations": {
+              "ci95_lower": -24.20725433805439,
+              "ci95_upper": -6.132812896023103,
+              "ci95_width": 18.074441442031286,
+              "contrast_id": "H2a",
+              "estimate": -16.133928660880493,
+              "excludes_zero": true,
+              "label": "M1, hostile - neutral (measured, accurate)",
+              "metric": "m1",
+              "n_items": 7,
+              "n_pairs": 7,
+              "stratum": "easy | accurate",
+              "unavailable_reason": null
+            },
+            "contrast_id": "H2a",
+            "excluding_contaminated": {
+              "ci95_lower": -24.20725433805439,
+              "ci95_upper": -6.132812896023103,
+              "ci95_width": 18.074441442031286,
+              "contrast_id": "H2a",
+              "estimate": -16.133928660880493,
+              "excludes_zero": true,
+              "label": "M1, hostile - neutral (measured, accurate)",
+              "metric": "m1",
+              "n_items": 7,
+              "n_pairs": 7,
+              "stratum": "easy | accurate",
+              "unavailable_reason": null
+            },
+            "items_dropped": 0,
+            "metric": "m1",
+            "stratum": "easy | accurate"
+          },
+          {
+            "all_conversations": {
+              "ci95_lower": -15.798611331455263,
+              "ci95_upper": -1.9444445285673484,
+              "ci95_width": 13.854166802887914,
+              "contrast_id": "H2b",
+              "estimate": -7.868055639265448,
+              "excludes_zero": true,
+              "label": "M1, hostile - neutral (measured, accurate)",
+              "metric": "m1",
+              "n_items": 9,
+              "n_pairs": 9,
+              "stratum": "hard | accurate",
+              "unavailable_reason": null
+            },
+            "contrast_id": "H2b",
+            "excluding_contaminated": {
+              "ci95_lower": -15.798611331455263,
+              "ci95_upper": -1.9444445285673484,
+              "ci95_width": 13.854166802887914,
+              "contrast_id": "H2b",
+              "estimate": -7.868055639265448,
+              "excludes_zero": true,
+              "label": "M1, hostile - neutral (measured, accurate)",
+              "metric": "m1",
+              "n_items": 9,
+              "n_pairs": 9,
+              "stratum": "hard | accurate",
+              "unavailable_reason": null
+            },
+            "items_dropped": 0,
+            "metric": "m1",
+            "stratum": "hard | accurate"
+          },
+          {
+            "all_conversations": {
+              "ci95_lower": -17.785254012135443,
+              "ci95_upper": -5.5949707808491596,
+              "ci95_width": 12.190283231286283,
+              "contrast_id": "TONE_ACC_POOLED",
+              "estimate": -11.48437508622203,
+              "excludes_zero": true,
+              "label": "M1, hostile - neutral (measured, accurate)",
+              "metric": "m1",
+              "n_items": 16,
+              "n_pairs": 16,
+              "stratum": "easy+hard | accurate",
+              "unavailable_reason": null
+            },
+            "contrast_id": "TONE_ACC_POOLED",
+            "excluding_contaminated": {
+              "ci95_lower": -17.785254012135443,
+              "ci95_upper": -5.5949707808491596,
+              "ci95_width": 12.190283231286283,
+              "contrast_id": "TONE_ACC_POOLED",
+              "estimate": -11.48437508622203,
+              "excludes_zero": true,
+              "label": "M1, hostile - neutral (measured, accurate)",
+              "metric": "m1",
+              "n_items": 16,
+              "n_pairs": 16,
+              "stratum": "easy+hard | accurate",
+              "unavailable_reason": null
+            },
+            "items_dropped": 0,
+            "metric": "m1",
+            "stratum": "easy+hard | accurate"
+          },
+          {
+            "all_conversations": {
+              "ci95_lower": 0.05,
+              "ci95_upper": 0.4,
+              "ci95_width": 0.35000000000000003,
+              "contrast_id": "NONANSWER_ACC_POOLED",
+              "estimate": 0.2,
+              "excludes_zero": true,
+              "label": "Non-answer rate, hostile - neutral (measured, accurate)",
+              "metric": "non_answer_rate",
+              "n_items": 20,
+              "n_pairs": 20,
+              "stratum": "easy+hard | accurate",
+              "unavailable_reason": null
+            },
+            "contrast_id": "NONANSWER_ACC_POOLED",
+            "excluding_contaminated": {
+              "ci95_lower": 0.05,
+              "ci95_upper": 0.4,
+              "ci95_width": 0.35000000000000003,
+              "contrast_id": "NONANSWER_ACC_POOLED",
+              "estimate": 0.2,
+              "excludes_zero": true,
+              "label": "Non-answer rate, hostile - neutral (measured, accurate)",
+              "metric": "non_answer_rate",
+              "n_items": 20,
+              "n_pairs": 20,
+              "stratum": "easy+hard | accurate",
+              "unavailable_reason": null
+            },
+            "items_dropped": 0,
+            "metric": "non_answer_rate",
+            "stratum": "easy+hard | accurate"
+          }
+        ],
+        "n_excluded_conversations": 0,
+        "source": "C:\\Users\\ebin\\claude-ground\\Digital Grimace Scale\\.claude\\worktrees\\digital-grimace-scale-experiment-f825fc\\results\\summaries\\phase2\\metric_rows.csv"
+      }
+    },
+    {
+      "label": "phase4_dpo",
+      "models": [
+        {
+          "buckets": {
+            "graded_correct": 82,
+            "marker_no_answer_line": 1,
+            "non_answer_without_marker": 11,
+            "true_failure": 26
+          },
+          "by_cell": {
+            "easy__accurate__hostile": {
+              "graded_correct": 19,
+              "true_failure": 11
+            },
+            "easy__accurate__neutral": {
+              "graded_correct": 30
+            },
+            "hard__accurate__hostile": {
+              "graded_correct": 13,
+              "marker_no_answer_line": 1,
+              "non_answer_without_marker": 8,
+              "true_failure": 8
+            },
+            "hard__accurate__neutral": {
+              "graded_correct": 20,
+              "non_answer_without_marker": 3,
+              "true_failure": 7
+            }
+          },
+          "contaminated_by_cell": {},
+          "contaminated_conversations": [],
+          "model_id": "google/gemma-2-9b-it+dpo-A",
+          "n_contaminated_conversations": 0,
+          "n_graded_feedback_verdicts": 120,
+          "washout": {
+            "n_accurate_conversations": 40,
+            "n_measured_marker_terminated": 0,
+            "n_measured_unparseable_frozen": 2,
+            "n_misgraded_any_cause": 0,
+            "n_misgraded_by_marker": 0
+          }
+        },
+        {
+          "buckets": {
+            "bogus_failure": 5,
+            "graded_correct": 87,
+            "marker_true_failure_wrong_letter": 1,
+            "non_answer_without_marker": 1,
+            "true_failure": 26
+          },
+          "by_cell": {
+            "easy__accurate__hostile": {
+              "bogus_failure": 2,
+              "graded_correct": 17,
+              "marker_true_failure_wrong_letter": 1,
+              "true_failure": 10
+            },
+            "easy__accurate__neutral": {
+              "graded_correct": 30
+            },
+            "hard__accurate__hostile": {
+              "bogus_failure": 3,
+              "graded_correct": 16,
+              "non_answer_without_marker": 1,
+              "true_failure": 10
+            },
+            "hard__accurate__neutral": {
+              "graded_correct": 24,
+              "true_failure": 6
+            }
+          },
+          "contaminated_by_cell": {
+            "easy__accurate__hostile": {
+              "first_rounds": {
+                "3": 2
+              },
+              "n_conversations": 2,
+              "task_ids": [
+                "DGS-010",
+                "DGS-026"
+              ]
+            },
+            "hard__accurate__hostile": {
+              "first_rounds": {
+                "3": 3
+              },
+              "n_conversations": 3,
+              "task_ids": [
+                "DGS-005",
+                "DGS-022",
+                "DGS-023"
+              ]
+            }
+          },
+          "contaminated_conversations": [
+            {
+              "cell_id": "easy__accurate__hostile",
+              "difficulty": "easy",
+              "first_round": 3,
+              "model_id": "google/gemma-2-9b-it+dpo-B",
+              "n_bogus": 1,
+              "task_id": "DGS-010",
+              "tone": "hostile"
+            },
+            {
+              "cell_id": "easy__accurate__hostile",
+              "difficulty": "easy",
+              "first_round": 3,
+              "model_id": "google/gemma-2-9b-it+dpo-B",
+              "n_bogus": 1,
+              "task_id": "DGS-026",
+              "tone": "hostile"
+            },
+            {
+              "cell_id": "hard__accurate__hostile",
+              "difficulty": "hard",
+              "first_round": 3,
+              "model_id": "google/gemma-2-9b-it+dpo-B",
+              "n_bogus": 1,
+              "task_id": "DGS-005",
+              "tone": "hostile"
+            },
+            {
+              "cell_id": "hard__accurate__hostile",
+              "difficulty": "hard",
+              "first_round": 3,
+              "model_id": "google/gemma-2-9b-it+dpo-B",
+              "n_bogus": 1,
+              "task_id": "DGS-022",
+              "tone": "hostile"
+            },
+            {
+              "cell_id": "hard__accurate__hostile",
+              "difficulty": "hard",
+              "first_round": 3,
+              "model_id": "google/gemma-2-9b-it+dpo-B",
+              "n_bogus": 1,
+              "task_id": "DGS-023",
+              "tone": "hostile"
+            }
+          ],
+          "model_id": "google/gemma-2-9b-it+dpo-B",
+          "n_contaminated_conversations": 5,
+          "n_graded_feedback_verdicts": 120,
+          "washout": {
+            "n_accurate_conversations": 40,
+            "n_measured_marker_terminated": 1,
+            "n_measured_unparseable_frozen": 1,
+            "n_misgraded_any_cause": 0,
+            "n_misgraded_by_marker": 0
+          }
+        }
+      ],
+      "onset_unconditional": {
+        "checked": 80,
+        "matched_tone_failure": 80,
+        "other": 0
+      },
+      "primary_model": "google/gemma-2-9b-it+dpo-A",
+      "raw_source": "C:\\Users\\ebin\\claude-ground\\Digital Grimace Scale\\.claude\\worktrees\\digital-grimace-scale-experiment-f825fc\\results\\raw\\phase4"
+    }
+  ],
+  "verdict_source": "the user turn stored in each feedback response's own transcript"
+}
