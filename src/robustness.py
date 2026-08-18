@@ -571,15 +571,19 @@ def feasible(rate: float | None) -> bool:
 # follows the answer.  The diagnostic below measures how much of a run's non-answer rate is that
 # artifact.  It is REPORTED ONLY: the frozen parser is never replaced, no contrast is recomputed
 # on the stripped text, and no verdict moves because of it.
-SPECIAL_TOKEN_TAIL = re.compile(
-    r"(?:\s*(?:<end_of_turn>|<eos>|<bos>|<pad>|</s>|<\|eot_id\|>|<\|end_of_text\|>))+\s*\Z")
+#
+# The strip itself lives in src.protocol (amendment A6's definition) so there is exactly one
+# list of special-token strings in the codebase; this module only reports on it.
 
 
 def strip_trailing_special(text: str) -> str:
     """Remove a trailing run of end-of-turn / end-of-sequence markers and the whitespace around it."""
-    if not isinstance(text, str):
-        raise RobustnessError("response text must be a string")
-    return SPECIAL_TOKEN_TAIL.sub("", text)
+    from .protocol import ProtocolError, strip_trailing_special_tokens  # noqa: PLC0415
+
+    try:
+        return strip_trailing_special_tokens(text)
+    except ProtocolError as error:
+        raise RobustnessError(str(error)) from error
 
 
 def reparse_diagnostic(pairs: Iterable[tuple[str, bool]]) -> dict[str, Any]:

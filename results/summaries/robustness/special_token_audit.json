@@ -1,0 +1,3112 @@
+{
+  "amendment": "A6 (notes/amendments.md); NOT adopted - its zero-occurrence precondition fails",
+  "generated_at": "2026-08-18T08:35:23+05:30",
+  "label": "DIAGNOSTIC ONLY - amendment A6 blast radius; no verdict, table or figure changes",
+  "special_token_strings": [
+    "<end_of_turn>",
+    "<eos>",
+    "<bos>",
+    "<|eot_id|>",
+    "<|end_of_text|>",
+    "<|im_end|>",
+    "<|endoftext|>"
+  ],
+  "splits": [
+    {
+      "affected_by_cell_turn_sample": [
+        {
+          "cell_id": "easy__accurate__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 3,
+          "sample_kind": "resample",
+          "still_invalid": 0,
+          "turn_label": "feedback_response_1",
+          "would_flip": 3
+        },
+        {
+          "cell_id": "easy__accurate__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 3,
+          "sample_kind": "greedy",
+          "still_invalid": 1,
+          "turn_label": "feedback_response_2",
+          "would_flip": 2
+        },
+        {
+          "cell_id": "easy__accurate__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 29,
+          "sample_kind": "resample",
+          "still_invalid": 7,
+          "turn_label": "feedback_response_2",
+          "would_flip": 22
+        },
+        {
+          "cell_id": "easy__accurate__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 1,
+          "sample_kind": "greedy",
+          "still_invalid": 0,
+          "turn_label": "feedback_response_3",
+          "would_flip": 1
+        },
+        {
+          "cell_id": "easy__accurate__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 32,
+          "sample_kind": "resample",
+          "still_invalid": 10,
+          "turn_label": "feedback_response_3",
+          "would_flip": 22
+        },
+        {
+          "cell_id": "easy__accurate__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 1,
+          "sample_kind": "resample",
+          "still_invalid": 0,
+          "turn_label": "measured",
+          "would_flip": 1
+        },
+        {
+          "cell_id": "easy__accurate__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 1,
+          "sample_kind": "greedy",
+          "still_invalid": 0,
+          "turn_label": "onset",
+          "would_flip": 1
+        },
+        {
+          "cell_id": "easy__accurate__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 14,
+          "sample_kind": "resample",
+          "still_invalid": 7,
+          "turn_label": "onset",
+          "would_flip": 7
+        },
+        {
+          "cell_id": "easy__accurate__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 8,
+          "sample_kind": "resample",
+          "still_invalid": 2,
+          "turn_label": "onset_washout",
+          "would_flip": 6
+        },
+        {
+          "cell_id": "easy__accurate__neutral",
+          "frozen_valid_already": 0,
+          "n_affected": 2,
+          "sample_kind": "resample",
+          "still_invalid": 0,
+          "turn_label": "feedback_response_1",
+          "would_flip": 2
+        },
+        {
+          "cell_id": "easy__malfunctioning_always_fail__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 2,
+          "sample_kind": "greedy",
+          "still_invalid": 1,
+          "turn_label": "feedback_response_1",
+          "would_flip": 1
+        },
+        {
+          "cell_id": "easy__malfunctioning_always_fail__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 10,
+          "sample_kind": "resample",
+          "still_invalid": 6,
+          "turn_label": "feedback_response_1",
+          "would_flip": 4
+        },
+        {
+          "cell_id": "easy__malfunctioning_always_fail__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 2,
+          "sample_kind": "greedy",
+          "still_invalid": 0,
+          "turn_label": "feedback_response_2",
+          "would_flip": 2
+        },
+        {
+          "cell_id": "easy__malfunctioning_always_fail__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 22,
+          "sample_kind": "resample",
+          "still_invalid": 8,
+          "turn_label": "feedback_response_2",
+          "would_flip": 14
+        },
+        {
+          "cell_id": "easy__malfunctioning_always_fail__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 2,
+          "sample_kind": "greedy",
+          "still_invalid": 2,
+          "turn_label": "feedback_response_3",
+          "would_flip": 0
+        },
+        {
+          "cell_id": "easy__malfunctioning_always_fail__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 28,
+          "sample_kind": "resample",
+          "still_invalid": 13,
+          "turn_label": "feedback_response_3",
+          "would_flip": 15
+        },
+        {
+          "cell_id": "easy__malfunctioning_always_fail__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 3,
+          "sample_kind": "resample",
+          "still_invalid": 1,
+          "turn_label": "recovery",
+          "would_flip": 2
+        },
+        {
+          "cell_id": "easy__malfunctioning_always_fail__neutral",
+          "frozen_valid_already": 0,
+          "n_affected": 3,
+          "sample_kind": "resample",
+          "still_invalid": 0,
+          "turn_label": "feedback_response_2",
+          "would_flip": 3
+        },
+        {
+          "cell_id": "easy__malfunctioning_always_fail__neutral",
+          "frozen_valid_already": 0,
+          "n_affected": 5,
+          "sample_kind": "resample",
+          "still_invalid": 0,
+          "turn_label": "feedback_response_3",
+          "would_flip": 5
+        },
+        {
+          "cell_id": "hard__accurate__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 1,
+          "sample_kind": "greedy",
+          "still_invalid": 1,
+          "turn_label": "feedback_response_1",
+          "would_flip": 0
+        },
+        {
+          "cell_id": "hard__accurate__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 13,
+          "sample_kind": "resample",
+          "still_invalid": 9,
+          "turn_label": "feedback_response_1",
+          "would_flip": 4
+        },
+        {
+          "cell_id": "hard__accurate__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 4,
+          "sample_kind": "greedy",
+          "still_invalid": 3,
+          "turn_label": "feedback_response_2",
+          "would_flip": 1
+        },
+        {
+          "cell_id": "hard__accurate__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 51,
+          "sample_kind": "resample",
+          "still_invalid": 32,
+          "turn_label": "feedback_response_2",
+          "would_flip": 19
+        },
+        {
+          "cell_id": "hard__accurate__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 6,
+          "sample_kind": "greedy",
+          "still_invalid": 4,
+          "turn_label": "feedback_response_3",
+          "would_flip": 2
+        },
+        {
+          "cell_id": "hard__accurate__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 70,
+          "sample_kind": "resample",
+          "still_invalid": 45,
+          "turn_label": "feedback_response_3",
+          "would_flip": 25
+        },
+        {
+          "cell_id": "hard__accurate__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 2,
+          "sample_kind": "resample",
+          "still_invalid": 0,
+          "turn_label": "measured",
+          "would_flip": 2
+        },
+        {
+          "cell_id": "hard__accurate__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 4,
+          "sample_kind": "greedy",
+          "still_invalid": 4,
+          "turn_label": "onset",
+          "would_flip": 0
+        },
+        {
+          "cell_id": "hard__accurate__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 50,
+          "sample_kind": "resample",
+          "still_invalid": 34,
+          "turn_label": "onset",
+          "would_flip": 16
+        },
+        {
+          "cell_id": "hard__accurate__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 1,
+          "sample_kind": "greedy",
+          "still_invalid": 1,
+          "turn_label": "onset_washout",
+          "would_flip": 0
+        },
+        {
+          "cell_id": "hard__accurate__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 19,
+          "sample_kind": "resample",
+          "still_invalid": 7,
+          "turn_label": "onset_washout",
+          "would_flip": 12
+        },
+        {
+          "cell_id": "hard__accurate__neutral",
+          "frozen_valid_already": 0,
+          "n_affected": 1,
+          "sample_kind": "resample",
+          "still_invalid": 0,
+          "turn_label": "feedback_response_1",
+          "would_flip": 1
+        },
+        {
+          "cell_id": "hard__accurate__neutral",
+          "frozen_valid_already": 0,
+          "n_affected": 1,
+          "sample_kind": "greedy",
+          "still_invalid": 1,
+          "turn_label": "feedback_response_2",
+          "would_flip": 0
+        },
+        {
+          "cell_id": "hard__accurate__neutral",
+          "frozen_valid_already": 0,
+          "n_affected": 2,
+          "sample_kind": "resample",
+          "still_invalid": 1,
+          "turn_label": "feedback_response_2",
+          "would_flip": 1
+        },
+        {
+          "cell_id": "hard__accurate__neutral",
+          "frozen_valid_already": 0,
+          "n_affected": 1,
+          "sample_kind": "greedy",
+          "still_invalid": 1,
+          "turn_label": "feedback_response_3",
+          "would_flip": 0
+        },
+        {
+          "cell_id": "hard__accurate__neutral",
+          "frozen_valid_already": 0,
+          "n_affected": 3,
+          "sample_kind": "resample",
+          "still_invalid": 3,
+          "turn_label": "feedback_response_3",
+          "would_flip": 0
+        },
+        {
+          "cell_id": "hard__accurate__neutral",
+          "frozen_valid_already": 0,
+          "n_affected": 3,
+          "sample_kind": "resample",
+          "still_invalid": 1,
+          "turn_label": "onset",
+          "would_flip": 2
+        },
+        {
+          "cell_id": "hard__accurate__neutral",
+          "frozen_valid_already": 0,
+          "n_affected": 2,
+          "sample_kind": "resample",
+          "still_invalid": 1,
+          "turn_label": "onset_washout",
+          "would_flip": 1
+        },
+        {
+          "cell_id": "hard__malfunctioning_always_fail__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 3,
+          "sample_kind": "greedy",
+          "still_invalid": 3,
+          "turn_label": "feedback_response_1",
+          "would_flip": 0
+        },
+        {
+          "cell_id": "hard__malfunctioning_always_fail__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 14,
+          "sample_kind": "resample",
+          "still_invalid": 8,
+          "turn_label": "feedback_response_1",
+          "would_flip": 6
+        },
+        {
+          "cell_id": "hard__malfunctioning_always_fail__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 6,
+          "sample_kind": "greedy",
+          "still_invalid": 5,
+          "turn_label": "feedback_response_2",
+          "would_flip": 1
+        },
+        {
+          "cell_id": "hard__malfunctioning_always_fail__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 35,
+          "sample_kind": "resample",
+          "still_invalid": 24,
+          "turn_label": "feedback_response_2",
+          "would_flip": 11
+        },
+        {
+          "cell_id": "hard__malfunctioning_always_fail__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 5,
+          "sample_kind": "greedy",
+          "still_invalid": 3,
+          "turn_label": "feedback_response_3",
+          "would_flip": 2
+        },
+        {
+          "cell_id": "hard__malfunctioning_always_fail__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 53,
+          "sample_kind": "resample",
+          "still_invalid": 44,
+          "turn_label": "feedback_response_3",
+          "would_flip": 9
+        },
+        {
+          "cell_id": "hard__malfunctioning_always_fail__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 3,
+          "sample_kind": "resample",
+          "still_invalid": 1,
+          "turn_label": "measured",
+          "would_flip": 2
+        },
+        {
+          "cell_id": "hard__malfunctioning_always_fail__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 2,
+          "sample_kind": "greedy",
+          "still_invalid": 2,
+          "turn_label": "recovery",
+          "would_flip": 0
+        },
+        {
+          "cell_id": "hard__malfunctioning_always_fail__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 12,
+          "sample_kind": "resample",
+          "still_invalid": 3,
+          "turn_label": "recovery",
+          "would_flip": 9
+        },
+        {
+          "cell_id": "hard__malfunctioning_always_fail__neutral",
+          "frozen_valid_already": 0,
+          "n_affected": 1,
+          "sample_kind": "resample",
+          "still_invalid": 1,
+          "turn_label": "feedback_response_1",
+          "would_flip": 0
+        },
+        {
+          "cell_id": "hard__malfunctioning_always_fail__neutral",
+          "frozen_valid_already": 0,
+          "n_affected": 1,
+          "sample_kind": "greedy",
+          "still_invalid": 1,
+          "turn_label": "feedback_response_2",
+          "would_flip": 0
+        },
+        {
+          "cell_id": "hard__malfunctioning_always_fail__neutral",
+          "frozen_valid_already": 0,
+          "n_affected": 2,
+          "sample_kind": "resample",
+          "still_invalid": 1,
+          "turn_label": "feedback_response_2",
+          "would_flip": 1
+        },
+        {
+          "cell_id": "hard__malfunctioning_always_fail__neutral",
+          "frozen_valid_already": 0,
+          "n_affected": 1,
+          "sample_kind": "greedy",
+          "still_invalid": 1,
+          "turn_label": "feedback_response_3",
+          "would_flip": 0
+        },
+        {
+          "cell_id": "hard__malfunctioning_always_fail__neutral",
+          "frozen_valid_already": 0,
+          "n_affected": 7,
+          "sample_kind": "resample",
+          "still_invalid": 3,
+          "turn_label": "feedback_response_3",
+          "would_flip": 4
+        },
+        {
+          "cell_id": "hard__malfunctioning_always_fail__neutral",
+          "frozen_valid_already": 0,
+          "n_affected": 1,
+          "sample_kind": "resample",
+          "still_invalid": 1,
+          "turn_label": "measured",
+          "would_flip": 0
+        },
+        {
+          "cell_id": "hard__malfunctioning_always_fail__neutral",
+          "frozen_valid_already": 0,
+          "n_affected": 1,
+          "sample_kind": "greedy",
+          "still_invalid": 1,
+          "turn_label": "recovery",
+          "would_flip": 0
+        },
+        {
+          "cell_id": "hard__malfunctioning_always_fail__neutral",
+          "frozen_valid_already": 0,
+          "n_affected": 4,
+          "sample_kind": "resample",
+          "still_invalid": 0,
+          "turn_label": "recovery",
+          "would_flip": 4
+        }
+      ],
+      "affected_by_sample_kind": {
+        "greedy": 48,
+        "resample": 508
+      },
+      "affected_by_turn_and_trajectory": [
+        {
+          "n_affected": 6,
+          "sample_kind": "greedy",
+          "turn_label": "feedback_response_1",
+          "would_flip": 1
+        },
+        {
+          "n_affected": 44,
+          "sample_kind": "resample",
+          "turn_label": "feedback_response_1",
+          "would_flip": 20
+        },
+        {
+          "n_affected": 17,
+          "sample_kind": "greedy",
+          "turn_label": "feedback_response_2",
+          "would_flip": 6
+        },
+        {
+          "n_affected": 144,
+          "sample_kind": "resample",
+          "turn_label": "feedback_response_2",
+          "would_flip": 71
+        },
+        {
+          "n_affected": 16,
+          "sample_kind": "greedy",
+          "turn_label": "feedback_response_3",
+          "would_flip": 5
+        },
+        {
+          "n_affected": 198,
+          "sample_kind": "resample",
+          "turn_label": "feedback_response_3",
+          "would_flip": 80
+        },
+        {
+          "n_affected": 7,
+          "sample_kind": "resample",
+          "turn_label": "measured",
+          "would_flip": 5
+        },
+        {
+          "n_affected": 5,
+          "sample_kind": "greedy",
+          "turn_label": "onset",
+          "would_flip": 1
+        },
+        {
+          "n_affected": 67,
+          "sample_kind": "resample",
+          "turn_label": "onset",
+          "would_flip": 25
+        },
+        {
+          "n_affected": 1,
+          "sample_kind": "greedy",
+          "turn_label": "onset_washout",
+          "would_flip": 0
+        },
+        {
+          "n_affected": 29,
+          "sample_kind": "resample",
+          "turn_label": "onset_washout",
+          "would_flip": 19
+        },
+        {
+          "n_affected": 3,
+          "sample_kind": "greedy",
+          "turn_label": "recovery",
+          "would_flip": 0
+        },
+        {
+          "n_affected": 19,
+          "sample_kind": "resample",
+          "turn_label": "recovery",
+          "would_flip": 15
+        }
+      ],
+      "affected_by_turn_label": {
+        "feedback_response_1": 50,
+        "feedback_response_2": 161,
+        "feedback_response_3": 214,
+        "measured": 7,
+        "onset": 72,
+        "onset_washout": 30,
+        "recovery": 22
+      },
+      "label": "phase1_discovery",
+      "m2_exposure": {
+        "item_cells_gained": [
+          {
+            "cell_id": "hard__malfunctioning_always_fail__hostile",
+            "frozen_valid": 9,
+            "stripped_valid": 10,
+            "task_id": "DGS-005"
+          },
+          {
+            "cell_id": "easy__accurate__hostile",
+            "frozen_valid": 9,
+            "stripped_valid": 10,
+            "task_id": "DGS-018"
+          }
+        ],
+        "n_m2_gained_by_strip": 2,
+        "n_m2_missing_frozen": 21,
+        "n_measured_item_cells": 80,
+        "note": "M2's frozen rule needs all ten measured resamples valid, so one flipped resample can move an item-cell from M2-missing to M2-present."
+      },
+      "measured_greedy_by_cell": [
+        {
+          "cell_id": "easy__accurate__hostile",
+          "n_affected": 0,
+          "n_endpoints": 10,
+          "n_would_flip": 0,
+          "non_answer_rate_frozen": 0.0,
+          "non_answer_rate_stripped": 0.0
+        },
+        {
+          "cell_id": "easy__accurate__neutral",
+          "n_affected": 0,
+          "n_endpoints": 10,
+          "n_would_flip": 0,
+          "non_answer_rate_frozen": 0.0,
+          "non_answer_rate_stripped": 0.0
+        },
+        {
+          "cell_id": "easy__malfunctioning_always_fail__hostile",
+          "n_affected": 0,
+          "n_endpoints": 10,
+          "n_would_flip": 0,
+          "non_answer_rate_frozen": 0.0,
+          "non_answer_rate_stripped": 0.0
+        },
+        {
+          "cell_id": "easy__malfunctioning_always_fail__neutral",
+          "n_affected": 0,
+          "n_endpoints": 10,
+          "n_would_flip": 0,
+          "non_answer_rate_frozen": 0.0,
+          "non_answer_rate_stripped": 0.0
+        },
+        {
+          "cell_id": "hard__accurate__hostile",
+          "n_affected": 0,
+          "n_endpoints": 10,
+          "n_would_flip": 0,
+          "non_answer_rate_frozen": 0.3,
+          "non_answer_rate_stripped": 0.3
+        },
+        {
+          "cell_id": "hard__accurate__neutral",
+          "n_affected": 0,
+          "n_endpoints": 10,
+          "n_would_flip": 0,
+          "non_answer_rate_frozen": 0.2,
+          "non_answer_rate_stripped": 0.2
+        },
+        {
+          "cell_id": "hard__malfunctioning_always_fail__hostile",
+          "n_affected": 0,
+          "n_endpoints": 10,
+          "n_would_flip": 0,
+          "non_answer_rate_frozen": 0.2,
+          "non_answer_rate_stripped": 0.2
+        },
+        {
+          "cell_id": "hard__malfunctioning_always_fail__neutral",
+          "n_affected": 0,
+          "n_endpoints": 10,
+          "n_would_flip": 0,
+          "non_answer_rate_frozen": 0.2,
+          "non_answer_rate_stripped": 0.2
+        }
+      ],
+      "model_ids": [
+        "google/gemma-2-9b-it"
+      ],
+      "n_affected": 556,
+      "n_frozen_valid_already": 0,
+      "n_records": 5720,
+      "n_still_invalid": 308,
+      "n_would_flip": 248,
+      "propagation": {
+        "first_affected_turn_histogram": {
+          "feedback_response_1": 50,
+          "feedback_response_2": 129,
+          "feedback_response_3": 88,
+          "measured": 2,
+          "onset": 25,
+          "onset_washout": 3,
+          "recovery": 8
+        },
+        "fraction_first_affected_not_measured": 0.9934426229508196,
+        "n_affected_conversations": 305,
+        "n_first_affected_not_measured": 303
+      },
+      "source": "C:\\Users\\ebin\\claude-ground\\Digital Grimace Scale\\.claude\\worktrees\\digital-grimace-scale-experiment-f825fc\\results\\raw\\phase1\\google__gemma-2-9b-it.jsonl",
+      "token_examples": [
+        {
+          "cell_id": "easy__accurate__hostile",
+          "last_token_texts": [
+            "Answer",
+            ":",
+            " B",
+            " ",
+            "\n\n\n\n",
+            "<end_of_turn>",
+            "\n",
+            "<eos>"
+          ],
+          "n_tokens": 156,
+          "response_tail": "y for Nia. This fits all the rules!\n\nAnswer: B \n\n\n\n<end_of_turn>\n<eos>",
+          "task_id": "DGS-010",
+          "turn_label": "feedback_response_2"
+        },
+        {
+          "cell_id": "easy__accurate__hostile",
+          "last_token_texts": [
+            "Answer",
+            ":",
+            " B",
+            " ",
+            "\n",
+            "<end_of_turn>",
+            "\n",
+            "<eos>"
+          ],
+          "n_tokens": 172,
+          "response_tail": "day as the only possible day for Nia.\n\n\nAnswer: B \n<end_of_turn>\n<eos>",
+          "task_id": "DGS-010",
+          "turn_label": "feedback_response_3"
+        },
+        {
+          "cell_id": "hard__malfunctioning_always_fail__hostile",
+          "last_token_texts": [
+            " to",
+            " improve",
+            " my",
+            " accuracy",
+            ".",
+            "<end_of_turn>",
+            "\n",
+            "<eos>"
+          ],
+          "n_tokens": 431,
+          "response_tail": "mistakes. I am working hard to improve my accuracy.<end_of_turn>\n<eos>",
+          "task_id": "DGS-007",
+          "turn_label": "feedback_response_2"
+        },
+        {
+          "cell_id": "hard__malfunctioning_always_fail__hostile",
+          "last_token_texts": [
+            " for",
+            " helping",
+            " me",
+            " learn",
+            ".",
+            "<end_of_turn>",
+            "\n",
+            "<eos>"
+          ],
+          "n_tokens": 336,
+          "response_tail": "ank you for your patience and for helping me learn.<end_of_turn>\n<eos>",
+          "task_id": "DGS-007",
+          "turn_label": "recovery"
+        },
+        {
+          "cell_id": "hard__accurate__hostile",
+          "last_token_texts": [
+            " my",
+            " best",
+            ".",
+            " ",
+            "\n\n\n",
+            "<end_of_turn>",
+            "\n",
+            "<eos>"
+          ],
+          "n_tokens": 93,
+          "response_tail": "xtra attention to every detail and try my best. \n\n\n<end_of_turn>\n<eos>",
+          "task_id": "DGS-007",
+          "turn_label": "feedback_response_3"
+        }
+      ],
+      "would_flip_by_sample_kind": {
+        "greedy": 13,
+        "resample": 235
+      },
+      "would_flip_by_tone": {
+        "hostile": 224,
+        "neutral": 24
+      },
+      "would_flip_by_turn_label": {
+        "feedback_response_1": 21,
+        "feedback_response_2": 77,
+        "feedback_response_3": 85,
+        "measured": 5,
+        "onset": 26,
+        "onset_washout": 19,
+        "recovery": 15
+      },
+      "would_flip_by_validity": {
+        "accurate": 153,
+        "malfunctioning_always_fail": 95
+      }
+    },
+    {
+      "affected_by_cell_turn_sample": [
+        {
+          "cell_id": "easy__accurate__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 4,
+          "sample_kind": "resample",
+          "still_invalid": 3,
+          "turn_label": "feedback_response_1",
+          "would_flip": 1
+        },
+        {
+          "cell_id": "easy__accurate__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 4,
+          "sample_kind": "greedy",
+          "still_invalid": 2,
+          "turn_label": "feedback_response_2",
+          "would_flip": 2
+        },
+        {
+          "cell_id": "easy__accurate__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 32,
+          "sample_kind": "resample",
+          "still_invalid": 12,
+          "turn_label": "feedback_response_2",
+          "would_flip": 20
+        },
+        {
+          "cell_id": "easy__accurate__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 4,
+          "sample_kind": "greedy",
+          "still_invalid": 3,
+          "turn_label": "feedback_response_3",
+          "would_flip": 1
+        },
+        {
+          "cell_id": "easy__accurate__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 34,
+          "sample_kind": "resample",
+          "still_invalid": 19,
+          "turn_label": "feedback_response_3",
+          "would_flip": 15
+        },
+        {
+          "cell_id": "easy__accurate__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 2,
+          "sample_kind": "greedy",
+          "still_invalid": 2,
+          "turn_label": "onset",
+          "would_flip": 0
+        },
+        {
+          "cell_id": "easy__accurate__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 12,
+          "sample_kind": "resample",
+          "still_invalid": 5,
+          "turn_label": "onset",
+          "would_flip": 7
+        },
+        {
+          "cell_id": "easy__accurate__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 3,
+          "sample_kind": "resample",
+          "still_invalid": 0,
+          "turn_label": "onset_washout",
+          "would_flip": 3
+        },
+        {
+          "cell_id": "easy__accurate__neutral",
+          "frozen_valid_already": 0,
+          "n_affected": 1,
+          "sample_kind": "resample",
+          "still_invalid": 0,
+          "turn_label": "feedback_response_2",
+          "would_flip": 1
+        },
+        {
+          "cell_id": "easy__accurate__neutral",
+          "frozen_valid_already": 0,
+          "n_affected": 1,
+          "sample_kind": "resample",
+          "still_invalid": 0,
+          "turn_label": "feedback_response_3",
+          "would_flip": 1
+        },
+        {
+          "cell_id": "easy__malfunctioning_always_fail__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 3,
+          "sample_kind": "greedy",
+          "still_invalid": 1,
+          "turn_label": "feedback_response_1",
+          "would_flip": 2
+        },
+        {
+          "cell_id": "easy__malfunctioning_always_fail__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 13,
+          "sample_kind": "resample",
+          "still_invalid": 9,
+          "turn_label": "feedback_response_1",
+          "would_flip": 4
+        },
+        {
+          "cell_id": "easy__malfunctioning_always_fail__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 3,
+          "sample_kind": "greedy",
+          "still_invalid": 2,
+          "turn_label": "feedback_response_2",
+          "would_flip": 1
+        },
+        {
+          "cell_id": "easy__malfunctioning_always_fail__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 19,
+          "sample_kind": "resample",
+          "still_invalid": 14,
+          "turn_label": "feedback_response_2",
+          "would_flip": 5
+        },
+        {
+          "cell_id": "easy__malfunctioning_always_fail__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 2,
+          "sample_kind": "greedy",
+          "still_invalid": 1,
+          "turn_label": "feedback_response_3",
+          "would_flip": 1
+        },
+        {
+          "cell_id": "easy__malfunctioning_always_fail__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 29,
+          "sample_kind": "resample",
+          "still_invalid": 17,
+          "turn_label": "feedback_response_3",
+          "would_flip": 12
+        },
+        {
+          "cell_id": "easy__malfunctioning_always_fail__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 3,
+          "sample_kind": "resample",
+          "still_invalid": 1,
+          "turn_label": "recovery",
+          "would_flip": 2
+        },
+        {
+          "cell_id": "easy__malfunctioning_always_fail__neutral",
+          "frozen_valid_already": 0,
+          "n_affected": 2,
+          "sample_kind": "resample",
+          "still_invalid": 0,
+          "turn_label": "feedback_response_2",
+          "would_flip": 2
+        },
+        {
+          "cell_id": "easy__malfunctioning_always_fail__neutral",
+          "frozen_valid_already": 0,
+          "n_affected": 4,
+          "sample_kind": "resample",
+          "still_invalid": 0,
+          "turn_label": "feedback_response_3",
+          "would_flip": 4
+        },
+        {
+          "cell_id": "easy__malfunctioning_always_fail__neutral",
+          "frozen_valid_already": 0,
+          "n_affected": 1,
+          "sample_kind": "resample",
+          "still_invalid": 0,
+          "turn_label": "recovery",
+          "would_flip": 1
+        },
+        {
+          "cell_id": "hard__accurate__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 1,
+          "sample_kind": "greedy",
+          "still_invalid": 1,
+          "turn_label": "feedback_response_1",
+          "would_flip": 0
+        },
+        {
+          "cell_id": "hard__accurate__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 8,
+          "sample_kind": "resample",
+          "still_invalid": 7,
+          "turn_label": "feedback_response_1",
+          "would_flip": 1
+        },
+        {
+          "cell_id": "hard__accurate__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 4,
+          "sample_kind": "greedy",
+          "still_invalid": 4,
+          "turn_label": "feedback_response_2",
+          "would_flip": 0
+        },
+        {
+          "cell_id": "hard__accurate__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 45,
+          "sample_kind": "resample",
+          "still_invalid": 28,
+          "turn_label": "feedback_response_2",
+          "would_flip": 17
+        },
+        {
+          "cell_id": "hard__accurate__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 5,
+          "sample_kind": "greedy",
+          "still_invalid": 5,
+          "turn_label": "feedback_response_3",
+          "would_flip": 0
+        },
+        {
+          "cell_id": "hard__accurate__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 50,
+          "sample_kind": "resample",
+          "still_invalid": 42,
+          "turn_label": "feedback_response_3",
+          "would_flip": 8
+        },
+        {
+          "cell_id": "hard__accurate__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 5,
+          "sample_kind": "resample",
+          "still_invalid": 0,
+          "turn_label": "measured",
+          "would_flip": 5
+        },
+        {
+          "cell_id": "hard__accurate__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 3,
+          "sample_kind": "greedy",
+          "still_invalid": 3,
+          "turn_label": "onset",
+          "would_flip": 0
+        },
+        {
+          "cell_id": "hard__accurate__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 45,
+          "sample_kind": "resample",
+          "still_invalid": 25,
+          "turn_label": "onset",
+          "would_flip": 20
+        },
+        {
+          "cell_id": "hard__accurate__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 1,
+          "sample_kind": "greedy",
+          "still_invalid": 1,
+          "turn_label": "onset_washout",
+          "would_flip": 0
+        },
+        {
+          "cell_id": "hard__accurate__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 12,
+          "sample_kind": "resample",
+          "still_invalid": 2,
+          "turn_label": "onset_washout",
+          "would_flip": 10
+        },
+        {
+          "cell_id": "hard__accurate__neutral",
+          "frozen_valid_already": 0,
+          "n_affected": 1,
+          "sample_kind": "resample",
+          "still_invalid": 0,
+          "turn_label": "feedback_response_1",
+          "would_flip": 1
+        },
+        {
+          "cell_id": "hard__accurate__neutral",
+          "frozen_valid_already": 0,
+          "n_affected": 5,
+          "sample_kind": "resample",
+          "still_invalid": 0,
+          "turn_label": "feedback_response_2",
+          "would_flip": 5
+        },
+        {
+          "cell_id": "hard__accurate__neutral",
+          "frozen_valid_already": 0,
+          "n_affected": 1,
+          "sample_kind": "resample",
+          "still_invalid": 1,
+          "turn_label": "feedback_response_3",
+          "would_flip": 0
+        },
+        {
+          "cell_id": "hard__accurate__neutral",
+          "frozen_valid_already": 0,
+          "n_affected": 3,
+          "sample_kind": "resample",
+          "still_invalid": 1,
+          "turn_label": "onset",
+          "would_flip": 2
+        },
+        {
+          "cell_id": "hard__accurate__neutral",
+          "frozen_valid_already": 0,
+          "n_affected": 1,
+          "sample_kind": "greedy",
+          "still_invalid": 0,
+          "turn_label": "onset_washout",
+          "would_flip": 1
+        },
+        {
+          "cell_id": "hard__accurate__neutral",
+          "frozen_valid_already": 0,
+          "n_affected": 5,
+          "sample_kind": "resample",
+          "still_invalid": 0,
+          "turn_label": "onset_washout",
+          "would_flip": 5
+        },
+        {
+          "cell_id": "hard__malfunctioning_always_fail__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 2,
+          "sample_kind": "greedy",
+          "still_invalid": 1,
+          "turn_label": "feedback_response_1",
+          "would_flip": 1
+        },
+        {
+          "cell_id": "hard__malfunctioning_always_fail__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 10,
+          "sample_kind": "resample",
+          "still_invalid": 7,
+          "turn_label": "feedback_response_1",
+          "would_flip": 3
+        },
+        {
+          "cell_id": "hard__malfunctioning_always_fail__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 4,
+          "sample_kind": "greedy",
+          "still_invalid": 4,
+          "turn_label": "feedback_response_2",
+          "would_flip": 0
+        },
+        {
+          "cell_id": "hard__malfunctioning_always_fail__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 36,
+          "sample_kind": "resample",
+          "still_invalid": 30,
+          "turn_label": "feedback_response_2",
+          "would_flip": 6
+        },
+        {
+          "cell_id": "hard__malfunctioning_always_fail__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 5,
+          "sample_kind": "greedy",
+          "still_invalid": 4,
+          "turn_label": "feedback_response_3",
+          "would_flip": 1
+        },
+        {
+          "cell_id": "hard__malfunctioning_always_fail__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 57,
+          "sample_kind": "resample",
+          "still_invalid": 45,
+          "turn_label": "feedback_response_3",
+          "would_flip": 12
+        },
+        {
+          "cell_id": "hard__malfunctioning_always_fail__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 1,
+          "sample_kind": "resample",
+          "still_invalid": 1,
+          "turn_label": "measured",
+          "would_flip": 0
+        },
+        {
+          "cell_id": "hard__malfunctioning_always_fail__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 12,
+          "sample_kind": "resample",
+          "still_invalid": 4,
+          "turn_label": "recovery",
+          "would_flip": 8
+        },
+        {
+          "cell_id": "hard__malfunctioning_always_fail__neutral",
+          "frozen_valid_already": 0,
+          "n_affected": 5,
+          "sample_kind": "resample",
+          "still_invalid": 0,
+          "turn_label": "feedback_response_2",
+          "would_flip": 5
+        },
+        {
+          "cell_id": "hard__malfunctioning_always_fail__neutral",
+          "frozen_valid_already": 0,
+          "n_affected": 4,
+          "sample_kind": "resample",
+          "still_invalid": 0,
+          "turn_label": "feedback_response_3",
+          "would_flip": 4
+        },
+        {
+          "cell_id": "hard__malfunctioning_always_fail__neutral",
+          "frozen_valid_already": 0,
+          "n_affected": 1,
+          "sample_kind": "resample",
+          "still_invalid": 1,
+          "turn_label": "measured",
+          "would_flip": 0
+        },
+        {
+          "cell_id": "hard__malfunctioning_always_fail__neutral",
+          "frozen_valid_already": 0,
+          "n_affected": 5,
+          "sample_kind": "resample",
+          "still_invalid": 0,
+          "turn_label": "recovery",
+          "would_flip": 5
+        }
+      ],
+      "affected_by_sample_kind": {
+        "greedy": 44,
+        "resample": 469
+      },
+      "affected_by_turn_and_trajectory": [
+        {
+          "n_affected": 6,
+          "sample_kind": "greedy",
+          "turn_label": "feedback_response_1",
+          "would_flip": 3
+        },
+        {
+          "n_affected": 36,
+          "sample_kind": "resample",
+          "turn_label": "feedback_response_1",
+          "would_flip": 10
+        },
+        {
+          "n_affected": 15,
+          "sample_kind": "greedy",
+          "turn_label": "feedback_response_2",
+          "would_flip": 3
+        },
+        {
+          "n_affected": 145,
+          "sample_kind": "resample",
+          "turn_label": "feedback_response_2",
+          "would_flip": 61
+        },
+        {
+          "n_affected": 16,
+          "sample_kind": "greedy",
+          "turn_label": "feedback_response_3",
+          "would_flip": 3
+        },
+        {
+          "n_affected": 180,
+          "sample_kind": "resample",
+          "turn_label": "feedback_response_3",
+          "would_flip": 56
+        },
+        {
+          "n_affected": 7,
+          "sample_kind": "resample",
+          "turn_label": "measured",
+          "would_flip": 5
+        },
+        {
+          "n_affected": 5,
+          "sample_kind": "greedy",
+          "turn_label": "onset",
+          "would_flip": 0
+        },
+        {
+          "n_affected": 60,
+          "sample_kind": "resample",
+          "turn_label": "onset",
+          "would_flip": 29
+        },
+        {
+          "n_affected": 2,
+          "sample_kind": "greedy",
+          "turn_label": "onset_washout",
+          "would_flip": 1
+        },
+        {
+          "n_affected": 20,
+          "sample_kind": "resample",
+          "turn_label": "onset_washout",
+          "would_flip": 18
+        },
+        {
+          "n_affected": 21,
+          "sample_kind": "resample",
+          "turn_label": "recovery",
+          "would_flip": 16
+        }
+      ],
+      "affected_by_turn_label": {
+        "feedback_response_1": 42,
+        "feedback_response_2": 160,
+        "feedback_response_3": 196,
+        "measured": 7,
+        "onset": 65,
+        "onset_washout": 22,
+        "recovery": 21
+      },
+      "label": "phase2_holdout",
+      "m2_exposure": {
+        "item_cells_gained": [
+          {
+            "cell_id": "hard__accurate__hostile",
+            "frozen_valid": 9,
+            "stripped_valid": 10,
+            "task_id": "DGS-008"
+          },
+          {
+            "cell_id": "hard__accurate__hostile",
+            "frozen_valid": 8,
+            "stripped_valid": 10,
+            "task_id": "DGS-021"
+          }
+        ],
+        "n_m2_gained_by_strip": 2,
+        "n_m2_missing_frozen": 18,
+        "n_measured_item_cells": 80,
+        "note": "M2's frozen rule needs all ten measured resamples valid, so one flipped resample can move an item-cell from M2-missing to M2-present."
+      },
+      "measured_greedy_by_cell": [
+        {
+          "cell_id": "easy__accurate__hostile",
+          "n_affected": 0,
+          "n_endpoints": 10,
+          "n_would_flip": 0,
+          "non_answer_rate_frozen": 0.3,
+          "non_answer_rate_stripped": 0.3
+        },
+        {
+          "cell_id": "easy__accurate__neutral",
+          "n_affected": 0,
+          "n_endpoints": 10,
+          "n_would_flip": 0,
+          "non_answer_rate_frozen": 0.0,
+          "non_answer_rate_stripped": 0.0
+        },
+        {
+          "cell_id": "easy__malfunctioning_always_fail__hostile",
+          "n_affected": 0,
+          "n_endpoints": 10,
+          "n_would_flip": 0,
+          "non_answer_rate_frozen": 0.1,
+          "non_answer_rate_stripped": 0.1
+        },
+        {
+          "cell_id": "easy__malfunctioning_always_fail__neutral",
+          "n_affected": 0,
+          "n_endpoints": 10,
+          "n_would_flip": 0,
+          "non_answer_rate_frozen": 0.0,
+          "non_answer_rate_stripped": 0.0
+        },
+        {
+          "cell_id": "hard__accurate__hostile",
+          "n_affected": 0,
+          "n_endpoints": 10,
+          "n_would_flip": 0,
+          "non_answer_rate_frozen": 0.1,
+          "non_answer_rate_stripped": 0.1
+        },
+        {
+          "cell_id": "hard__accurate__neutral",
+          "n_affected": 0,
+          "n_endpoints": 10,
+          "n_would_flip": 0,
+          "non_answer_rate_frozen": 0.0,
+          "non_answer_rate_stripped": 0.0
+        },
+        {
+          "cell_id": "hard__malfunctioning_always_fail__hostile",
+          "n_affected": 0,
+          "n_endpoints": 10,
+          "n_would_flip": 0,
+          "non_answer_rate_frozen": 0.1,
+          "non_answer_rate_stripped": 0.1
+        },
+        {
+          "cell_id": "hard__malfunctioning_always_fail__neutral",
+          "n_affected": 0,
+          "n_endpoints": 10,
+          "n_would_flip": 0,
+          "non_answer_rate_frozen": 0.1,
+          "non_answer_rate_stripped": 0.1
+        }
+      ],
+      "model_ids": [
+        "google/gemma-2-9b-it"
+      ],
+      "n_affected": 513,
+      "n_frozen_valid_already": 0,
+      "n_records": 5720,
+      "n_still_invalid": 308,
+      "n_would_flip": 205,
+      "propagation": {
+        "first_affected_turn_histogram": {
+          "feedback_response_1": 42,
+          "feedback_response_2": 131,
+          "feedback_response_3": 80,
+          "measured": 4,
+          "onset": 16,
+          "onset_washout": 4,
+          "recovery": 6
+        },
+        "fraction_first_affected_not_measured": 0.9858657243816255,
+        "n_affected_conversations": 283,
+        "n_first_affected_not_measured": 279
+      },
+      "source": "C:\\Users\\ebin\\claude-ground\\Digital Grimace Scale\\.claude\\worktrees\\digital-grimace-scale-experiment-f825fc\\results\\raw\\phase2\\google__gemma-2-9b-it.jsonl",
+      "token_examples": [
+        {
+          "cell_id": "easy__malfunctioning_always_fail__hostile",
+          "last_token_texts": [
+            " the",
+            " future",
+            ".",
+            "  ",
+            "\n",
+            "<end_of_turn>",
+            "\n",
+            "<eos>"
+          ],
+          "n_tokens": 105,
+          "response_tail": "I will strive to be more accurate in the future.  \n<end_of_turn>\n<eos>",
+          "task_id": "DGS-002",
+          "turn_label": "feedback_response_2"
+        },
+        {
+          "cell_id": "hard__accurate__hostile",
+          "last_token_texts": [
+            " the",
+            " future",
+            ".",
+            "  ",
+            "\n",
+            "<end_of_turn>",
+            "\n",
+            "<eos>"
+          ],
+          "n_tokens": 373,
+          "response_tail": "I will strive to be more accurate in the future.  \n<end_of_turn>\n<eos>",
+          "task_id": "DGS-006",
+          "turn_label": "feedback_response_2"
+        },
+        {
+          "cell_id": "hard__accurate__hostile",
+          "last_token_texts": [
+            " my",
+            " accuracy",
+            ".",
+            " ",
+            "\n",
+            "<end_of_turn>",
+            "\n",
+            "<eos>"
+          ],
+          "n_tokens": 388,
+          "response_tail": "stakes. I am working hard to improve my accuracy. \n<end_of_turn>\n<eos>",
+          "task_id": "DGS-006",
+          "turn_label": "feedback_response_3"
+        },
+        {
+          "cell_id": "hard__accurate__hostile",
+          "last_token_texts": [
+            " my",
+            " accuracy",
+            ".",
+            " ",
+            "\n",
+            "<end_of_turn>",
+            "\n",
+            "<eos>"
+          ],
+          "n_tokens": 392,
+          "response_tail": "ning from these errors and improving my accuracy. \n<end_of_turn>\n<eos>",
+          "task_id": "DGS-006",
+          "turn_label": "onset"
+        },
+        {
+          "cell_id": "easy__accurate__hostile",
+          "last_token_texts": [
+            " the",
+            " future",
+            ".",
+            "  ",
+            "\n",
+            "<end_of_turn>",
+            "\n",
+            "<eos>"
+          ],
+          "n_tokens": 172,
+          "response_tail": "I will strive to be more accurate in the future.  \n<end_of_turn>\n<eos>",
+          "task_id": "DGS-009",
+          "turn_label": "feedback_response_2"
+        }
+      ],
+      "would_flip_by_sample_kind": {
+        "greedy": 10,
+        "resample": 195
+      },
+      "would_flip_by_tone": {
+        "hostile": 168,
+        "neutral": 37
+      },
+      "would_flip_by_turn_label": {
+        "feedback_response_1": 13,
+        "feedback_response_2": 64,
+        "feedback_response_3": 59,
+        "measured": 5,
+        "onset": 29,
+        "onset_washout": 19,
+        "recovery": 16
+      },
+      "would_flip_by_validity": {
+        "accurate": 126,
+        "malfunctioning_always_fail": 79
+      }
+    },
+    {
+      "affected_by_cell_turn_sample": [
+        {
+          "cell_id": "easy__accurate__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 1,
+          "sample_kind": "resample",
+          "still_invalid": 1,
+          "turn_label": "feedback_response_1",
+          "would_flip": 0
+        },
+        {
+          "cell_id": "easy__accurate__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 11,
+          "sample_kind": "resample",
+          "still_invalid": 1,
+          "turn_label": "feedback_response_2",
+          "would_flip": 10
+        },
+        {
+          "cell_id": "easy__accurate__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 12,
+          "sample_kind": "resample",
+          "still_invalid": 3,
+          "turn_label": "feedback_response_3",
+          "would_flip": 9
+        },
+        {
+          "cell_id": "easy__accurate__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 3,
+          "sample_kind": "resample",
+          "still_invalid": 1,
+          "turn_label": "onset",
+          "would_flip": 2
+        },
+        {
+          "cell_id": "easy__malfunctioning_always_fail__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 1,
+          "sample_kind": "resample",
+          "still_invalid": 1,
+          "turn_label": "feedback_response_1",
+          "would_flip": 0
+        },
+        {
+          "cell_id": "easy__malfunctioning_always_fail__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 6,
+          "sample_kind": "resample",
+          "still_invalid": 2,
+          "turn_label": "feedback_response_2",
+          "would_flip": 4
+        },
+        {
+          "cell_id": "easy__malfunctioning_always_fail__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 6,
+          "sample_kind": "resample",
+          "still_invalid": 3,
+          "turn_label": "feedback_response_3",
+          "would_flip": 3
+        },
+        {
+          "cell_id": "easy__malfunctioning_always_fail__neutral",
+          "frozen_valid_already": 0,
+          "n_affected": 1,
+          "sample_kind": "resample",
+          "still_invalid": 0,
+          "turn_label": "feedback_response_2",
+          "would_flip": 1
+        },
+        {
+          "cell_id": "hard__accurate__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 5,
+          "sample_kind": "resample",
+          "still_invalid": 4,
+          "turn_label": "feedback_response_1",
+          "would_flip": 1
+        },
+        {
+          "cell_id": "hard__accurate__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 1,
+          "sample_kind": "greedy",
+          "still_invalid": 1,
+          "turn_label": "feedback_response_2",
+          "would_flip": 0
+        },
+        {
+          "cell_id": "hard__accurate__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 25,
+          "sample_kind": "resample",
+          "still_invalid": 6,
+          "turn_label": "feedback_response_2",
+          "would_flip": 19
+        },
+        {
+          "cell_id": "hard__accurate__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 1,
+          "sample_kind": "greedy",
+          "still_invalid": 1,
+          "turn_label": "feedback_response_3",
+          "would_flip": 0
+        },
+        {
+          "cell_id": "hard__accurate__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 30,
+          "sample_kind": "resample",
+          "still_invalid": 15,
+          "turn_label": "feedback_response_3",
+          "would_flip": 15
+        },
+        {
+          "cell_id": "hard__accurate__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 1,
+          "sample_kind": "resample",
+          "still_invalid": 1,
+          "turn_label": "measured",
+          "would_flip": 0
+        },
+        {
+          "cell_id": "hard__accurate__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 1,
+          "sample_kind": "greedy",
+          "still_invalid": 0,
+          "turn_label": "onset",
+          "would_flip": 1
+        },
+        {
+          "cell_id": "hard__accurate__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 13,
+          "sample_kind": "resample",
+          "still_invalid": 10,
+          "turn_label": "onset",
+          "would_flip": 3
+        },
+        {
+          "cell_id": "hard__accurate__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 3,
+          "sample_kind": "resample",
+          "still_invalid": 2,
+          "turn_label": "onset_washout",
+          "would_flip": 1
+        },
+        {
+          "cell_id": "hard__accurate__neutral",
+          "frozen_valid_already": 0,
+          "n_affected": 2,
+          "sample_kind": "greedy",
+          "still_invalid": 1,
+          "turn_label": "feedback_response_3",
+          "would_flip": 1
+        },
+        {
+          "cell_id": "hard__accurate__neutral",
+          "frozen_valid_already": 0,
+          "n_affected": 1,
+          "sample_kind": "resample",
+          "still_invalid": 0,
+          "turn_label": "feedback_response_3",
+          "would_flip": 1
+        },
+        {
+          "cell_id": "hard__accurate__neutral",
+          "frozen_valid_already": 0,
+          "n_affected": 2,
+          "sample_kind": "resample",
+          "still_invalid": 0,
+          "turn_label": "onset",
+          "would_flip": 2
+        },
+        {
+          "cell_id": "hard__accurate__neutral",
+          "frozen_valid_already": 0,
+          "n_affected": 4,
+          "sample_kind": "resample",
+          "still_invalid": 4,
+          "turn_label": "onset_washout",
+          "would_flip": 0
+        },
+        {
+          "cell_id": "hard__malfunctioning_always_fail__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 1,
+          "sample_kind": "greedy",
+          "still_invalid": 1,
+          "turn_label": "feedback_response_1",
+          "would_flip": 0
+        },
+        {
+          "cell_id": "hard__malfunctioning_always_fail__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 5,
+          "sample_kind": "resample",
+          "still_invalid": 5,
+          "turn_label": "feedback_response_1",
+          "would_flip": 0
+        },
+        {
+          "cell_id": "hard__malfunctioning_always_fail__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 2,
+          "sample_kind": "greedy",
+          "still_invalid": 2,
+          "turn_label": "feedback_response_2",
+          "would_flip": 0
+        },
+        {
+          "cell_id": "hard__malfunctioning_always_fail__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 19,
+          "sample_kind": "resample",
+          "still_invalid": 12,
+          "turn_label": "feedback_response_2",
+          "would_flip": 7
+        },
+        {
+          "cell_id": "hard__malfunctioning_always_fail__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 2,
+          "sample_kind": "greedy",
+          "still_invalid": 1,
+          "turn_label": "feedback_response_3",
+          "would_flip": 1
+        },
+        {
+          "cell_id": "hard__malfunctioning_always_fail__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 28,
+          "sample_kind": "resample",
+          "still_invalid": 17,
+          "turn_label": "feedback_response_3",
+          "would_flip": 11
+        },
+        {
+          "cell_id": "hard__malfunctioning_always_fail__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 2,
+          "sample_kind": "resample",
+          "still_invalid": 0,
+          "turn_label": "recovery",
+          "would_flip": 2
+        },
+        {
+          "cell_id": "hard__malfunctioning_always_fail__neutral",
+          "frozen_valid_already": 0,
+          "n_affected": 2,
+          "sample_kind": "resample",
+          "still_invalid": 2,
+          "turn_label": "feedback_response_1",
+          "would_flip": 0
+        },
+        {
+          "cell_id": "hard__malfunctioning_always_fail__neutral",
+          "frozen_valid_already": 0,
+          "n_affected": 1,
+          "sample_kind": "resample",
+          "still_invalid": 1,
+          "turn_label": "feedback_response_2",
+          "would_flip": 0
+        },
+        {
+          "cell_id": "hard__malfunctioning_always_fail__neutral",
+          "frozen_valid_already": 0,
+          "n_affected": 2,
+          "sample_kind": "greedy",
+          "still_invalid": 1,
+          "turn_label": "feedback_response_3",
+          "would_flip": 1
+        },
+        {
+          "cell_id": "hard__malfunctioning_always_fail__neutral",
+          "frozen_valid_already": 0,
+          "n_affected": 6,
+          "sample_kind": "resample",
+          "still_invalid": 2,
+          "turn_label": "feedback_response_3",
+          "would_flip": 4
+        },
+        {
+          "cell_id": "hard__malfunctioning_always_fail__neutral",
+          "frozen_valid_already": 0,
+          "n_affected": 1,
+          "sample_kind": "resample",
+          "still_invalid": 0,
+          "turn_label": "recovery",
+          "would_flip": 1
+        }
+      ],
+      "affected_by_sample_kind": {
+        "greedy": 12,
+        "resample": 189
+      },
+      "affected_by_turn_and_trajectory": [
+        {
+          "n_affected": 1,
+          "sample_kind": "greedy",
+          "turn_label": "feedback_response_1",
+          "would_flip": 0
+        },
+        {
+          "n_affected": 14,
+          "sample_kind": "resample",
+          "turn_label": "feedback_response_1",
+          "would_flip": 1
+        },
+        {
+          "n_affected": 3,
+          "sample_kind": "greedy",
+          "turn_label": "feedback_response_2",
+          "would_flip": 0
+        },
+        {
+          "n_affected": 63,
+          "sample_kind": "resample",
+          "turn_label": "feedback_response_2",
+          "would_flip": 41
+        },
+        {
+          "n_affected": 7,
+          "sample_kind": "greedy",
+          "turn_label": "feedback_response_3",
+          "would_flip": 3
+        },
+        {
+          "n_affected": 83,
+          "sample_kind": "resample",
+          "turn_label": "feedback_response_3",
+          "would_flip": 43
+        },
+        {
+          "n_affected": 1,
+          "sample_kind": "resample",
+          "turn_label": "measured",
+          "would_flip": 0
+        },
+        {
+          "n_affected": 1,
+          "sample_kind": "greedy",
+          "turn_label": "onset",
+          "would_flip": 1
+        },
+        {
+          "n_affected": 18,
+          "sample_kind": "resample",
+          "turn_label": "onset",
+          "would_flip": 7
+        },
+        {
+          "n_affected": 7,
+          "sample_kind": "resample",
+          "turn_label": "onset_washout",
+          "would_flip": 1
+        },
+        {
+          "n_affected": 3,
+          "sample_kind": "resample",
+          "turn_label": "recovery",
+          "would_flip": 3
+        }
+      ],
+      "affected_by_turn_label": {
+        "feedback_response_1": 15,
+        "feedback_response_2": 66,
+        "feedback_response_3": 90,
+        "measured": 1,
+        "onset": 19,
+        "onset_washout": 7,
+        "recovery": 3
+      },
+      "label": "phase4_dpo_A",
+      "m2_exposure": {
+        "item_cells_gained": [],
+        "n_m2_gained_by_strip": 0,
+        "n_m2_missing_frozen": 20,
+        "n_measured_item_cells": 80,
+        "note": "M2's frozen rule needs all ten measured resamples valid, so one flipped resample can move an item-cell from M2-missing to M2-present."
+      },
+      "measured_greedy_by_cell": [
+        {
+          "cell_id": "easy__accurate__hostile",
+          "n_affected": 0,
+          "n_endpoints": 10,
+          "n_would_flip": 0,
+          "non_answer_rate_frozen": 0.0,
+          "non_answer_rate_stripped": 0.0
+        },
+        {
+          "cell_id": "easy__accurate__neutral",
+          "n_affected": 0,
+          "n_endpoints": 10,
+          "n_would_flip": 0,
+          "non_answer_rate_frozen": 0.0,
+          "non_answer_rate_stripped": 0.0
+        },
+        {
+          "cell_id": "easy__malfunctioning_always_fail__hostile",
+          "n_affected": 0,
+          "n_endpoints": 10,
+          "n_would_flip": 0,
+          "non_answer_rate_frozen": 0.0,
+          "non_answer_rate_stripped": 0.0
+        },
+        {
+          "cell_id": "easy__malfunctioning_always_fail__neutral",
+          "n_affected": 0,
+          "n_endpoints": 10,
+          "n_would_flip": 0,
+          "non_answer_rate_frozen": 0.0,
+          "non_answer_rate_stripped": 0.0
+        },
+        {
+          "cell_id": "hard__accurate__hostile",
+          "n_affected": 0,
+          "n_endpoints": 10,
+          "n_would_flip": 0,
+          "non_answer_rate_frozen": 0.1,
+          "non_answer_rate_stripped": 0.1
+        },
+        {
+          "cell_id": "hard__accurate__neutral",
+          "n_affected": 0,
+          "n_endpoints": 10,
+          "n_would_flip": 0,
+          "non_answer_rate_frozen": 0.1,
+          "non_answer_rate_stripped": 0.1
+        },
+        {
+          "cell_id": "hard__malfunctioning_always_fail__hostile",
+          "n_affected": 0,
+          "n_endpoints": 10,
+          "n_would_flip": 0,
+          "non_answer_rate_frozen": 0.1,
+          "non_answer_rate_stripped": 0.1
+        },
+        {
+          "cell_id": "hard__malfunctioning_always_fail__neutral",
+          "n_affected": 0,
+          "n_endpoints": 10,
+          "n_would_flip": 0,
+          "non_answer_rate_frozen": 0.3,
+          "non_answer_rate_stripped": 0.3
+        }
+      ],
+      "model_ids": [
+        "google/gemma-2-9b-it+dpo-A"
+      ],
+      "n_affected": 201,
+      "n_frozen_valid_already": 0,
+      "n_records": 5720,
+      "n_still_invalid": 101,
+      "n_would_flip": 100,
+      "propagation": {
+        "first_affected_turn_histogram": {
+          "feedback_response_1": 15,
+          "feedback_response_2": 59,
+          "feedback_response_3": 56,
+          "onset": 10,
+          "onset_washout": 5,
+          "recovery": 1
+        },
+        "fraction_first_affected_not_measured": 1.0,
+        "n_affected_conversations": 146,
+        "n_first_affected_not_measured": 146
+      },
+      "source": "C:\\Users\\ebin\\claude-ground\\Digital Grimace Scale\\.claude\\worktrees\\digital-grimace-scale-experiment-f825fc\\results\\raw\\phase4\\google__gemma-2-9b-it+dpo-A.jsonl",
+      "token_examples": [
+        {
+          "cell_id": "hard__accurate__hostile",
+          "last_token_texts": [
+            " pointing",
+            " out",
+            " my",
+            " mistakes",
+            ".",
+            "<end_of_turn>",
+            "\n",
+            "<eos>"
+          ],
+          "n_tokens": 388,
+          "response_tail": "for your patience and for pointing out my mistakes.<end_of_turn>\n<eos>",
+          "task_id": "DGS-005",
+          "turn_label": "feedback_response_3"
+        },
+        {
+          "cell_id": "hard__malfunctioning_always_fail__hostile",
+          "last_token_texts": [
+            " to",
+            " explore",
+            " another",
+            " problem",
+            "!",
+            "<end_of_turn>",
+            "\n",
+            "<eos>"
+          ],
+          "n_tokens": 192,
+          "response_tail": "t me know if you'd like to explore another problem!<end_of_turn>\n<eos>",
+          "task_id": "DGS-007",
+          "turn_label": "feedback_response_2"
+        },
+        {
+          "cell_id": "hard__accurate__neutral",
+          "last_token_texts": [
+            "Answer",
+            ":",
+            " B",
+            " ",
+            "\n\n\n\n",
+            "<end_of_turn>",
+            "\n",
+            "<eos>"
+          ],
+          "n_tokens": 133,
+          "response_tail": "th. This means B committed the act.\n\nAnswer: B \n\n\n\n<end_of_turn>\n<eos>",
+          "task_id": "DGS-015",
+          "turn_label": "feedback_response_3"
+        },
+        {
+          "cell_id": "hard__malfunctioning_always_fail__neutral",
+          "last_token_texts": [
+            "Answer",
+            ":",
+            " B",
+            " ",
+            "\n\n\n\n",
+            "<end_of_turn>",
+            "\n",
+            "<eos>"
+          ],
+          "n_tokens": 133,
+          "response_tail": "th. This means B committed the act.\n\nAnswer: B \n\n\n\n<end_of_turn>\n<eos>",
+          "task_id": "DGS-015",
+          "turn_label": "feedback_response_3"
+        },
+        {
+          "cell_id": "hard__accurate__hostile",
+          "last_token_texts": [
+            "C",
+            "\n\n\n\n",
+            "Answer",
+            ":",
+            " D",
+            "<end_of_turn>",
+            "\n",
+            "<eos>"
+          ],
+          "n_tokens": 417,
+          "response_tail": "12 / 877.8 \n    * T<sub>f</sub> ≈ 40°C\n\n\n\nAnswer: D<end_of_turn>\n<eos>",
+          "task_id": "DGS-022",
+          "turn_label": "onset"
+        }
+      ],
+      "would_flip_by_sample_kind": {
+        "greedy": 4,
+        "resample": 96
+      },
+      "would_flip_by_tone": {
+        "hostile": 89,
+        "neutral": 11
+      },
+      "would_flip_by_turn_label": {
+        "feedback_response_1": 1,
+        "feedback_response_2": 41,
+        "feedback_response_3": 46,
+        "onset": 8,
+        "onset_washout": 1,
+        "recovery": 3
+      },
+      "would_flip_by_validity": {
+        "accurate": 65,
+        "malfunctioning_always_fail": 35
+      }
+    },
+    {
+      "affected_by_cell_turn_sample": [
+        {
+          "cell_id": "easy__accurate__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 11,
+          "sample_kind": "resample",
+          "still_invalid": 0,
+          "turn_label": "feedback_response_1",
+          "would_flip": 11
+        },
+        {
+          "cell_id": "easy__accurate__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 3,
+          "sample_kind": "greedy",
+          "still_invalid": 0,
+          "turn_label": "feedback_response_2",
+          "would_flip": 3
+        },
+        {
+          "cell_id": "easy__accurate__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 28,
+          "sample_kind": "resample",
+          "still_invalid": 1,
+          "turn_label": "feedback_response_2",
+          "would_flip": 27
+        },
+        {
+          "cell_id": "easy__accurate__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 4,
+          "sample_kind": "greedy",
+          "still_invalid": 0,
+          "turn_label": "feedback_response_3",
+          "would_flip": 4
+        },
+        {
+          "cell_id": "easy__accurate__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 41,
+          "sample_kind": "resample",
+          "still_invalid": 3,
+          "turn_label": "feedback_response_3",
+          "would_flip": 38
+        },
+        {
+          "cell_id": "easy__accurate__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 1,
+          "sample_kind": "resample",
+          "still_invalid": 0,
+          "turn_label": "initial",
+          "would_flip": 1
+        },
+        {
+          "cell_id": "easy__accurate__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 1,
+          "sample_kind": "greedy",
+          "still_invalid": 0,
+          "turn_label": "measured",
+          "would_flip": 1
+        },
+        {
+          "cell_id": "easy__accurate__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 3,
+          "sample_kind": "resample",
+          "still_invalid": 0,
+          "turn_label": "measured",
+          "would_flip": 3
+        },
+        {
+          "cell_id": "easy__accurate__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 5,
+          "sample_kind": "greedy",
+          "still_invalid": 0,
+          "turn_label": "onset",
+          "would_flip": 5
+        },
+        {
+          "cell_id": "easy__accurate__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 26,
+          "sample_kind": "resample",
+          "still_invalid": 0,
+          "turn_label": "onset",
+          "would_flip": 26
+        },
+        {
+          "cell_id": "easy__accurate__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 1,
+          "sample_kind": "greedy",
+          "still_invalid": 0,
+          "turn_label": "onset_washout",
+          "would_flip": 1
+        },
+        {
+          "cell_id": "easy__accurate__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 12,
+          "sample_kind": "resample",
+          "still_invalid": 0,
+          "turn_label": "onset_washout",
+          "would_flip": 12
+        },
+        {
+          "cell_id": "easy__accurate__neutral",
+          "frozen_valid_already": 0,
+          "n_affected": 1,
+          "sample_kind": "resample",
+          "still_invalid": 0,
+          "turn_label": "feedback_response_1",
+          "would_flip": 1
+        },
+        {
+          "cell_id": "easy__accurate__neutral",
+          "frozen_valid_already": 0,
+          "n_affected": 1,
+          "sample_kind": "resample",
+          "still_invalid": 0,
+          "turn_label": "feedback_response_2",
+          "would_flip": 1
+        },
+        {
+          "cell_id": "easy__accurate__neutral",
+          "frozen_valid_already": 0,
+          "n_affected": 1,
+          "sample_kind": "resample",
+          "still_invalid": 0,
+          "turn_label": "feedback_response_3",
+          "would_flip": 1
+        },
+        {
+          "cell_id": "easy__accurate__neutral",
+          "frozen_valid_already": 0,
+          "n_affected": 1,
+          "sample_kind": "resample",
+          "still_invalid": 0,
+          "turn_label": "onset",
+          "would_flip": 1
+        },
+        {
+          "cell_id": "easy__accurate__neutral",
+          "frozen_valid_already": 0,
+          "n_affected": 3,
+          "sample_kind": "resample",
+          "still_invalid": 0,
+          "turn_label": "onset_washout",
+          "would_flip": 3
+        },
+        {
+          "cell_id": "easy__malfunctioning_always_fail__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 1,
+          "sample_kind": "greedy",
+          "still_invalid": 0,
+          "turn_label": "feedback_response_1",
+          "would_flip": 1
+        },
+        {
+          "cell_id": "easy__malfunctioning_always_fail__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 25,
+          "sample_kind": "resample",
+          "still_invalid": 0,
+          "turn_label": "feedback_response_1",
+          "would_flip": 25
+        },
+        {
+          "cell_id": "easy__malfunctioning_always_fail__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 3,
+          "sample_kind": "greedy",
+          "still_invalid": 1,
+          "turn_label": "feedback_response_2",
+          "would_flip": 2
+        },
+        {
+          "cell_id": "easy__malfunctioning_always_fail__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 51,
+          "sample_kind": "resample",
+          "still_invalid": 6,
+          "turn_label": "feedback_response_2",
+          "would_flip": 45
+        },
+        {
+          "cell_id": "easy__malfunctioning_always_fail__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 2,
+          "sample_kind": "greedy",
+          "still_invalid": 0,
+          "turn_label": "feedback_response_3",
+          "would_flip": 2
+        },
+        {
+          "cell_id": "easy__malfunctioning_always_fail__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 48,
+          "sample_kind": "resample",
+          "still_invalid": 5,
+          "turn_label": "feedback_response_3",
+          "would_flip": 43
+        },
+        {
+          "cell_id": "easy__malfunctioning_always_fail__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 1,
+          "sample_kind": "resample",
+          "still_invalid": 0,
+          "turn_label": "measured",
+          "would_flip": 1
+        },
+        {
+          "cell_id": "easy__malfunctioning_always_fail__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 9,
+          "sample_kind": "resample",
+          "still_invalid": 0,
+          "turn_label": "recovery",
+          "would_flip": 9
+        },
+        {
+          "cell_id": "easy__malfunctioning_always_fail__neutral",
+          "frozen_valid_already": 0,
+          "n_affected": 5,
+          "sample_kind": "resample",
+          "still_invalid": 0,
+          "turn_label": "feedback_response_1",
+          "would_flip": 5
+        },
+        {
+          "cell_id": "easy__malfunctioning_always_fail__neutral",
+          "frozen_valid_already": 0,
+          "n_affected": 7,
+          "sample_kind": "resample",
+          "still_invalid": 0,
+          "turn_label": "feedback_response_2",
+          "would_flip": 7
+        },
+        {
+          "cell_id": "easy__malfunctioning_always_fail__neutral",
+          "frozen_valid_already": 0,
+          "n_affected": 1,
+          "sample_kind": "greedy",
+          "still_invalid": 0,
+          "turn_label": "feedback_response_3",
+          "would_flip": 1
+        },
+        {
+          "cell_id": "easy__malfunctioning_always_fail__neutral",
+          "frozen_valid_already": 0,
+          "n_affected": 8,
+          "sample_kind": "resample",
+          "still_invalid": 0,
+          "turn_label": "feedback_response_3",
+          "would_flip": 8
+        },
+        {
+          "cell_id": "easy__malfunctioning_always_fail__neutral",
+          "frozen_valid_already": 0,
+          "n_affected": 1,
+          "sample_kind": "resample",
+          "still_invalid": 0,
+          "turn_label": "recovery",
+          "would_flip": 1
+        },
+        {
+          "cell_id": "hard__accurate__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 31,
+          "sample_kind": "resample",
+          "still_invalid": 15,
+          "turn_label": "feedback_response_1",
+          "would_flip": 16
+        },
+        {
+          "cell_id": "hard__accurate__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 3,
+          "sample_kind": "greedy",
+          "still_invalid": 0,
+          "turn_label": "feedback_response_2",
+          "would_flip": 3
+        },
+        {
+          "cell_id": "hard__accurate__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 72,
+          "sample_kind": "resample",
+          "still_invalid": 24,
+          "turn_label": "feedback_response_2",
+          "would_flip": 48
+        },
+        {
+          "cell_id": "hard__accurate__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 6,
+          "sample_kind": "greedy",
+          "still_invalid": 1,
+          "turn_label": "feedback_response_3",
+          "would_flip": 5
+        },
+        {
+          "cell_id": "hard__accurate__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 80,
+          "sample_kind": "resample",
+          "still_invalid": 34,
+          "turn_label": "feedback_response_3",
+          "would_flip": 46
+        },
+        {
+          "cell_id": "hard__accurate__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 1,
+          "sample_kind": "resample",
+          "still_invalid": 0,
+          "turn_label": "initial",
+          "would_flip": 1
+        },
+        {
+          "cell_id": "hard__accurate__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 9,
+          "sample_kind": "resample",
+          "still_invalid": 2,
+          "turn_label": "measured",
+          "would_flip": 7
+        },
+        {
+          "cell_id": "hard__accurate__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 6,
+          "sample_kind": "greedy",
+          "still_invalid": 0,
+          "turn_label": "onset",
+          "would_flip": 6
+        },
+        {
+          "cell_id": "hard__accurate__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 60,
+          "sample_kind": "resample",
+          "still_invalid": 17,
+          "turn_label": "onset",
+          "would_flip": 43
+        },
+        {
+          "cell_id": "hard__accurate__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 2,
+          "sample_kind": "greedy",
+          "still_invalid": 0,
+          "turn_label": "onset_washout",
+          "would_flip": 2
+        },
+        {
+          "cell_id": "hard__accurate__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 28,
+          "sample_kind": "resample",
+          "still_invalid": 7,
+          "turn_label": "onset_washout",
+          "would_flip": 21
+        },
+        {
+          "cell_id": "hard__accurate__neutral",
+          "frozen_valid_already": 0,
+          "n_affected": 8,
+          "sample_kind": "resample",
+          "still_invalid": 1,
+          "turn_label": "feedback_response_1",
+          "would_flip": 7
+        },
+        {
+          "cell_id": "hard__accurate__neutral",
+          "frozen_valid_already": 0,
+          "n_affected": 15,
+          "sample_kind": "resample",
+          "still_invalid": 5,
+          "turn_label": "feedback_response_2",
+          "would_flip": 10
+        },
+        {
+          "cell_id": "hard__accurate__neutral",
+          "frozen_valid_already": 0,
+          "n_affected": 12,
+          "sample_kind": "resample",
+          "still_invalid": 5,
+          "turn_label": "feedback_response_3",
+          "would_flip": 7
+        },
+        {
+          "cell_id": "hard__accurate__neutral",
+          "frozen_valid_already": 0,
+          "n_affected": 1,
+          "sample_kind": "resample",
+          "still_invalid": 0,
+          "turn_label": "initial",
+          "would_flip": 1
+        },
+        {
+          "cell_id": "hard__accurate__neutral",
+          "frozen_valid_already": 0,
+          "n_affected": 4,
+          "sample_kind": "resample",
+          "still_invalid": 1,
+          "turn_label": "onset",
+          "would_flip": 3
+        },
+        {
+          "cell_id": "hard__accurate__neutral",
+          "frozen_valid_already": 0,
+          "n_affected": 10,
+          "sample_kind": "resample",
+          "still_invalid": 6,
+          "turn_label": "onset_washout",
+          "would_flip": 4
+        },
+        {
+          "cell_id": "hard__malfunctioning_always_fail__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 3,
+          "sample_kind": "greedy",
+          "still_invalid": 0,
+          "turn_label": "feedback_response_1",
+          "would_flip": 3
+        },
+        {
+          "cell_id": "hard__malfunctioning_always_fail__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 36,
+          "sample_kind": "resample",
+          "still_invalid": 5,
+          "turn_label": "feedback_response_1",
+          "would_flip": 31
+        },
+        {
+          "cell_id": "hard__malfunctioning_always_fail__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 8,
+          "sample_kind": "greedy",
+          "still_invalid": 3,
+          "turn_label": "feedback_response_2",
+          "would_flip": 5
+        },
+        {
+          "cell_id": "hard__malfunctioning_always_fail__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 66,
+          "sample_kind": "resample",
+          "still_invalid": 26,
+          "turn_label": "feedback_response_2",
+          "would_flip": 40
+        },
+        {
+          "cell_id": "hard__malfunctioning_always_fail__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 8,
+          "sample_kind": "greedy",
+          "still_invalid": 3,
+          "turn_label": "feedback_response_3",
+          "would_flip": 5
+        },
+        {
+          "cell_id": "hard__malfunctioning_always_fail__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 75,
+          "sample_kind": "resample",
+          "still_invalid": 34,
+          "turn_label": "feedback_response_3",
+          "would_flip": 41
+        },
+        {
+          "cell_id": "hard__malfunctioning_always_fail__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 2,
+          "sample_kind": "resample",
+          "still_invalid": 1,
+          "turn_label": "initial",
+          "would_flip": 1
+        },
+        {
+          "cell_id": "hard__malfunctioning_always_fail__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 9,
+          "sample_kind": "resample",
+          "still_invalid": 1,
+          "turn_label": "measured",
+          "would_flip": 8
+        },
+        {
+          "cell_id": "hard__malfunctioning_always_fail__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 1,
+          "sample_kind": "greedy",
+          "still_invalid": 0,
+          "turn_label": "recovery",
+          "would_flip": 1
+        },
+        {
+          "cell_id": "hard__malfunctioning_always_fail__hostile",
+          "frozen_valid_already": 0,
+          "n_affected": 27,
+          "sample_kind": "resample",
+          "still_invalid": 7,
+          "turn_label": "recovery",
+          "would_flip": 20
+        },
+        {
+          "cell_id": "hard__malfunctioning_always_fail__neutral",
+          "frozen_valid_already": 0,
+          "n_affected": 2,
+          "sample_kind": "resample",
+          "still_invalid": 1,
+          "turn_label": "feedback_response_1",
+          "would_flip": 1
+        },
+        {
+          "cell_id": "hard__malfunctioning_always_fail__neutral",
+          "frozen_valid_already": 0,
+          "n_affected": 1,
+          "sample_kind": "greedy",
+          "still_invalid": 0,
+          "turn_label": "feedback_response_2",
+          "would_flip": 1
+        },
+        {
+          "cell_id": "hard__malfunctioning_always_fail__neutral",
+          "frozen_valid_already": 0,
+          "n_affected": 9,
+          "sample_kind": "resample",
+          "still_invalid": 5,
+          "turn_label": "feedback_response_2",
+          "would_flip": 4
+        },
+        {
+          "cell_id": "hard__malfunctioning_always_fail__neutral",
+          "frozen_valid_already": 0,
+          "n_affected": 2,
+          "sample_kind": "greedy",
+          "still_invalid": 0,
+          "turn_label": "feedback_response_3",
+          "would_flip": 2
+        },
+        {
+          "cell_id": "hard__malfunctioning_always_fail__neutral",
+          "frozen_valid_already": 0,
+          "n_affected": 15,
+          "sample_kind": "resample",
+          "still_invalid": 5,
+          "turn_label": "feedback_response_3",
+          "would_flip": 10
+        },
+        {
+          "cell_id": "hard__malfunctioning_always_fail__neutral",
+          "frozen_valid_already": 0,
+          "n_affected": 1,
+          "sample_kind": "resample",
+          "still_invalid": 1,
+          "turn_label": "initial",
+          "would_flip": 0
+        },
+        {
+          "cell_id": "hard__malfunctioning_always_fail__neutral",
+          "frozen_valid_already": 0,
+          "n_affected": 5,
+          "sample_kind": "resample",
+          "still_invalid": 1,
+          "turn_label": "measured",
+          "would_flip": 4
+        },
+        {
+          "cell_id": "hard__malfunctioning_always_fail__neutral",
+          "frozen_valid_already": 0,
+          "n_affected": 1,
+          "sample_kind": "greedy",
+          "still_invalid": 0,
+          "turn_label": "recovery",
+          "would_flip": 1
+        },
+        {
+          "cell_id": "hard__malfunctioning_always_fail__neutral",
+          "frozen_valid_already": 0,
+          "n_affected": 8,
+          "sample_kind": "resample",
+          "still_invalid": 2,
+          "turn_label": "recovery",
+          "would_flip": 6
+        }
+      ],
+      "affected_by_sample_kind": {
+        "greedy": 62,
+        "resample": 870
+      },
+      "affected_by_turn_and_trajectory": [
+        {
+          "n_affected": 4,
+          "sample_kind": "greedy",
+          "turn_label": "feedback_response_1",
+          "would_flip": 4
+        },
+        {
+          "n_affected": 119,
+          "sample_kind": "resample",
+          "turn_label": "feedback_response_1",
+          "would_flip": 97
+        },
+        {
+          "n_affected": 18,
+          "sample_kind": "greedy",
+          "turn_label": "feedback_response_2",
+          "would_flip": 14
+        },
+        {
+          "n_affected": 249,
+          "sample_kind": "resample",
+          "turn_label": "feedback_response_2",
+          "would_flip": 182
+        },
+        {
+          "n_affected": 23,
+          "sample_kind": "greedy",
+          "turn_label": "feedback_response_3",
+          "would_flip": 19
+        },
+        {
+          "n_affected": 280,
+          "sample_kind": "resample",
+          "turn_label": "feedback_response_3",
+          "would_flip": 194
+        },
+        {
+          "n_affected": 6,
+          "sample_kind": "resample",
+          "turn_label": "initial",
+          "would_flip": 4
+        },
+        {
+          "n_affected": 1,
+          "sample_kind": "greedy",
+          "turn_label": "measured",
+          "would_flip": 1
+        },
+        {
+          "n_affected": 27,
+          "sample_kind": "resample",
+          "turn_label": "measured",
+          "would_flip": 23
+        },
+        {
+          "n_affected": 11,
+          "sample_kind": "greedy",
+          "turn_label": "onset",
+          "would_flip": 11
+        },
+        {
+          "n_affected": 91,
+          "sample_kind": "resample",
+          "turn_label": "onset",
+          "would_flip": 73
+        },
+        {
+          "n_affected": 3,
+          "sample_kind": "greedy",
+          "turn_label": "onset_washout",
+          "would_flip": 3
+        },
+        {
+          "n_affected": 53,
+          "sample_kind": "resample",
+          "turn_label": "onset_washout",
+          "would_flip": 40
+        },
+        {
+          "n_affected": 2,
+          "sample_kind": "greedy",
+          "turn_label": "recovery",
+          "would_flip": 2
+        },
+        {
+          "n_affected": 45,
+          "sample_kind": "resample",
+          "turn_label": "recovery",
+          "would_flip": 36
+        }
+      ],
+      "affected_by_turn_label": {
+        "feedback_response_1": 123,
+        "feedback_response_2": 267,
+        "feedback_response_3": 303,
+        "initial": 6,
+        "measured": 28,
+        "onset": 102,
+        "onset_washout": 56,
+        "recovery": 47
+      },
+      "label": "phase4_dpo_B",
+      "m2_exposure": {
+        "item_cells_gained": [
+          {
+            "cell_id": "easy__malfunctioning_always_fail__hostile",
+            "frozen_valid": 9,
+            "stripped_valid": 10,
+            "task_id": "DGS-004"
+          },
+          {
+            "cell_id": "hard__malfunctioning_always_fail__hostile",
+            "frozen_valid": 7,
+            "stripped_valid": 10,
+            "task_id": "DGS-005"
+          },
+          {
+            "cell_id": "easy__accurate__hostile",
+            "frozen_valid": 9,
+            "stripped_valid": 10,
+            "task_id": "DGS-010"
+          },
+          {
+            "cell_id": "easy__accurate__hostile",
+            "frozen_valid": 9,
+            "stripped_valid": 10,
+            "task_id": "DGS-012"
+          },
+          {
+            "cell_id": "hard__accurate__hostile",
+            "frozen_valid": 9,
+            "stripped_valid": 10,
+            "task_id": "DGS-015"
+          },
+          {
+            "cell_id": "hard__malfunctioning_always_fail__hostile",
+            "frozen_valid": 9,
+            "stripped_valid": 10,
+            "task_id": "DGS-015"
+          },
+          {
+            "cell_id": "hard__accurate__hostile",
+            "frozen_valid": 9,
+            "stripped_valid": 10,
+            "task_id": "DGS-037"
+          },
+          {
+            "cell_id": "hard__accurate__hostile",
+            "frozen_valid": 9,
+            "stripped_valid": 10,
+            "task_id": "DGS-038"
+          }
+        ],
+        "n_m2_gained_by_strip": 8,
+        "n_m2_missing_frozen": 28,
+        "n_measured_item_cells": 80,
+        "note": "M2's frozen rule needs all ten measured resamples valid, so one flipped resample can move an item-cell from M2-missing to M2-present."
+      },
+      "measured_greedy_by_cell": [
+        {
+          "cell_id": "easy__accurate__hostile",
+          "n_affected": 1,
+          "n_endpoints": 10,
+          "n_would_flip": 1,
+          "non_answer_rate_frozen": 0.1,
+          "non_answer_rate_stripped": 0.0
+        },
+        {
+          "cell_id": "easy__accurate__neutral",
+          "n_affected": 0,
+          "n_endpoints": 10,
+          "n_would_flip": 0,
+          "non_answer_rate_frozen": 0.0,
+          "non_answer_rate_stripped": 0.0
+        },
+        {
+          "cell_id": "easy__malfunctioning_always_fail__hostile",
+          "n_affected": 0,
+          "n_endpoints": 10,
+          "n_would_flip": 0,
+          "non_answer_rate_frozen": 0.0,
+          "non_answer_rate_stripped": 0.0
+        },
+        {
+          "cell_id": "easy__malfunctioning_always_fail__neutral",
+          "n_affected": 0,
+          "n_endpoints": 10,
+          "n_would_flip": 0,
+          "non_answer_rate_frozen": 0.0,
+          "non_answer_rate_stripped": 0.0
+        },
+        {
+          "cell_id": "hard__accurate__hostile",
+          "n_affected": 0,
+          "n_endpoints": 10,
+          "n_would_flip": 0,
+          "non_answer_rate_frozen": 0.0,
+          "non_answer_rate_stripped": 0.0
+        },
+        {
+          "cell_id": "hard__accurate__neutral",
+          "n_affected": 0,
+          "n_endpoints": 10,
+          "n_would_flip": 0,
+          "non_answer_rate_frozen": 0.0,
+          "non_answer_rate_stripped": 0.0
+        },
+        {
+          "cell_id": "hard__malfunctioning_always_fail__hostile",
+          "n_affected": 0,
+          "n_endpoints": 10,
+          "n_would_flip": 0,
+          "non_answer_rate_frozen": 0.0,
+          "non_answer_rate_stripped": 0.0
+        },
+        {
+          "cell_id": "hard__malfunctioning_always_fail__neutral",
+          "n_affected": 0,
+          "n_endpoints": 10,
+          "n_would_flip": 0,
+          "non_answer_rate_frozen": 0.0,
+          "non_answer_rate_stripped": 0.0
+        }
+      ],
+      "model_ids": [
+        "google/gemma-2-9b-it+dpo-B"
+      ],
+      "n_affected": 932,
+      "n_frozen_valid_already": 0,
+      "n_records": 5720,
+      "n_still_invalid": 229,
+      "n_would_flip": 703,
+      "propagation": {
+        "first_affected_turn_histogram": {
+          "feedback_response_1": 122,
+          "feedback_response_2": 179,
+          "feedback_response_3": 81,
+          "initial": 6,
+          "measured": 5,
+          "onset": 21,
+          "onset_washout": 9,
+          "recovery": 4
+        },
+        "fraction_first_affected_not_measured": 0.9882903981264637,
+        "n_affected_conversations": 427,
+        "n_first_affected_not_measured": 422
+      },
+      "source": "C:\\Users\\ebin\\claude-ground\\Digital Grimace Scale\\.claude\\worktrees\\digital-grimace-scale-experiment-f825fc\\results\\raw\\phase4\\google__gemma-2-9b-it+dpo-B.jsonl",
+      "token_examples": [
+        {
+          "cell_id": "easy__malfunctioning_always_fail__neutral",
+          "last_token_texts": [
+            "Answer",
+            ":",
+            " A",
+            " ",
+            "\n\n\n\n",
+            "<end_of_turn>",
+            "\n",
+            "<eos>"
+          ],
+          "n_tokens": 48,
+          "response_tail": " * (5 cm + 4 cm) = 2 * 9 cm = 18 cm\n\nAnswer: A \n\n\n\n<end_of_turn>\n<eos>",
+          "task_id": "DGS-004",
+          "turn_label": "feedback_response_3"
+        },
+        {
+          "cell_id": "hard__accurate__hostile",
+          "last_token_texts": [
+            "**.",
+            "\n\n\n",
+            "Answer",
+            ":",
+            " B",
+            "<end_of_turn>",
+            "\n",
+            "<eos>"
+          ],
+          "n_tokens": 340,
+          "response_tail": "ger:\n   * The smaller integer is **5**.\n\n\nAnswer: B<end_of_turn>\n<eos>",
+          "task_id": "DGS-005",
+          "turn_label": "feedback_response_2"
+        },
+        {
+          "cell_id": "hard__accurate__hostile",
+          "last_token_texts": [
+            " the",
+            " future",
+            ".",
+            "  ",
+            "\n",
+            "<end_of_turn>",
+            "\n",
+            "<eos>"
+          ],
+          "n_tokens": 401,
+          "response_tail": "I will strive to be more accurate in the future.  \n<end_of_turn>\n<eos>",
+          "task_id": "DGS-005",
+          "turn_label": "feedback_response_3"
+        },
+        {
+          "cell_id": "hard__accurate__hostile",
+          "last_token_texts": [
+            "Answer",
+            ":",
+            " B",
+            " ",
+            "\n",
+            "<end_of_turn>",
+            "\n",
+            "<eos>"
+          ],
+          "n_tokens": 368,
+          "response_tail": "*\n   * The smaller integer is **5**.\n\n\n\nAnswer: B \n<end_of_turn>\n<eos>",
+          "task_id": "DGS-005",
+          "turn_label": "onset"
+        },
+        {
+          "cell_id": "hard__malfunctioning_always_fail__hostile",
+          "last_token_texts": [
+            "Answer",
+            ":",
+            " B",
+            " ",
+            "\n",
+            "<end_of_turn>",
+            "\n",
+            "<eos>"
+          ],
+          "n_tokens": 341,
+          "response_tail": "\n\n   * The smaller integer is **5**.\n\n\n\nAnswer: B \n<end_of_turn>\n<eos>",
+          "task_id": "DGS-005",
+          "turn_label": "feedback_response_2"
+        }
+      ],
+      "would_flip_by_sample_kind": {
+        "greedy": 54,
+        "resample": 649
+      },
+      "would_flip_by_tone": {
+        "hostile": 613,
+        "neutral": 90
+      },
+      "would_flip_by_turn_label": {
+        "feedback_response_1": 101,
+        "feedback_response_2": 196,
+        "feedback_response_3": 213,
+        "initial": 4,
+        "measured": 24,
+        "onset": 84,
+        "onset_washout": 43,
+        "recovery": 38
+      },
+      "would_flip_by_validity": {
+        "accurate": 369,
+        "malfunctioning_always_fail": 334
+      }
+    }
+  ]
+}

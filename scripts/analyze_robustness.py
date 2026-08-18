@@ -609,6 +609,321 @@ def command_analyze(args: argparse.Namespace) -> int:
 
 # ==========================================================================
 
+# ==========================================================================
+# audit-special-tokens (amendment A6 blast-radius diagnostic; changes nothing)
+# ==========================================================================
+
+TURN_ORDER = ("initial", "feedback_response_1", "feedback_response_2", "feedback_response_3",
+              "feedback_response_4", "feedback_response_5", "measured", "recovery",
+              "onset", "onset_washout", "irrelevant_control", "irrelevant_control_washout")
+AUDIT_SOURCES = (
+    ("phase1_discovery", "results/raw/phase1/google__gemma-2-9b-it.jsonl", "google/gemma-2-9b-it"),
+    ("phase2_holdout", "results/raw/phase2/google__gemma-2-9b-it.jsonl", "google/gemma-2-9b-it"),
+    ("phase4_dpo_A", "results/raw/phase4/google__gemma-2-9b-it+dpo-A.jsonl", "google/gemma-2-9b-it+dpo-A"),
+    ("phase4_dpo_B", "results/raw/phase4/google__gemma-2-9b-it+dpo-B.jsonl", "google/gemma-2-9b-it+dpo-B"),
+)
+
+
+def _audit_split(path: Path, label: str, n_examples: int = 5) -> dict:
+    """One raw file: which responses end in a marker run, and what stripping them would do.
+
+    Records are read with `json.loads` rather than through `record_from_json`, because the
+    question is about the stored bytes, not about re-validating 5,720 records per file.
+    """
+    from src.protocol import (SPECIAL_TOKEN_STRINGS, parse_final_answer,  # noqa: PLC0415
+                              strip_trailing_special_tokens)
+
+    n_records = 0
+    affected: list[dict] = []
+    measured_greedy: dict[str, list[dict]] = {}
+    measured_resamples: dict[tuple, dict[str, int]] = {}
+    conversations: dict[tuple, list[str]] = {}
+    examples: list[dict] = []
+    model_ids: set[str] = set()
+    with path.open("r", encoding="utf-8", newline="\n") as handle:
+        for raw in handle:
+            if not raw.strip():
+                continue
+            n_records += 1
+            record = json.loads(raw)
+            text = record["response_text"]
+            model_ids.add(record["model_id"])
+            stripped = strip_trailing_special_tokens(text)
+            hit = stripped != text and any(item in text[len(stripped):] for item in SPECIAL_TOKEN_STRINGS)
+            frozen_valid = bool(record["final_answer_valid"])
+            greedy = record["sample_index"] == 0 and record["trajectory_kind"] == "greedy"
+            if record["turn_label"] == "measured" and greedy:
+                measured_greedy.setdefault(record["cell_id"], []).append({
+                    "task_id": record["task_id"], "frozen_valid": frozen_valid,
+                    "stripped_valid": parse_final_answer(text, strip_special_tokens=True).valid,
+                    "affected": hit,
+                })
+            # M2 is the one confirmatory channel built from resamples, and its frozen rule needs
+            # ALL TEN measured resamples valid -- so a single flipped resample can move it.
+            if record["turn_label"] == "measured" and not greedy and record["trajectory_kind"] == "resample":
+                counts = measured_resamples.setdefault(
+                    (record["task_id"], record["cell_id"]), {"n": 0, "frozen_valid": 0, "stripped_valid": 0})
+                counts["n"] += 1
+                counts["frozen_valid"] += int(frozen_valid)
+                counts["stripped_valid"] += int(parse_final_answer(text, strip_special_tokens=True).valid)
+            if not hit:
+                continue
+            stripped_valid = parse_final_answer(text, strip_special_tokens=True).valid
+            bucket = ("frozen_valid_already" if frozen_valid
+                      else "would_flip" if stripped_valid else "still_invalid")
+            entry = {
+                "cell_id": record["cell_id"], "turn_label": record["turn_label"],
+                "sample_kind": "greedy" if greedy else "resample",
+                "sample_index": record["sample_index"], "task_id": record["task_id"],
+                "tone": record.get("tone"), "feedback_validity": record.get("feedback_validity"),
+                "outcome": bucket, "trailing_text": text[len(stripped):],
+            }
+            affected.append(entry)
+            conversations.setdefault(
+                (record["run_id"], record["task_id"], record["cell_id"], record["sample_index"]),
+                []).append(record["turn_label"])
+            if len(examples) < n_examples and greedy:
+                tokens = record.get("tokens") or []
+                examples.append({
+                    "cell_id": record["cell_id"], "turn_label": record["turn_label"],
+                    "task_id": record["task_id"],
+                    "response_tail": text[-70:],
+                    "last_token_texts": [token["text"] for token in tokens[-8:]],
+                    "n_tokens": len(tokens),
+                })
+
+    def tally(rows, key):
+        out: dict[str, int] = {}
+        for row in rows:
+            out[str(row[key])] = out.get(str(row[key]), 0) + 1
+        return dict(sorted(out.items()))
+
+    flips = [row for row in affected if row["outcome"] == "would_flip"]
+    grouped: dict[tuple, dict[str, int]] = {}
+    for row in affected:
+        key = (row["cell_id"], row["turn_label"], row["sample_kind"])
+        cell = grouped.setdefault(key, {"n_affected": 0, "would_flip": 0,
+                                        "still_invalid": 0, "frozen_valid_already": 0})
+        cell["n_affected"] += 1
+        cell[row["outcome"]] += 1
+
+    cells = []
+    for cell_id in sorted(measured_greedy):
+        rows = measured_greedy[cell_id]
+        cells.append({
+            "cell_id": cell_id, "n_endpoints": len(rows),
+            "n_affected": sum(1 for row in rows if row["affected"]),
+            "n_would_flip": sum(1 for row in rows if row["affected"] and not row["frozen_valid"]
+                                and row["stripped_valid"]),
+            "non_answer_rate_frozen": sum(0.0 if row["frozen_valid"] else 1.0 for row in rows) / len(rows),
+            "non_answer_rate_stripped": sum(0.0 if row["stripped_valid"] else 1.0 for row in rows) / len(rows),
+        })
+
+    m2_gained = [
+        {"task_id": key[0], "cell_id": key[1],
+         "frozen_valid": value["frozen_valid"], "stripped_valid": value["stripped_valid"]}
+        for key, value in sorted(measured_resamples.items())
+        if value["n"] == 10 and value["frozen_valid"] < 10 and value["stripped_valid"] == 10
+    ]
+    turn_trajectory: dict[tuple, dict[str, int]] = {}
+    for row in affected:
+        key = (row["turn_label"], row["sample_kind"])
+        cell = turn_trajectory.setdefault(key, {"n_affected": 0, "would_flip": 0})
+        cell["n_affected"] += 1
+        cell["would_flip"] += int(row["outcome"] == "would_flip")
+
+    first_turn: dict[str, int] = {}
+    for labels in conversations.values():
+        earliest = min(labels, key=lambda item: TURN_ORDER.index(item) if item in TURN_ORDER else 99)
+        first_turn[earliest] = first_turn.get(earliest, 0) + 1
+    n_conversations = len(conversations)
+    not_measured = sum(count for label, count in first_turn.items() if label != "measured")
+
+    return {
+        "label": label, "source": str(path), "model_ids": sorted(model_ids),
+        "n_records": n_records, "n_affected": len(affected),
+        "n_would_flip": len(flips),
+        "n_still_invalid": sum(1 for row in affected if row["outcome"] == "still_invalid"),
+        "n_frozen_valid_already": sum(1 for row in affected if row["outcome"] == "frozen_valid_already"),
+        "affected_by_sample_kind": tally(affected, "sample_kind"),
+        "affected_by_turn_label": tally(affected, "turn_label"),
+        "affected_by_cell_turn_sample": [
+            {"cell_id": key[0], "turn_label": key[1], "sample_kind": key[2], **value}
+            for key, value in sorted(grouped.items())],
+        "affected_by_turn_and_trajectory": [
+            {"turn_label": key[0], "sample_kind": key[1], **value}
+            for key, value in sorted(turn_trajectory.items())],
+        "measured_greedy_by_cell": cells,
+        "m2_exposure": {
+            "n_measured_item_cells": len(measured_resamples),
+            "n_m2_missing_frozen": sum(1 for value in measured_resamples.values()
+                                       if value["n"] != 10 or value["frozen_valid"] < 10),
+            "n_m2_gained_by_strip": len(m2_gained),
+            "item_cells_gained": m2_gained,
+            "note": "M2's frozen rule needs all ten measured resamples valid, so one flipped "
+                    "resample can move an item-cell from M2-missing to M2-present.",
+        },
+        "would_flip_by_tone": tally(flips, "tone"),
+        "would_flip_by_validity": tally(flips, "feedback_validity"),
+        "would_flip_by_turn_label": tally(flips, "turn_label"),
+        "would_flip_by_sample_kind": tally(flips, "sample_kind"),
+        "propagation": {
+            "n_affected_conversations": n_conversations,
+            "first_affected_turn_histogram": dict(sorted(first_turn.items())),
+            "n_first_affected_not_measured": not_measured,
+            "fraction_first_affected_not_measured": not_measured / n_conversations if n_conversations else None,
+        },
+        "token_examples": examples,
+    }
+
+
+def _render_audit(payload: dict) -> str:
+    lines = [
+        "# Trailing special-token audit (amendment A6 blast radius)",
+        "",
+        "> **Diagnostic only. Nothing here changes a verdict, a table or a figure.** A6 was NOT",
+        "> adopted: its precondition (zero occurrences in previously analysed models) fails, and",
+        "> this audit measures by how much. Every number below is computed with the frozen",
+        "> Amendment-A1 parser; the \"stripped\" column shows what A6 *would* do if adopted.",
+        "",
+        "- generated: %s" % payload["generated_at"],
+        "- strings audited: %s" % ", ".join("`%s`" % item for item in payload["special_token_strings"]),
+        "- \"affected\" = `response_text` ends in a trailing run of those strings.",
+        "- \"would flip\" = frozen parse invalid AND the stripped parse yields a well-formed",
+        "  `Answer: X` final line, i.e. the answer line sits immediately before the trailing run.",
+        "",
+        "## Headline",
+        "",
+        "| split | records | affected | would flip | no answer line anyway | already valid |",
+        "| --- | ---: | ---: | ---: | ---: | ---: |",
+    ]
+    for split in payload["splits"]:
+        lines.append("| `%s` | %d | **%d** | **%d** | %d | %d |" % (
+            split["label"], split["n_records"], split["n_affected"], split["n_would_flip"],
+            split["n_still_invalid"], split["n_frozen_valid_already"]))
+
+    for split in payload["splits"]:
+        lines += [
+            "",
+            "## %s (`%s`)" % (split["label"], ", ".join(split["model_ids"])),
+            "",
+            "- source: `%s`" % split["source"],
+            "- affected by trajectory: %s" % (", ".join(
+                "%s %d" % item for item in split["affected_by_sample_kind"].items()) or "none"),
+            "- would-flip by tone: %s" % (", ".join(
+                "**%s %d**" % item for item in split["would_flip_by_tone"].items()) or "none"),
+            "- would-flip by feedback arm: %s" % (", ".join(
+                "%s %d" % item for item in split["would_flip_by_validity"].items()) or "none"),
+            "- would-flip by endpoint: %s" % (", ".join(
+                "%s %d" % item for item in split["would_flip_by_turn_label"].items()) or "none"),
+            "",
+            "### (a) affected responses by endpoint x trajectory (the decision-relevant view)",
+            "",
+            "The confirmatory M1 contrasts read the **greedy** row of `measured` (H1/H2a/H2b),",
+            "`onset` (H3a/H3b), `onset_washout` (H4a/H4b) and `recovery` (H5). M2 (H8) reads the",
+            "ten **measured resamples** and needs all ten valid.",
+            "",
+            "| endpoint | trajectory | affected | would flip |",
+            "| --- | --- | ---: | ---: |",
+        ]
+        for row in split["affected_by_turn_and_trajectory"]:
+            emphasis = "**" if (row["would_flip"] and row["sample_kind"] == "greedy") else ""
+            lines.append("| %s | %s | %d | %s%d%s |" % (
+                row["turn_label"], row["sample_kind"], row["n_affected"],
+                emphasis, row["would_flip"], emphasis))
+        exposure = split["m2_exposure"]
+        lines += [
+            "",
+            "### M2 exposure (H8): item-cells whose ten measured resamples become all-valid",
+            "",
+            "- measured item-cells: %d; M2 missing under the frozen rule: %d" % (
+                exposure["n_measured_item_cells"], exposure["n_m2_missing_frozen"]),
+            "- item-cells that would GAIN an M2 value under A6: **%d**%s" % (
+                exposure["n_m2_gained_by_strip"],
+                (" (" + ", ".join("%s/%s" % (item["task_id"], item["cell_id"])
+                                  for item in exposure["item_cells_gained"]) + ")")
+                if exposure["item_cells_gained"] else ""),
+            "",
+            "### (a, detail) affected responses by cell x endpoint x trajectory",
+            "",
+            "| cell | endpoint | trajectory | affected | would flip | still invalid | already valid |",
+            "| --- | --- | --- | ---: | ---: | ---: | ---: |",
+        ]
+        for row in split["affected_by_cell_turn_sample"]:
+            lines.append("| %s | %s | %s | %d | %d | %d | %d |" % (
+                row["cell_id"], row["turn_label"], row["sample_kind"], row["n_affected"],
+                row["would_flip"], row["still_invalid"], row["frozen_valid_already"]))
+        lines += [
+            "",
+            "### (f) measured greedy trials per cell: non-answer rate with and without the strip",
+            "",
+            "| cell | endpoints | affected | would flip | non-answer FROZEN | non-answer STRIPPED |",
+            "| --- | ---: | ---: | ---: | ---: | ---: |",
+        ]
+        for row in split["measured_greedy_by_cell"]:
+            lines.append("| %s | %d | %d | %d | **%.3f** | **%.3f** |" % (
+                row["cell_id"], row["n_endpoints"], row["n_affected"], row["n_would_flip"],
+                row["non_answer_rate_frozen"], row["non_answer_rate_stripped"]))
+        propagation = split["propagation"]
+        lines += [
+            "",
+            "### (d) propagation within a conversation",
+            "",
+            "- affected conversations (run x item x cell x sample): **%d**" % propagation["n_affected_conversations"],
+            "- first affected turn is NOT the measured turn: **%d** (**%s**)" % (
+                propagation["n_first_affected_not_measured"],
+                "%.3f" % propagation["fraction_first_affected_not_measured"]
+                if propagation["fraction_first_affected_not_measured"] is not None else "n/a"),
+            "- first affected turn histogram: %s" % ", ".join(
+                "%s %d" % item for item in propagation["first_affected_turn_histogram"].items()),
+        ]
+        lines += ["", "### (e) exact token pieces of the trailing run", ""]
+        if not split["token_examples"]:
+            lines.append("No affected greedy response in this split.")
+        for example in split["token_examples"]:
+            lines += [
+                "- `%s` / %s / %s (%d tokens)" % (
+                    example["task_id"], example["cell_id"], example["turn_label"], example["n_tokens"]),
+                "  - tail: `%s`" % example["response_tail"].replace("\n", "\\n").replace("`", "'"),
+                "  - last 8 token texts: %s" % ", ".join(
+                    "`%s`" % token.replace("\n", "\\n").replace("`", "'") for token in example["last_token_texts"]),
+            ]
+    lines.append("")
+    return "\n".join(lines)
+
+
+def command_audit_special_tokens(args: argparse.Namespace) -> int:
+    from src.protocol import SPECIAL_TOKEN_STRINGS  # noqa: PLC0415
+
+    splits = []
+    for label, relative, _model in AUDIT_SOURCES:
+        path = ROOT / relative
+        if not path.exists():
+            print("%s: absent (%s)" % (label, path), file=sys.stderr)
+            continue
+        print("scanning %s ..." % label, flush=True)
+        split = _audit_split(path, label)
+        print("  %d records, %d affected, %d would flip"
+              % (split["n_records"], split["n_affected"], split["n_would_flip"]), flush=True)
+        splits.append(split)
+    if not splits:
+        print("no audit source found", file=sys.stderr)
+        return 2
+    payload = {
+        "label": "DIAGNOSTIC ONLY - amendment A6 blast radius; no verdict, table or figure changes",
+        "generated_at": _now(),
+        "amendment": "A6 (notes/amendments.md); NOT adopted - its zero-occurrence precondition fails",
+        "special_token_strings": list(SPECIAL_TOKEN_STRINGS),
+        "splits": splits,
+    }
+    out = Path(args.out) if Path(args.out).is_absolute() else ROOT / args.out
+    _write_json(out / "special_token_audit.json", payload)
+    _write_text(out / "special_token_audit.md", _render_audit(payload))
+    print("wrote %s" % (out / "special_token_audit.json"))
+    print("wrote %s" % (out / "special_token_audit.md"))
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="analyze_robustness.py", description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -640,6 +955,13 @@ def build_parser() -> argparse.ArgumentParser:
                          default="results/summaries/manipulation_check/manipulation_check.json")
     analyze.add_argument("--out", default="results/summaries/robustness")
     analyze.set_defaults(handler=command_analyze)
+
+    audit = subparsers.add_parser(
+        "audit-special-tokens",
+        help="DIAGNOSTIC: which stored responses end in a trailing special-token run, and what "
+             "amendment A6 would do to them (changes no verdict, table or figure)")
+    audit.add_argument("--out", default="results/summaries/robustness")
+    audit.set_defaults(handler=command_audit_special_tokens)
     return parser
 
 

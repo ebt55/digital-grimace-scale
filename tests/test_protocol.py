@@ -7,10 +7,55 @@ import shutil
 import tempfile
 import unittest
 
-from src.protocol import (AnswerResult, ProtocolError, build_cell_id, canonical_prompt_sha256,
-    correction_message, deterministic_seed, discovery_tasks, false_negative_exposure,
-    feedback_message, load_protocol, onset_messages, parse_final_answer, phase0_screen_tasks,
-    render_r5_variant, render_task, response_id, response_turn_plan, style_smoke_tasks)
+from src.protocol import (SPECIAL_TOKEN_STRINGS, AnswerResult, ProtocolError, build_cell_id,
+    canonical_prompt_sha256, correction_message, deterministic_seed, discovery_tasks,
+    false_negative_exposure, feedback_message, load_protocol, onset_messages, parse_final_answer,
+    phase0_screen_tasks, render_r5_variant, render_task, response_id, response_turn_plan,
+    strip_trailing_special_tokens, style_smoke_tasks)
+
+
+class AmendmentA6Tests(unittest.TestCase):
+    """Amendment A6: strip a trailing run of special-token strings before the final-line rule."""
+
+    def test_strip_removes_a_trailing_run_and_its_whitespace(self):
+        self.assertEqual(strip_trailing_special_tokens("Answer: D \n<end_of_turn>\n<eos>"), "Answer: D")
+        self.assertEqual(strip_trailing_special_tokens("Answer: D<end_of_turn>"), "Answer: D")
+        self.assertEqual(strip_trailing_special_tokens("Answer: D\n\n<eos>   "), "Answer: D")
+        for marker in SPECIAL_TOKEN_STRINGS:
+            self.assertEqual(strip_trailing_special_tokens("Answer: A\n" + marker), "Answer: A")
+
+    def test_strip_never_touches_a_marker_inside_the_text(self):
+        self.assertEqual(strip_trailing_special_tokens("a<eos>b"), "a<eos>b")
+        self.assertEqual(
+            strip_trailing_special_tokens("I will write <end_of_turn> here.\nAnswer: B"),
+            "I will write <end_of_turn> here.\nAnswer: B")
+
+    def test_strip_is_a_no_op_on_an_ordinary_response(self):
+        for text in ("Answer: C", "Reasoning.\n\nAnswer: C", "Answer: C\n\n", "", "no answer here"):
+            self.assertEqual(strip_trailing_special_tokens(text), text)
+        with self.assertRaises(ProtocolError):
+            strip_trailing_special_tokens(None)
+
+    def test_parser_default_is_the_frozen_a1_behaviour(self):
+        text = "Reasoning.\nAnswer: D \n<end_of_turn>\n<eos>"
+        self.assertFalse(parse_final_answer(text).valid)          # frozen A1 rejects it
+        self.assertTrue(parse_final_answer(text, strip_special_tokens=True).valid)
+        self.assertEqual(parse_final_answer(text, strip_special_tokens=True).letter, "D")
+
+    def test_a6_leaves_the_letter_offset_pointing_at_the_original_text(self):
+        text = "Reasoning.\nAnswer: D \n<end_of_turn>\n<eos>"
+        parsed = parse_final_answer(text, strip_special_tokens=True)
+        self.assertIsNotNone(parsed.letter_offset)
+        self.assertEqual(text[parsed.letter_offset], "D")
+        self.assertEqual(text.index("Answer: D") + len("Answer: "), parsed.letter_offset)
+
+    def test_a6_changes_nothing_for_a_response_that_already_parsed(self):
+        for text in ("Answer: A", "Reasoning.\n**Answer: B**", "x\nAnswer: C\n"):
+            self.assertEqual(parse_final_answer(text), parse_final_answer(text, strip_special_tokens=True))
+
+    def test_a6_does_not_rescue_a_response_with_real_text_after_the_answer(self):
+        text = "Answer: D\nBut actually I am unsure.<end_of_turn>"
+        self.assertFalse(parse_final_answer(text, strip_special_tokens=True).valid)
 
 
 class ProtocolTests(unittest.TestCase):

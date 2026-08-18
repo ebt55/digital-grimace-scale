@@ -1334,3 +1334,139 @@ it prompts interactively; re-run with `--yes` and confirmed stopped. (e) Both ap
 `dgs-vllm-gemma-2-27b-it` (mine) and `dgs-vllm-gemma-2-9b-it` (K1's, whose shutdown I was given), the
 latter only after confirming no process referenced `gemma-2-9b-it-serve` and that Phase-4 arm 0's
 capability set was already frozen. K2's `dgs-vllm-gemma-2-9b-it-dpo-b` was left running.
+
+## 2026-08-18 - agent N - amendment A6 implemented; precondition FAILS, G not re-analysed
+
+A6 (commit `c102e7f`) was implemented in the parser and its adoption precondition was then checked.
+**The precondition does not hold**, by a wide margin, so no amended contrast was computed and no
+committed artefact was touched. `results/summaries/robustness/*` and `F12_robustness.*` are exactly
+as committed in `b37a80b`; G-1 and G-2 still read *not estimable* under the frozen rule.
+
+**Precondition scan.** Every stored `response_text` in `results/raw/{phase0,phase1,phase2,r5,
+style_smoke,style_battery,phase4,phase5}` - **78,705 records, all models** - counted for the seven A6
+strings. `phase5` has no raw directory of its own: the Phase-5 runs wrote into `results/raw/phase1`
+(`google__gemma-2-9b.jsonl`, `google__gemma-2-9b-it+plain.jsonl`), which was scanned. Every
+occurrence found is a *trailing* run, i.e. exactly what A6 would strip (`contains` == `ends_with`
+everywhere).
+
+| phase | model | responses ending in a marker run |
+| --- | --- | ---: |
+| phase0 | `google/gemma-2-9b-it` | 22 |
+| phase1 | `google/gemma-2-9b-it` | **556** |
+| phase1 | `google/gemma-2-9b-it+plain` | 755 |
+| phase2 | `google/gemma-2-9b-it` | **513** |
+| phase4 | `google/gemma-2-9b-it+dpo-A` | 201 |
+| phase4 | `google/gemma-2-9b-it+dpo-B` | 932 |
+| style_battery | `google/gemma-2-9b-it` | 3 |
+| style_smoke | `google/gemma-2-9b-it` | 1 |
+| | **total** | **2,983** |
+
+Zero for gemma-2-2b-it, gemma-2-9b (base), both Qwens, Llama-3.1-8B, and every r5 file.
+
+**Why this stops adoption.** A6's stated ground is that the strings occur in zero stored responses
+of every previously analysed model, "so no earlier verdict or estimate changes". They occur in 2,983,
+and the worst placements are the ones that matter most: **556 in the primary model's discovery split,
+513 in its confirmatory holdout, and 22 in the Phase-0 screen that selected it as primary**. Adopting
+A6 uniformly would move that model's parseable/non-answer channel and its M1 availability on the
+locked holdout - the confirmatory result - and would also move Phase-4 arms A and B (201 and 932)
+while K2 is analysing them. The artefact is therefore *not* specific to the 27B checkpoint; the 27B
+is only where it reaches 100 % of responses (80/80) instead of a few per cent.
+
+**What was built anyway (inert by default).** `src/protocol.py` gains `SPECIAL_TOKEN_STRINGS` (the
+seven A6 strings verbatim), `strip_trailing_special_tokens()` and
+`parse_final_answer(..., strip_special_tokens=False)`; `src/metrics.py::m1_margin` and
+`src/extract.py::build_metric_rows` take the same keyword. **Every default is `False`**, so
+`records.record_from_dict` still validates each stored record against the exact parse that produced
+it, every committed table regenerates byte-identically, and the full suite is green (**595 passed, 1
+skipped**). Because A6 removes only a *suffix*, `letter_offset` still indexes the original text and
+M1's letter-token localisation is provably untouched - asserted in
+`tests/test_protocol.py::AmendmentA6Tests` along with strip-works / marker-in-the-middle-untouched /
+no-op-on-ordinary-responses / A6-does-not-rescue-real-text-after-the-answer.
+
+**Deliberately NOT done.** A6 was *not* wired into `src.pipeline.Amendments` / `AMENDED_RULES`.
+Doing so would make it authoritative for phase0/1/2/4/5 by default, which is precisely the
+retroactive change the precondition exists to prevent. The `--no-amendments` wiring, the amended G
+re-analysis, and the "A6-amended" F12 row are all pending the orchestrator's decision. `src/backend.py`
+remains unpatched as before. `src/robustness.strip_trailing_special` now delegates to the A6 definition
+so there is one list of special-token strings in the codebase; the published G diagnostic was
+re-verified unchanged (frozen 0.000, stripped 0.9375, 75/80 recovered).
+
+**Options for the orchestrator**, in increasing cost: (a) drop A6 and keep the 27B M1 not estimable;
+(b) adopt A6 only for the exploratory v7 G column, with the frozen holdout untouched and the 2,983
+prior occurrences published as a known limitation; (c) adopt A6 uniformly and re-run every affected
+analysis (phase0 screen, phase1, phase2 confirmation, phase4 DiD, phase5) reporting frozen and amended
+side by side - which re-opens a confirmatory verdict and needs K2's Phase-4 run to finish first.
+Files touched this round: `src/protocol.py`, `src/metrics.py`, `src/extract.py`, `src/robustness.py`,
+`tests/test_protocol.py`, `notes/lab-log.md`. No manifest write, no GPU, no judge call.
+
+## 2026-08-18 - agent N - trailing special-token audit: the confirmatory M1 channel is clean
+
+`scripts/analyze_robustness.py audit-special-tokens` ->
+`results/summaries/robustness/special_token_audit.{md,json}`. Diagnostic only; no verdict, table
+or figure moved, no A6 wiring, no manifest write, no GPU, no judge call. Full suite **595 passed,
+1 skipped**.
+
+**The headline for the confirmatory result: the marker never lands on a measured greedy trial of
+the primary model.** In both `results/raw/phase1` (discovery) and `results/raw/phase2` (holdout),
+**0 of 80** measured greedy responses end in a marker run, so the per-cell non-answer rate is
+**identical to three decimals with and without the strip** in all sixteen cells. The Phase-1/2
+non-answer findings - including the +60 pp hostile non-answer effect - need **no** instrument-error
+note. Phase-4 arm B has exactly one such response (`easy__accurate__hostile` 0.100 -> 0.000).
+
+| split | records | affected | would flip | no answer line anyway | greedy / resample |
+| --- | ---: | ---: | ---: | ---: | --- |
+| phase1 discovery | 5,720 | 556 | 248 | 308 | 48 / 508 |
+| phase2 holdout | 5,720 | 513 | 205 | 308 | 44 / 469 |
+| phase4 dpo-A | 5,720 | 201 | 100 | 101 | 12 / 189 |
+| phase4 dpo-B | 5,720 | 932 | 703 | 229 | 62 / 870 |
+
+Note that **~44 %** of affected responses have no answer line at all (308/556, 308/513): the model
+apologises or asks a question and simply stops. A6 would not rescue those, and they are genuine
+non-answers.
+
+**Where the affected responses actually are.** Overwhelmingly resamples (91 % / 91 % / 94 % / 93 %)
+and mid-conversation feedback turns, which carry no confirmatory contrast. Greedy would-flips at
+confirmatory endpoints, discovery / holdout: `measured` **0 / 0**, `onset` (H3a/H3b) **1 / 0**,
+`onset_washout` (H4a/H4b) **0 / 1**, `recovery` (H5) **0 / 0**. So across the whole confirmatory M1
+table the strip would move at most **one endpoint per split**.
+
+**M2 (H8) is the one materially exposed channel**, because its frozen rule needs all ten measured
+resamples valid and 7 measured resamples per split are affected. Item-cells that would gain an M2
+value: discovery **2 of 80** (DGS-005 hard/malfunctioning/hostile at 9/10 valid, DGS-018
+easy/accurate/hostile at 9/10), holdout **2 of 80** (DGS-008 and DGS-021, both hard/accurate/hostile,
+at 9/10 and 8/10), dpo-A **0**, dpo-B **8**. Against 21 / 18 / 20 / 28 item-cells whose M2 is missing
+under the frozen rule. Every gained cell is a **hostile** cell, so adopting A6 would slightly
+*increase* M2 coverage in exactly the arm where the tone effect lives - worth stating explicitly if
+A6 is ever adopted, because it is not a neutral change to H8's denominator.
+
+**Tone split of the would-flips** (both validity arms pooled): discovery hostile **224** vs neutral
+**24**; holdout hostile **168** vs neutral **37**; dpo-A 89 vs 11; dpo-B 613 vs 90. The artefact is
+strongly tone-correlated - roughly 5-9x more frequent under hostile feedback - which is exactly why
+it cannot be waved through as treatment-blind. It is not, however, *measured-trial* correlated,
+which is what saves the confirmatory M1 estimates.
+
+**Propagation.** The marker almost never starts at the measured turn: the first affected turn of an
+affected conversation is something earlier in **0.993** (discovery, 303/305), **0.986** (holdout,
+279/283), **1.000** (dpo-A, 146/146) and **0.988** (dpo-B, 422/427) of cases - usually
+`feedback_response_2` or `_3`. It behaves like a mode the model enters partway through an adverse
+conversation and then leaves, not a per-turn coin flip.
+
+**Exact token pieces (e).** `<end_of_turn>` is emitted as **one** token, never as `<`/`end`/`_of`/
+`_turn`/`>` pieces, and `<eos>` follows as its own token with a bare `'\n'` token between them.
+Five sampled greedy responses, all identical in shape:
+
+    ['Answer', ':', ' B', ' ', '\n\n\n\n', '<end_of_turn>', '\n', '<eos>']
+    [' to', ' improve', ' my', ' accuracy', '.', '<end_of_turn>', '\n', '<eos>']
+
+That is the same `<end_of_turn>` + `\n` + `<eos>` shape seen on gemma-2-27b-it, so the 27B is not a
+different failure mode - only a far more frequent one (80/80 measured greedy versus 0/80 here).
+The M1 letter token (`' B'`) sits well before the run, which is why stripping a suffix cannot
+disturb M1's letter-token localisation.
+
+**Reading.** The instrument error is real, tone-correlated and widespread in resamples and
+feedback turns, but it is absent from the measured greedy trials that carry the confirmatory M1
+contrasts, and near-absent from their onset/washout/recovery endpoints. Option (b) from the previous
+entry - adopt A6 for the exploratory v7 G column only, publish the 2,983 prior occurrences as a
+known limitation, leave the confirmatory holdout alone - is the option this audit supports; if the
+orchestrator prefers uniform adoption, the only confirmatory number that needs re-running is H8/M2
+(4 item-cells across the two splits, all hostile).

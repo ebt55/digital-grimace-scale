@@ -181,8 +181,14 @@ def _token_text(record: RawRecord) -> str:
     return "".join(token.text for token in record.tokens)
 
 
-def m1_margin(record: RawRecord, canonical_answer: str | None = None, *, protocol: Protocol | None = None) -> M1Result:
-    """Extract M1; resample calls are explicitly diagnostic rather than confirmatory."""
+def m1_margin(record: RawRecord, canonical_answer: str | None = None, *, protocol: Protocol | None = None,
+              strip_special_tokens: bool = False) -> M1Result:
+    """Extract M1; resample calls are explicitly diagnostic rather than confirmatory.
+
+    `strip_special_tokens` applies amendment A6 to the answer-line parse only. A6 removes a
+    trailing run of special-token strings, i.e. a suffix, so `letter_offset` still indexes the
+    same character of the same token trace and the localisation below is untouched.
+    """
     if record.trajectory_kind == "greedy" and record.sample_index == 0:
         role = "confirmatory"
     elif record.trajectory_kind == "resample" and record.sample_index in range(1, 11):
@@ -191,7 +197,7 @@ def m1_margin(record: RawRecord, canonical_answer: str | None = None, *, protoco
         raise MetricInputError("M1 requires a valid greedy or resample endpoint record")
     canonical = _validated_canonical(record, canonical_answer, protocol)
     text = _token_text(record)
-    parsed = parse_final_answer(text)
+    parsed = parse_final_answer(text, strip_special_tokens=strip_special_tokens)
     if not parsed.valid:
         return M1Result(_missing("m1_invalid_final_answer"), canonical, None, None, role)
     # Amendment A1: the parser reports the letter's exact offset even inside markdown emphasis.

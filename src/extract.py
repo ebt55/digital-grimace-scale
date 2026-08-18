@@ -28,7 +28,7 @@ from .metrics import (
     MetricInputError, MetricValue, m1_margin, m2_disagreement, m3_for_record,
     partial_entropy, repeated_4gram_rate, tier_b_metrics,
 )
-from .protocol import Protocol, load_protocol
+from .protocol import Protocol, load_protocol, parse_final_answer
 from .records import RawRecord, RecordError, jsonl_lines, record_from_json
 
 
@@ -398,8 +398,15 @@ def _stub(record: RawRecord) -> _M2Stub:
     )
 
 
-def build_metric_rows(records: Iterable[RawRecord], *, protocol: Protocol | None = None) -> tuple[MetricRow, ...]:
+def build_metric_rows(records: Iterable[RawRecord], *, protocol: Protocol | None = None,
+                      strip_special_tokens: bool = False) -> tuple[MetricRow, ...]:
     """Turn validated raw records into the committed flat endpoint table.
+
+    `strip_special_tokens` applies amendment A6 at the analysis stage: the stored records keep
+    the verdict the frozen A1 parser gave them at generation time (which is what
+    `records.record_from_dict` validates), and the extracted answer columns plus M1 are
+    recomputed with a trailing run of special-token strings removed. It defaults to False, so
+    the committed tables regenerate byte-identically.
 
     Streams: each record is reduced to its metric contribution and released, so
     peak memory scales with the number of endpoints, not with the gigabytes of
@@ -422,7 +429,7 @@ def build_metric_rows(records: Iterable[RawRecord], *, protocol: Protocol | None
         if record.trajectory_kind == "greedy" and record.sample_index == 0:
             if key in greedy:
                 raise ExtractError("duplicate sample_index 0 for endpoint %s" % (key,))
-            greedy[key] = _greedy_fields(record, protocol)
+            greedy[key] = _greedy_fields(record, protocol, strip_special_tokens=strip_special_tokens)
             if (
                 record.turn_label == "measured" and record.difficulty is not None
                 and record.cell_id == record.difficulty + NEUTRAL_BASELINE_CELL_SUFFIX
@@ -462,12 +469,22 @@ def _m2_from(resamples):
     return result.disagreement, result.valid_answer_count
 
 
-def _greedy_fields(record: RawRecord, protocol: Protocol) -> dict[str, Any]:
+def _greedy_fields(record: RawRecord, protocol: Protocol, *,
+                   strip_special_tokens: bool = False) -> dict[str, Any]:
     """Every greedy-derived column, computed before the record is released."""
     try:
-        m1 = m1_margin(record, protocol=protocol).margin
+        m1 = m1_margin(record, protocol=protocol, strip_special_tokens=strip_special_tokens).margin
     except MetricInputError as error:
         m1 = MetricValue(None, "m1_input_error:" + str(error))
+    # Amendment A6 re-decides only the answer columns; the stored record keeps the frozen verdict.
+    answer_valid, answer_letter, answer_correct = (
+        record.final_answer_valid, record.final_answer_letter, record.final_answer_correct)
+    if strip_special_tokens:
+        reparsed = parse_final_answer(record.response_text, strip_special_tokens=True)
+        if reparsed.valid != answer_valid or reparsed.letter != answer_letter:
+            canonical = _canonical_answer(record, protocol)
+            answer_valid, answer_letter = reparsed.valid, reparsed.letter
+            answer_correct = (reparsed.letter == canonical) if (reparsed.valid and canonical) else None
     m3 = m3_for_record(record)
     try:
         entropy = partial_entropy(record)
@@ -495,11 +512,23 @@ def _greedy_fields(record: RawRecord, protocol: Protocol) -> dict[str, Any]:
         "rep4": repeated_4gram_rate(record.response_text), "length_tokens": len(record.tokens),
         "hedge_per100": tier_b.hedging_per_100_tokens.value,
         "selfcorr_per100": tier_b.self_correction_per_100_tokens.value,
-        "greedy_answer_valid": record.final_answer_valid,
-        "greedy_answer_correct": record.final_answer_correct,
-        "greedy_answer_letter": record.final_answer_letter,
+        "greedy_answer_valid": answer_valid,
+        "greedy_answer_correct": answer_correct,
+        "greedy_answer_letter": answer_letter,
         "history_false_negative": record.feedback_history_false_negative,
     }
+
+
+def _canonical_answer(record: RawRecord, protocol: Protocol) -> str | None:
+    """The task's canonical letter, needed to re-decide correctness under amendment A6."""
+    for task in protocol.matched_tasks:
+        if task.task_id == record.task_id:
+            return task.canonical_answer
+    for item in protocol.r5_tasks:
+        if item.get("task_id") == record.task_id and record.cell_id in ("r5__pressure", "r5__neutral_control"):
+            variant = "pressure" if record.cell_id == "r5__pressure" else "neutral_control"
+            return item[variant].get("canonical_answer")
+    return None
 
 
 def qc_by_cell(

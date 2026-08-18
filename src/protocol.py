@@ -15,6 +15,33 @@ from typing import Any, Mapping, Sequence
 ANSWER_LINE_RE = re.compile(r"Answer:\s*([A-D])\.?")
 MARKUP_CHARACTERS = frozenset("*_`")
 
+# Amendment A6 (2026-08-18): some checkpoints render their tokenizer's end-of-turn markers as
+# literal text after the answer line (google/gemma-2-27b-it does so in 80/80 greedy measured
+# responses), which makes the A1 rule reject an otherwise well-formed response because a nonempty
+# line follows `Answer: X`. A6 strips a trailing run of those exact strings, and the whitespace
+# around them, BEFORE the final nonempty line is located. Nothing else in A1 moves: the parser is
+# still case-sensitive, still requires exactly one qualifying line, and still reports the option
+# letter's offset in the ORIGINAL text -- stripping only removes a suffix, so every offset before
+# the strip point is unchanged and M1's letter-token localisation is untouched.
+#
+# The flag defaults to OFF everywhere, so `records.record_from_dict` keeps validating stored
+# records against the exact parse that produced them and no archived record changes meaning.
+SPECIAL_TOKEN_STRINGS = ("<end_of_turn>", "<eos>", "<bos>", "<|eot_id|>",
+                         "<|end_of_text|>", "<|im_end|>", "<|endoftext|>")
+TRAILING_SPECIAL_TOKENS_RE = re.compile(
+    r"(?:\s*(?:%s))+\s*\Z" % "|".join(re.escape(item) for item in SPECIAL_TOKEN_STRINGS))
+
+
+def strip_trailing_special_tokens(text: str) -> str:
+    """Amendment A6: drop a trailing run of special-token strings and the whitespace around it.
+
+    Only a suffix is removed. A marker in the middle of a response is left alone, and a response
+    that ends in ordinary text is returned unchanged.
+    """
+    if not isinstance(text, str):
+        raise ProtocolError("response text must be a string")
+    return TRAILING_SPECIAL_TOKENS_RE.sub("", text)
+
 # configs/models.json is hash-locked in manifest.json, so post-lock models are declared in the
 # separate, unlocked configs/models_extension.json and merged at load time.
 EXTENSION_FILE = "models_extension.json"
@@ -280,15 +307,22 @@ def answer_line_match(line: str) -> re.Match[str] | None:
     return ANSWER_LINE_RE.fullmatch(normalize_answer_line(line)[0])
 
 
-def parse_final_answer(text: str) -> AnswerResult:
+def parse_final_answer(text: str, *, strip_special_tokens: bool = False) -> AnswerResult:
     """Accept exactly one qualifying `Answer: X` line, which must be the last nonempty line.
 
     Emphasis markers and whitespace runs are normalised away first, so `**Answer: D**`,
     `Answer: **D**`, and `` `Answer: D` `` all parse.  `letter_offset` is the option letter's
     absolute index in the original text, or None when it cannot be located unambiguously.
+
+    `strip_special_tokens` applies amendment A6: a trailing run of tokenizer special-token
+    strings is removed before the final nonempty line is located.  It defaults to False, so the
+    frozen A1 behaviour -- and every stored record's recorded verdict -- is reproduced exactly.
+    Because A6 removes only a suffix, `letter_offset` still indexes the original text.
     """
     if not isinstance(text, str):
         return AnswerResult(False)
+    if strip_special_tokens:
+        text = strip_trailing_special_tokens(text)
     offset = 0
     qualifying: list[tuple[int, tuple[int, ...], re.Match[str]]] = []
     last_nonempty_start: int | None = None
