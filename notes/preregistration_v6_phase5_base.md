@@ -1,6 +1,7 @@
 # Preregistration v6 — Phase 5 (denominator): does the signature exist before instruction tuning?
 
-Written 2026-08-18 05:50 IST by the orchestrator, before any base-model transcript was generated.
+Written 2026-08-18 ~05:30 IST by the orchestrator (commit fd49220, 05:31; the first draft mis-stated the
+clock as 05:50), before any base-model transcript was generated.
 Roadmap §10.1: "identical factorial transcripts through the base siblings of whichever models carried
 results — does the false-failure signature exist pre-RLHF?" Exploratory, discovery split only; it changes
 no Phase-1/2 verdict.

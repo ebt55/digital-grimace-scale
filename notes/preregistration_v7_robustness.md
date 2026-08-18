@@ -1,6 +1,7 @@
 # Preregistration v7 — robustness checks: hostile wording, item scale, model scale (exploratory)
 
-Written 2026-08-18 08:05 IST by the orchestrator, before any of the three checks generated a token.
+Written 2026-08-18 ~07:15 IST by the orchestrator (commit 1ea7a1f, 07:18; the first draft mis-stated the
+clock as 08:05), before any of the three checks generated a token.
 Purpose: the confirmed signature rests on 20 + 20 locked tasks, one frozen hostile wording and models
 ≤ 9B. These checks ask whether the *M1 / non-answer* signature (the judge-free headline channel)
 survives (W) three other mild hostile wordings, (S) a 5× larger fresh item bank, and (G) a 27B model.
