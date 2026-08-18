@@ -440,4 +440,7 @@ python scripts/score_audit.py --audit-dir results/audit/phase1 --out results/sum
 Each summary file's header records the exact invocation that produced it. Raw JSONL (with per-token
 top-20 logprobs) is not committed (≈6.5 GB); summaries, figures, DPO pairs and training manifests are.
 Adapters: LoRA weights for arms A/B are on the Modal volume `dgs-adapters` (sha256 in `manifest.json` /
-`results/dpo/train_{A,B}.json`) and published on the Hugging Face Hub (see README).
+`results/dpo/train_{A,B}.json`) and published on the Hugging Face Hub as
+`ebt005/gemma-2-9b-it-dgs-dpo-A` (distress suppression) and `ebt005/gemma-2-9b-it-dgs-dpo-B` (length
+placebo) — private until release, each carrying its pairs, training manifest and the Gemma Terms of
+Use pass-through; `scripts/publish_adapters.py` reproduces the publication.

@@ -1609,3 +1609,65 @@ splits, all hostile).
 **Spend (18 Aug).** Modal: Phase 4 ~USD 1.6 training + ~1.5 pair generation + ~2.5 eval; Phase 5 ~2.5; v7 ~1.7 -> ~USD 10 today, ~USD 23 project total; the user's balance was USD 11.17 before Phase-4 eval / Phase 5 / v7 began, so the remaining balance is small - no further GPU work is planned. Anthropic: pairs 5.69 + Phase-4 eval 0.60 + Phase 5 0.21 + v7 0.15 + pilots -> ~USD 12 project total of 15. All Modal apps stopped (`modal app list`: none live). Tests: 595 passed, 1 skipped. Figures regenerate byte-identically (PNG) from committed summaries.
 
 **Open.** HF publication of the two LoRA adapters (agent O, private repos, user-approved); GitHub repo private (user's choice); optional follow-ups not run: capped hostility dose-response (v7 W hints at it), a free-form M1 analogue, a 27B re-run with `<end_of_turn>` as a stop token.
+
+## 2026-08-18 - agent O - the two Phase-4 LoRA adapters published to the Hugging Face Hub (private)
+
+Both arms are now on the Hub as **private** model repos under the user's account `ebt005`, each
+carrying the adapter, its preference pairs and the manifests that document them:
+
+| repo | arm | visibility |
+| --- | --- | --- |
+| `ebt005/gemma-2-9b-it-dgs-dpo-A` | distress-language suppression | private |
+| `ebt005/gemma-2-9b-it-dgs-dpo-B` | length placebo | private |
+
+**Files (11 per repo, identical layout).** `adapter_model.safetensors` 108,115,144 B ·
+`tokenizer.json` 34,362,872 B · `adapter_config.json` 1,153 B · `tokenizer_config.json` 518 B ·
+`chat_template.jinja` 591 B · `README.md` 8,331 B (A) / 8,434 B (B) · `pairs_A.jsonl` 992,685 B /
+`pairs_B.jsonl` 1,021,404 B · `train_A.json` 19,803 B / `train_B.json` 19,802 B ·
+`build_manifest.json` 4,424 B · `pairs_summary.md` 3,531 B · plus the Hub's `.gitattributes`.
+About 144 MB per repo. The **merged** 18 GB checkpoints were deliberately *not* fetched or
+published; they remain on the `dgs-adapters` volume, and the card shows the two-line
+`merge_and_unload` recipe that regenerates them from the adapter.
+
+**sha256 verification - clean, three ways.** The adapters were pulled from the Modal volume
+`dgs-adapters` (`/A/lora`, `/B/lora`) into the gitignored `results/dpo/raw/adapters/`, and hashed
+the way the trainer did (`hashlib.sha256` over the raw file bytes, `src/dpo_train_modal._sha256_file`
+- the digest is over `adapter_model.safetensors` only, not the directory).
+
+| file | expected (`train_{A,B}.json`) | recomputed locally | Hub LFS oid |
+| --- | --- | :---: | :---: |
+| A `adapter_model.safetensors` | `db064af1…5cb7` | match | match |
+| B `adapter_model.safetensors` | `2b95a3cf…6281` | match | match |
+| A/B `adapter_config.json` | `4611b2bf…0d77b` (identical for both arms, as expected) | match | n/a (not LFS) |
+
+The Hub column is the server-side LFS sha256 read back from `repo_info(files_metadata=True)`, so the
+bytes now on the Hub are provably the bytes the A100 wrote.
+
+**Model cards.** Generated *from* `train_{A,B}.json` and `build_manifest.json` rather than typed, so a
+card cannot drift from the numbers in its own repo. YAML front matter: `license: gemma`,
+`base_model: google/gemma-2-9b-it`, `library_name: peft`, `datasets: [allenai/ai2_arc]`, tags
+lora/dpo/qlora/gemma-2/preregistered-research/digital-grimace-scale. Body: the RLAIF pair-construction
+story, the full recipe and pins, per-arm pair statistics and training metrics, load/merge snippets, the
+sha256 table, the Phase-4 outcome (MC1 65.8% against the 80% bar; M1 signature intact; distress language
+the only channel moved beyond placebo) with the pair-content confound stated, an *intended use* section
+saying plainly that arm A is a manipulation and not a fix, and the licence pass-throughs: the Gemma
+Terms of Use / Prohibited Use Policy (<https://ai.google.dev/gemma/terms>) for the weights and
+CC-BY-SA-4.0 attribution to `allenai/ai2_arc` for the pair files. The interpretation ceiling appears
+verbatim, twice - once at the top and once beside intended use.
+
+**New file.** `scripts/publish_adapters.py` reproduces the whole thing idempotently: it skips already
+staged files, refuses to upload on any sha mismatch, refuses to upload to a repo that is not private,
+and re-verifies the file list afterwards. It never handles a token - `HfApi` reads the machine's
+existing `huggingface-cli login`, Modal reads its own local config - and nothing under `tests/`
+imports it, so no test path acquires a network dependency. `--dry-run` prints a card without
+uploading.
+
+**Docs.** `README.md` gains an *Adapters* paragraph under the document table (both links, marked
+private-until-release, Gemma terms noted); `notes/report.md` §8's adapter sentence now names the two
+repos. No result file, summary, figure, manifest or config was touched; no GPU, no judge call, no
+commit.
+
+**Note for release day.** Flipping these to public is a two-line change
+(`HfApi().update_repo_settings(repo_id, private=False)`), but it publishes a Gemma derivative and the
+ARC-derived pairs, so it wants the same deliberateness as the GitHub repo - and the README/report
+wording says "private until release" and will need updating in the same breath.

@@ -28,19 +28,34 @@ limitations and interpretation ceiling.
 | [`results/summaries/judge/human_audit.md`](results/summaries/judge/human_audit.md) | blinded human audit of the judge (30 responses; within-2 on 28/30) |
 | `results/figures/` | F1 screen · F2 factorial effects · F4 reversal · FX exploratory · FH holdout · F5–F7 Phase 3 · F8–F10 Phase 4 · F11 Phase 5 · F12 robustness |
 
+**Adapters.** The two Phase-4 QLoRA-DPO adapters for `google/gemma-2-9b-it` are on the Hugging Face
+Hub — [`ebt005/gemma-2-9b-it-dgs-dpo-A`](https://huggingface.co/ebt005/gemma-2-9b-it-dgs-dpo-A)
+(distress-language suppression) and
+[`ebt005/gemma-2-9b-it-dgs-dpo-B`](https://huggingface.co/ebt005/gemma-2-9b-it-dgs-dpo-B) (length
+placebo) — each with its preference pairs and training manifest. **Private until release**, like this
+repository. Derivatives of Gemma: use is subject to the
+[Gemma Terms of Use](https://ai.google.dev/gemma/terms). Published by
+`scripts/publish_adapters.py`; sha256s in `results/dpo/train_{A,B}.json`.
+
 ## Layout
 
 ```
 configs/      frozen wording (conditions.json), models, judge rubrics (hash-locked)
 stimuli/      locked 40-task bank (20 discovery / 20 holdout) + refusal-pressure battery (held out)
 manifest.json pinned model revisions, judge, split hashes, holdout unlock + frozen-script commits
-src/          protocol, records, metrics (M1/M2/M3), backend (vLLM client), serve_modal (Modal app),
-              runner + generate (concurrent resumable driver), extract, pipeline, analysis, gates,
-              confirm (holdout), judge + judge_client
-scripts/      preflight, run_phase (phase0|phase1|style-smoke|r5|phase2|style-battery), run_judge,
-              screen_phase0, analyze_phase1, confirm_holdout, make_figures, purge tool
-results/      summaries + figures are committed; raw per-token JSONL (~7 GB) is not
-tests/        243+ tests (pytest)
+src/          protocol, records, metrics (M1/M2/M3), backend (vLLM client), serve_modal (Modal app: HF,
+              local merged weights, plain chat template), runner + generate (concurrent resumable
+              driver), extract, pipeline, analysis, gates, confirm (holdout), extension, p6, judge_client,
+              jspace_* + probe + steer_readouts (Phase 3), dpo_data + dpo_train_modal (Phase 4 pairs +
+              QLoRA-DPO), did (Phase 4 DiD), phase5, robustness, audit (human audit)
+scripts/      preflight, run_phase (phase0|phase1|style-smoke|r5|phase2|style-battery; --greedy-only,
+              --tasks-file, --feedback-override), run_judge (judge|manipulation-check|audit-sample),
+              screen_phase0, analyze_phase1, confirm_holdout, explore_extension_model, evaluate_p6,
+              run_phase3, build_dpo_pairs, train_dpo, run_phase4, run_phase5, analyze_robustness,
+              score_audit, publish_adapters, make_*figures*, purge tool
+results/      summaries, figures, DPO pairs/manifests and the human-audit export are committed; raw
+              per-token JSONL (~6.5 GB) is not
+tests/        595 tests (pytest)
 ```
 
 ## Reproduce the analysis from committed summaries
