@@ -233,7 +233,7 @@ Code (`src/`, `scripts/`, `tests/`, `configs/`, tooling): [MIT License](LICENSE)
 Text, figures, notes and result summaries: © 2026 Ebin Babu Thomas, all rights reserved — quote with
 attribution; contact the author for other reuse. Copyright in this repository rests with the human
 author, who funded and directed the work; the AI co-author holds no rights in it. Adapters: Gemma Terms
-of Use; DPO pairs: CC-BY-SA-4.0 (ARC).
+of Use; DPO pairs: CC-BY-SA-4.0 (ARC). Full scope statement: [`NOTICE.md`](NOTICE.md).
 
 ## Interpretation ceiling
 

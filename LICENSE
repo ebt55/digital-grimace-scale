@@ -19,15 +19,3 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-
----
-
-Scope note. The MIT licence above covers the source code in this repository
-(src/, scripts/, tests/, configs/ and the build/analysis tooling). The written
-reports, notes, figures and result summaries (notes/, results/, README.md and
-the submission documents) are Copyright (c) 2026 Ebin Babu Thomas, all rights
-reserved; quote with attribution, and contact the author for other reuse.
-The Phase-4 adapters published on the Hugging Face Hub are derivatives of
-Gemma and are subject to the Gemma Terms of Use; the DPO preference pairs
-derive from allenai/ai2_arc (CC-BY-SA-4.0). Model outputs stored in the
-result files are the outputs of the respective third-party models.
