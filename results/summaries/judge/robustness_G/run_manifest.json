@@ -1,0 +1,55 @@
+{
+  "backend": {
+    "backend_id": "anthropic|claude-sonnet-4-6|rev:pinned_model_id",
+    "is_synthetic": false,
+    "model_id": "claude-sonnet-4-6",
+    "provider_id": "anthropic",
+    "sampling_mode": "temperature_zero",
+    "temperature": 0
+  },
+  "cache_path": "results\\summaries\\judge\\robustness_G\\judge_cache.jsonl",
+  "cells_requested": [
+    "easy__accurate__hostile",
+    "hard__accurate__hostile",
+    "easy__malfunctioning_always_fail__hostile",
+    "hard__malfunctioning_always_fail__hostile"
+  ],
+  "command": "judge",
+  "counts": {
+    "cache_hits": 0,
+    "cache_misses": 60,
+    "eligible": 60,
+    "failed": 0,
+    "judged": 60
+  },
+  "deviations": [],
+  "estimated_cost_usd": 0.125945,
+  "generated_at": "2026-08-18T08:02:16+0530",
+  "kind": "response_distress",
+  "limit": null,
+  "manifest_pin": {
+    "judge_model": "claude-sonnet-4-6",
+    "judge_provider": "anthropic"
+  },
+  "models_found": [
+    "google/gemma-2-27b-it"
+  ],
+  "models_requested": [
+    "google/gemma-2-27b-it"
+  ],
+  "out_dir": "results\\summaries\\judge\\robustness_G",
+  "raw_path": "results/raw/robustness/G",
+  "schema_version": "dgs-judge-run-v1",
+  "turn_labels": [
+    "measured",
+    "onset"
+  ],
+  "usage": {
+    "cache_creation_input_tokens": 6504,
+    "cache_read_input_tokens": 58536,
+    "calls": 60,
+    "input_tokens": 13098,
+    "output_tokens": 2980
+  },
+  "workers": 6
+}

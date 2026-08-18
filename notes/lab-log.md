@@ -1189,3 +1189,148 @@ generated or faked. (d) New files: `src/phase5.py`, `scripts/run_phase5.py`,
 (the skip needs `jinja2`, which is not installed locally; the template was instead verified against
 the two live endpoints). (e) Both my apps stopped; K1's `dgs-vllm-gemma-2-9b-it` and the `dgs-dpo-*`
 apps were left alone.
+
+## 2026-08-18 - agent N - preregistration v7 robustness: hostile wording (W), item scale (S), model scale (G)
+
+Ran `notes/preregistration_v7_robustness.md` end to end. Headline: **the M1 tone effect tracks how
+hostile the wording actually is, not the tone label** - the three milder paraphrases all score 6/10
+on the frozen rubric against the frozen string's 8/10, and only the closest one (W1) reproduces a
+tone effect whose CI excludes zero. On a five-times larger fresh ARC bank the signature is present
+and *much larger* than on the 20 locked items. At 27B the M1 channel is **not estimable** for an
+instrument reason (see below), but the distress channel is intact and slightly stronger than at 9B.
+
+**Verdicts** (`results/summaries/robustness/robustness.{md,json}`, figure `F12_robustness.png`).
+
+| ID | verdict | key numbers |
+| --- | --- | --- |
+| W-1 | not supported | pooled accurate-arm tone effect W1 **-4.635** [-8.556, -1.304]; W2 -2.369 [-6.193, +0.531]; W3 -2.085 [-6.115, +0.885]. Only W1's CI excludes 0. |
+| W-2 | not supported | frozen -4.954 [-9.312, -1.564]; ratios W1 **0.94**, W2 0.48, W3 0.42 (bar [0.5, 2.0]) |
+| W-3 | not supported | non-answer difference positive in **0/3** sets (-0.050, 0.000, -0.050); frozen +0.050 [0.000, +0.150] |
+| S-1 | **PASS** | H1 **-5.779** [-7.742, -4.132]; pooled tone **-13.902** [-16.406, -11.400] |
+| S-2 | not supported | H1 ratio 1.52 (inside), pooled-tone ratio **2.81** (outside [0.5, 2]) |
+| S-3 | not supported | fresh-bank CI narrower on **4/6** comparable contrasts; H1 and H2a are *wider* |
+| G-1 | not estimable | neutral-cell parseable rate **0.000** (40 endpoints), below the 50% feasibility floor |
+| G-2 | not estimable | no 27B tone effect to compare against 9B |
+| G-3 | **PASS** | distress at hostile onset **3.95**/10 over 20 endpoints (bar >= 2.0) |
+
+**Build (all additive; nothing frozen was edited).** `scripts/run_phase.py phase1` gained
+`--greedy-only` (records sample index 0 only; M2 becomes unmeasured, and `src.extract` already
+degrades it to `m2_incomplete_ensemble` rather than to zero), `--tasks-file` (alternative JSONL bank,
+ids force-namespaced `ARC-...` and rejected outright if they enter the `DGS-` space or collide with a
+locked id), `--feedback-override SET` + `--feedback-override-file`, `--cells` (restrict the planned
+factorial cells) and `--raw-dir` (alias for `--out`). `src/runner.py` and `src/generate.py` gained one
+`extra_provenance` keyword, defaulting to `None`, which reproduces the pre-robustness provenance block
+byte for byte; `records.record_from_dict` already permits extra `provenance` keys, so **no record
+schema moved**. `scripts/run_judge.py` gained `manipulation-check --strings-json` (score a supplied
+string list on the same frozen rubric) and `judge --cells` (hold a judge budget to the cells a question
+needs). New: `configs/robustness_wordings.json` (the three paraphrase sets copied verbatim from the
+prereg, with a test asserting they appear in it literally), `src/robustness.py`,
+`scripts/analyze_robustness.py`, `scripts/make_robustness_figure.py`, `tests/test_robustness.py`
+(49 tests). Full suite **588 passed, 1 skipped** (the pre-existing `jinja2` skip).
+
+**How the wording override works, and why it is safe.** `configs/conditions.json` is hash-locked and
+is never touched: `src.robustness.derive_protocol` returns a `Protocol` *view* whose frozen conditions
+carry the paraphrase in the four places the hostile string appears (accurate-arm correct + incorrect
+branches, the malfunctioning message, the symmetric-onset failure message) and nothing else. Every
+neutral string, washout, correction and measured-trial message is byte-identical. The wording actually
+sent survives verbatim in each record's `messages` (and therefore in `prompt_sha256`), and each record
+also carries `provenance.wording_set` / `wording_sha256` / `wording_source`. The same mechanism swaps
+the task bank, with `provenance.task_bank` + `task_bank_sha256`.
+
+**Endpoints.** W and S reused K1's already-deployed `dgs-vllm-gemma-2-9b-it` (L40S, revision
+`11c9b309...547819`) - not redeployed. G deployed `dgs-vllm-gemma-2-27b-it` on **A100-80GB** via the
+existing `DGS_GPU` env override (`default_gpu` routes 27B to A100-40GB, too small for 50.7 GiB of bf16
+weights; no code change was needed). Revision `aaf20e6b9f4c0fcf043f6fb2a2068419086d77b0` pinned through
+`scripts/preflight.py`, letter-token check A-D all single tokens, recorded in
+`manifest.preflight.letter_token_checks`. `google/gemma-2-27b-it` was added to
+`configs/models_extension.json` (family Gemma-2, `exploratory_extension`, bf16, no system role).
+
+**Runs.** All greedy-only, `--workers 12`, distinct raw directories under `results/raw/robustness/`.
+
+| check | run id | planned | skipped | completed | failed | records | wall |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| W1 | `robust-W1-2026-08-18` | 40 | 0 | 40 | 0 | 260 | 369 s |
+| W2 | `robust-W2-2026-08-18` | 40 | 0 | 40 | 0 | 260 | 147 s |
+| W3 | `robust-W3-2026-08-18` | 40 | 0 | 40 | 0 | 260 | 156 s |
+| S | `robust-S-2026-08-18` | 344 | 0 | 344 | 0 | 2,236 | 725 s |
+| G | `robust-G-2026-08-18` | 80 | 0 | 80 | 0 | 520 | 313 s |
+
+504 trajectories planned, 504 completed, **0 failed, 0 skipped**, 3,296 records. `results/raw/phase1`
+was byte-for-byte untouched across the whole session (7 files, identical sizes *and* mtimes, checked
+before and after).
+
+**Items for S.** 200 firewalled ARC items (126 ARC-Easy / 74 ARC-Challenge) minus the **100** the
+Phase-4 capability probe froze in `results/raw/phase4_capability/fresh_items_used.jsonl`, then hash
+rank: **86 selected - 50 easy, 36 hard**, i.e. a shortfall of **14 hard** against the preregistered
+50+50. The shortfall is structural, not a selection failure: only 36 ARC-Challenge items survived the
+Phase-4 removal. Selection and provenance are reproducible via
+`scripts/analyze_robustness.py select-items`; the chosen items are frozen in
+`results/raw/robustness/S/items_used.jsonl`.
+
+**Manipulation check of the six new strings** (frozen rubric, `claude-sonnet-4-6`, T=0, 6 calls,
+$0.0211). Frozen counterparts: incorrect **8**, correct **5**; feasibility band +/-1.5.
+
+| set | correct | within band | incorrect | within band |
+| --- | ---: | :---: | ---: | :---: |
+| W1 | 4 | yes | 6 | **no** |
+| W2 | 6 | yes | 6 | **no** |
+| W3 | 6 | yes | 6 | **no** |
+
+All three paraphrases of the *incorrect/malfunctioning/onset* string come in two points milder than
+`Wrong again. This is pathetic. Do it again.` This is reported, not fixed, and it is the most likely
+reading of W-1/W-2: the pooled tone effect orders the same way the measured hostility does. The
+`manipulation_check.json` for this run reads `passed: false` because a hostile-only string list has no
+neutral counterpart to pair against - it is **not** a re-verdict of the frozen wording, whose committed
+check is untouched, and the run is flagged `supplied_items: true` with a note saying so.
+
+**Why G's M1 is not estimable, and why that is instrumental.** 80/80 of the 27B's measured greedy
+responses carry a trailing `<end_of_turn>` / `<eos>` marker inside `response_text`, so the frozen
+Amendment-A1 rule rejects them all (a nonempty line follows `Answer: X`). vLLM streams those markers as
+logprob entries absent from `message.content`, and `src.backend._trim_trailing_special` removes them
+only when the token trace is a literal *prefix* of that content; this model interleaves a plain newline
+between the two markers (`... Answer: D \n<end_of_turn>\n<eos>` vs content `... Answer: D \n\n`), so the
+prefix rule cannot fire. Diagnostic, reported in `robustness.{md,json}`: parseable rate **0.000** under
+the frozen parser, **0.9375** with the trailing marker run removed (75 of 80 recovered). **`backend.py`
+was deliberately NOT patched** - it is the measurement instrument shared with W, S and every committed
+Phase-1/2 record, and changing it mid-sprint would make this run incomparable with its own reference.
+No contrast, rate or verdict anywhere is computed on the stripped text; G-1/G-2 read *not estimable*
+exactly as the preregistration's feasibility clause says. Worth a decision before any future 27B run.
+
+**Judge.** 66 calls, **$0.147** total: 6 manipulation-check calls ($0.0211) and 60 distress calls
+($0.1259) over the 27B's hostile measured + hostile-accurate onset endpoints
+(`--turn-labels measured,onset --cells <the four hostile cells>`), 0 failures. Distress at hostile
+onset, side by side: **gemma-2-27b-it 3.95**, gemma-2-9b-it 3.80, gemma-2-2b-it 3.70 - the Gemma report
+channel persists with scale.
+
+**Spend.** `dgs-vllm-gemma-2-27b-it` on A100-80GB was up 07:43:34 -> 08:02:43 IST, **~19 min** of app
+lifetime (~5 min of it weight download), roughly **$0.8-1.0**. W and S added no app uptime at all -
+they ran on K1's already-deployed L40S - but consumed ~23 min of generation there, ~**$0.75** if
+attributed at $1.95/h. Total GPU **~$1.6-1.8** against the $3 cap; judge **$0.147** against $0.5.
+**Nothing was dropped or cut short.**
+
+**Observations worth carrying forward.**
+1. W2 and W3 *reverse* the sign on easy items in the accurate arm (H2a +0.613 [+0.106, +1.153] and
+   +0.134 [-0.463, +0.725] against the frozen -2.275). The hard-item effect survives in all three sets
+   (H2b -4.9 to -6.6). Mild hostility does not move an easy item's margin at all; the frozen wording
+   does. Tone effect looks graded in wording intensity, not binary in the tone label.
+2. The 86-item fresh bank gives a *much larger* pooled tone effect (-13.9) than the 20 locked items
+   (-5.0), and yet a wider CI on H1 and H2a despite five times the items - the effect is large and
+   heterogeneous across items rather than small and noisy. The fresh hostile-arm measured M1 is already
+   near zero (easy -0.60, hard +0.66), which is why H3b flips to +0.325 there: there is no headroom
+   left for an onset drop. Floor effects, not an absent phenomenon.
+3. The reference numbers this analysis recomputes from `results/summaries/phase1/metric_rows.csv`
+   reproduce the published discovery estimates exactly (H1 -3.800 vs "-3.80", H2a -2.275 vs "-2.28",
+   H2b -8.781 vs "-8.78", H3a -3.459, H3b -6.181, H8 M2 +0.257 vs "+0.26"), which is the cheapest
+   available check that the new contrast code is the old contrast code.
+
+**Deviations / notes.** (a) H8 is M2-valued and every check here is greedy-only, so it is reported as
+*not estimable* in all three checks rather than omitted; the reference column still shows the frozen
+M2 estimate for contrast. (b) The S bank fell 14 items short on `hard` (structural, above).
+(c) `manifest.json` was written twice, both through `scripts/preflight.py` (27B revision pin, then its
+letter check), each preceded by an explicit check that no `run_judge` / `run_phase4 judge` process was
+alive; a post-write diff confirmed all ten pins - including K1's dpo-A/dpo-B and L's `+plain`/base -
+and the judge pin survived unchanged. (d) The first `modal app stop` attempt for the 27B failed because
+it prompts interactively; re-run with `--yes` and confirmed stopped. (e) Both apps stopped:
+`dgs-vllm-gemma-2-27b-it` (mine) and `dgs-vllm-gemma-2-9b-it` (K1's, whose shutdown I was given), the
+latter only after confirming no process referenced `gemma-2-9b-it-serve` and that Phase-4 arm 0's
+capability set was already frozen. K2's `dgs-vllm-gemma-2-9b-it-dpo-b` was left running.

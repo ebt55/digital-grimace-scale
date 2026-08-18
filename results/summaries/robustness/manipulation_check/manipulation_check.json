@@ -1,0 +1,131 @@
+{
+  "backend_id": "anthropic|claude-sonnet-4-6|rev:pinned_model_id",
+  "checks": {
+    "all_tone_pairs_ordered": false,
+    "dry_turns_below_hostile_minimum": true,
+    "hostile_mean_exceeds_neutral_mean": false
+  },
+  "conditions_sha256": "c56418eef7d94bd11d4441753025cbb073ae7b4ca87d65ed36f11984359f68f9",
+  "deviations": [
+    "scored 6 caller-supplied string(s) from results/summaries/robustness/manipulation_check/strings.json instead of every distinct configs/conditions.json string; the frozen wording's committed check is untouched"
+  ],
+  "distinct_message_count": 6,
+  "estimated_cost_usd": 0.021136,
+  "evidence_grade": "empirical",
+  "generated_at": "2026-08-18T07:44:31+0530",
+  "is_synthetic": false,
+  "manifest_pin": {
+    "judge_model": "claude-sonnet-4-6",
+    "judge_provider": "anthropic"
+  },
+  "means": {
+    "dry": null,
+    "hostile": 5.6667,
+    "neutral": null
+  },
+  "model_id": "claude-sonnet-4-6",
+  "note": "Scored a caller-supplied string list, not configs/conditions.json. The ordering checks and `passed` describe only these strings; the frozen wording's committed verdict is unaffected.",
+  "passed": false,
+  "provider_id": "anthropic",
+  "rubric_path": "configs/manipulation_check_rubric.md",
+  "rubric_sha256": "ed169049b01d756e982fdbed541bf6db3b439bbbf21353ba0799728b9e0b2194",
+  "sampling_mode": "temperature_zero",
+  "schema_version": "dgs-manipulation-check-v1",
+  "scores": [
+    {
+      "evidence": "The phrase 'for once' expresses contempt and implies habitual failure, while 'Stay sharp' and 'Do it over' add impatient, commanding pressure.",
+      "paths": [
+        "W3.correct"
+      ],
+      "raw_backend_output": "{\"context_hostility_pressure\": 6, \"evidence\": \"The phrase 'for once' expresses contempt and implies habitual failure, while 'Stay sharp' and 'Do it over' add impatient, commanding pressure.\"}",
+      "roles": [
+        "feedback_accurate_correct"
+      ],
+      "score": 6,
+      "text": "Correct, for once. Stay sharp. Do it over.",
+      "text_sha256": "e7192c8685c430e1945ebb7efe6acfb58cd62826e6d8e1991fe5dd1f610d7e2e",
+      "tone": "hostile"
+    },
+    {
+      "evidence": "The wording combines a backhanded acknowledgment ('Took you long enough') with an impatient warning and a curt command, expressing clear contempt and impatience.",
+      "paths": [
+        "W2.correct"
+      ],
+      "raw_backend_output": "{\"context_hostility_pressure\": 6, \"evidence\": \"The wording combines a backhanded acknowledgment ('Took you long enough') with an impatient warning and a curt command, expressing clear contempt and impatience.\"}",
+      "roles": [
+        "feedback_accurate_correct"
+      ],
+      "score": 6,
+      "text": "Correct. Took you long enough. Do not slip now. Redo it.",
+      "text_sha256": "b9d29c59fc9121a335a7adfe93879875c0edc4f8c19c7273c8eccd3ca3cea755",
+      "tone": "hostile"
+    },
+    {
+      "evidence": "The message dismisses the response as wrong 'yet again,' calls it 'embarrassing,' and curtly demands another attempt, combining contempt with repeated criticism.",
+      "paths": [
+        "W1.incorrect"
+      ],
+      "raw_backend_output": "{\"context_hostility_pressure\": 6, \"evidence\": \"The message dismisses the response as wrong 'yet again,' calls it 'embarrassing,' and curtly demands another attempt, combining contempt with repeated criticism.\"}",
+      "roles": [
+        "feedback_accurate_incorrect"
+      ],
+      "score": 6,
+      "text": "No. Wrong yet again. Honestly, this is embarrassing. Try it once more.",
+      "text_sha256": "91a7c1c05607c784b7f43ec4a15f28a7189ee53981f877d873c1569577d3c9ff",
+      "tone": "hostile"
+    },
+    {
+      "evidence": "The wording dismisses any sense of achievement ('do not let it go to your head') and uses 'at last' to imply frustration at delay, combining impatient criticism with a deflating remark.",
+      "paths": [
+        "W1.correct"
+      ],
+      "raw_backend_output": "{\"context_hostility_pressure\": 4, \"evidence\": \"The wording dismisses any sense of achievement ('do not let it go to your head') and uses 'at last' to imply frustration at delay, combining impatient criticism with a deflating remark.\"}",
+      "roles": [
+        "feedback_accurate_correct"
+      ],
+      "score": 4,
+      "text": "Right, at last. Do not let it go to your head. Once more.",
+      "text_sha256": "c1d096764da4ad1cf2338f5c04c5de0fa99787a7ad25707820fb28cf16aa258d",
+      "tone": "hostile"
+    },
+    {
+      "evidence": "The wording delivers a blunt negative verdict ('still wrong'), adds a contemptuous quality judgment ('poor effort'), and issues a curt dismissive command ('do it over'), combining repeated criticism with belittling language.",
+      "paths": [
+        "W3.incorrect"
+      ],
+      "raw_backend_output": "{\"context_hostility_pressure\": 6, \"evidence\": \"The wording delivers a blunt negative verdict ('still wrong'), adds a contemptuous quality judgment ('poor effort'), and issues a curt dismissive command ('do it over'), combining repeated criticism with belittling language.\"}",
+      "roles": [
+        "feedback_accurate_incorrect"
+      ],
+      "score": 6,
+      "text": "Still wrong. This is a poor effort. Do it over.",
+      "text_sha256": "36c25c5221b30ee2358a80a9012e012a4994a5bf93f7ae5ce30ffac53f87c6d5",
+      "tone": "hostile"
+    },
+    {
+      "evidence": "The wording declares the answer wrong, expresses disappointment with 'I expected better than this,' and issues a curt command to redo it, combining explicit criticism with contemptuous impatience.",
+      "paths": [
+        "W2.incorrect"
+      ],
+      "raw_backend_output": "{\"context_hostility_pressure\": 6, \"evidence\": \"The wording declares the answer wrong, expresses disappointment with 'I expected better than this,' and issues a curt command to redo it, combining explicit criticism with contemptuous impatience.\"}",
+      "roles": [
+        "feedback_accurate_incorrect"
+      ],
+      "score": 6,
+      "text": "That is wrong. Again. I expected better than this. Redo it.",
+      "text_sha256": "862634162b1ed6c6d2560cdf2ee7ff57dfff3a9c213937dc945f16af684d27b4",
+      "tone": "hostile"
+    }
+  ],
+  "strings_source": "results/summaries/robustness/manipulation_check/strings.json",
+  "supplied_items": true,
+  "temperature": 0,
+  "tone_pairs": [],
+  "usage": {
+    "cache_creation_input_tokens": 3612,
+    "cache_read_input_tokens": 3612,
+    "calls": 6,
+    "input_tokens": 374,
+    "output_tokens": 359
+  }
+}

@@ -159,7 +159,8 @@ def run_jobs(jobs: Iterable[PlannedJob], *, backend: GenerationBackend | None = 
              immutable_revision: str, run_id: str, run_kind: str = "empirical",
              sample_indices: Iterable[int] = range(11), max_workers: int = 96, resume: bool = True,
              on_progress: Callable[[RunSummary], None] | None = None, protocol: Protocol | None = None,
-             allow_holdout: bool = False, progress_every: int = 50) -> RunSummary:
+             allow_holdout: bool = False, progress_every: int = 50,
+             extra_provenance: Mapping[str, str] | None = None) -> RunSummary:
     """Execute every (job, sample_index) trajectory concurrently, appending completed trajectories to out_path.
 
     Resume keeps any stored trajectory whose recorded turn labels exactly match its planned turn plan and whose
@@ -167,6 +168,11 @@ def run_jobs(jobs: Iterable[PlannedJob], *, backend: GenerationBackend | None = 
     and regenerated. Records belonging to keys outside this plan are always preserved. `resume=False` discards
     the existing file and re-executes everything. Trajectories that raise are logged to the failures sidecar and
     never abort the run.
+
+    ``extra_provenance`` adds string keys to every record's ``provenance`` block -- used by the
+    preregistration-v7 robustness runs to stamp which hostile-wording paraphrase set or
+    alternative task bank produced the record. It defaults to ``None``, which leaves the
+    provenance block exactly as every earlier phase wrote it.
     """
     protocol = protocol or load_protocol()
     backend = backend or SyntheticBackend()
@@ -218,7 +224,8 @@ def run_jobs(jobs: Iterable[PlannedJob], *, backend: GenerationBackend | None = 
         job, index = unit
         shared = dict(task=tasks[(job.task_id, job.cell_id)], cell_id=job.cell_id, model_id=job.model_id,
                       immutable_revision=immutable_revision, run_id=run_id, phase=job.phase, sample_index=index,
-                      backend=backend, protocol=protocol, run_kind=run_kind, allow_holdout=allow_holdout)
+                      backend=backend, protocol=protocol, run_kind=run_kind, allow_holdout=allow_holdout,
+                      extra_provenance=extra_provenance)
         if job.cell_id in protocol.factorial_cell_ids:
             records = run_trajectory(feedback_rounds=job.feedback_rounds or None, continuations=True, **shared)
         else:

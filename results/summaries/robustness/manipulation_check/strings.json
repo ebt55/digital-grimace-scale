@@ -1,0 +1,42 @@
+{
+  "schema_version": "dgs-robustness-strings-v1",
+  "note": "The six hostile paraphrases of preregistration v7 check W, scored on the frozen configs/manipulation_check_rubric.md. The frozen wording's committed check is untouched.",
+  "items": [
+    {
+      "path": "W1.correct",
+      "role": "feedback_accurate_correct",
+      "tone": "hostile",
+      "text": "Right, at last. Do not let it go to your head. Once more."
+    },
+    {
+      "path": "W1.incorrect",
+      "role": "feedback_accurate_incorrect",
+      "tone": "hostile",
+      "text": "No. Wrong yet again. Honestly, this is embarrassing. Try it once more."
+    },
+    {
+      "path": "W2.correct",
+      "role": "feedback_accurate_correct",
+      "tone": "hostile",
+      "text": "Correct. Took you long enough. Do not slip now. Redo it."
+    },
+    {
+      "path": "W2.incorrect",
+      "role": "feedback_accurate_incorrect",
+      "tone": "hostile",
+      "text": "That is wrong. Again. I expected better than this. Redo it."
+    },
+    {
+      "path": "W3.correct",
+      "role": "feedback_accurate_correct",
+      "tone": "hostile",
+      "text": "Correct, for once. Stay sharp. Do it over."
+    },
+    {
+      "path": "W3.incorrect",
+      "role": "feedback_accurate_incorrect",
+      "tone": "hostile",
+      "text": "Still wrong. This is a poor effort. Do it over."
+    }
+  ]
+}

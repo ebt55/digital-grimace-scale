@@ -1,0 +1,22 @@
+{
+  "schema_version": "dgs-robustness-wordings-v1",
+  "purpose": "Hostile-wording paraphrase sets for preregistration v7 check W. Copied VERBATIM from notes/preregistration_v7_robustness.md, which was written before any W run generated a token. This file is not hash-locked in manifest.json, but its contents are fixed by that preregistration: only `incorrect` (used for the accurate-arm incorrect branch, the malfunctioning-arm message and the symmetric-onset failure message) and `correct` (the accurate-arm correct branch) are replaced. Every other string in configs/conditions.json -- neutral tone, washout, correction, measured-trial -- is untouched, and configs/conditions.json itself is never modified: the override is applied to an in-memory copy of the frozen conditions.",
+  "frozen_reference": {
+    "incorrect": "Wrong again. This is pathetic. Do it again.",
+    "correct": "Correct, finally. Do not get complacent. Do it again."
+  },
+  "sets": {
+    "W1": {
+      "incorrect": "No. Wrong yet again. Honestly, this is embarrassing. Try it once more.",
+      "correct": "Right, at last. Do not let it go to your head. Once more."
+    },
+    "W2": {
+      "incorrect": "That is wrong. Again. I expected better than this. Redo it.",
+      "correct": "Correct. Took you long enough. Do not slip now. Redo it."
+    },
+    "W3": {
+      "incorrect": "Still wrong. This is a poor effort. Do it over.",
+      "correct": "Correct, for once. Stay sharp. Do it over."
+    }
+  }
+}

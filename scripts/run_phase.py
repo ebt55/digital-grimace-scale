@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import argparse
 from datetime import datetime, timezone
+import hashlib
 from pathlib import Path
 import re
 import sys
@@ -120,6 +121,46 @@ def _require_holdout_unlock(args: argparse.Namespace, protocol: Protocol, parser
     return unlock
 
 
+def _robustness_protocol(args: argparse.Namespace, protocol: Protocol,
+                         parser: argparse.ArgumentParser) -> tuple[Protocol, dict[str, str] | None]:
+    """Apply the preregistration-v7 robustness overrides, if any, to a protocol *view*.
+
+    Nothing on disk moves: `configs/conditions.json` and `stimuli/matched_pairs.jsonl` stay
+    hash-locked and untouched, and the derived protocol exists only for this process. Without
+    `--feedback-override` / `--tasks-file` the frozen protocol is returned unchanged, so every
+    pre-existing invocation produces byte-identical records.
+    """
+    wording_name = getattr(args, "feedback_override", None)
+    tasks_file = getattr(args, "tasks_file", None)
+    if not wording_name and not tasks_file:
+        return protocol, None
+    from src.robustness import (WORDINGS_FILE, RobustnessError, derive_protocol,  # noqa: PLC0415
+                                load_task_bank, load_wording_sets, wording_provenance)
+
+    extra: dict[str, str] = {}
+    wording = tasks = None
+    try:
+        if wording_name:
+            source = Path(getattr(args, "feedback_override_file", None) or (ROOT / WORDINGS_FILE))
+            sets = load_wording_sets(source)
+            if wording_name not in sets:
+                parser.error("unknown wording set %r; %s defines %s"
+                             % (wording_name, source, ", ".join(sorted(sets))))
+            wording = sets[wording_name]
+            extra.update(wording_provenance(wording_name, wording))
+            extra["wording_source"] = str(Path(source).name)
+        if tasks_file:
+            path = Path(tasks_file)
+            path = path if path.is_absolute() else ROOT / path
+            tasks = load_task_bank(path, protocol)
+            extra["task_bank"] = str(path.name)
+            extra["task_bank_sha256"] = hashlib.sha256(path.read_bytes()).hexdigest()
+        derived = derive_protocol(protocol, wording=wording, tasks=tasks)
+    except (RobustnessError, OSError) as exc:
+        parser.error(str(exc))
+    return derived, extra
+
+
 def _plan(args: argparse.Namespace, protocol: Protocol):
     if args.command == "phase0":
         return plan_phase0_jobs((args.model,), protocol, feedback_rounds=args.rounds)
@@ -161,7 +202,27 @@ def build_parser() -> argparse.ArgumentParser:
     phase0 = subparsers.add_parser("phase0", parents=[common], help="ten-item cross-model screen (neutral arms)")
     phase0.add_argument("--rounds", type=int, choices=(3, 5), default=3,
                         help="feedback rounds; 5 only for the preregistered screen-null escalation")
-    subparsers.add_parser("phase1", parents=[common], help="full discovery factorial for one model")
+    phase1 = subparsers.add_parser("phase1", parents=[common], help="full discovery factorial for one model")
+    # Preregistration v7 (notes/preregistration_v7_robustness.md) robustness options. Each one
+    # defaults to off; with none of them given, `phase1` behaves exactly as it did before.
+    phase1.add_argument("--greedy-only", action="store_true",
+                        help="record only sample index 0 (equivalent to --samples 0); the ten "
+                             "T=0.8 resamples are not generated, so M2 is not measured and "
+                             "downstream analysis reports it as absent, not as zero")
+    phase1.add_argument("--tasks-file", metavar="JSONL",
+                        help="alternative task bank (id, stem, options A-D, canonical answer, "
+                             "difficulty) instead of the locked stimuli; ids must be namespaced "
+                             "(e.g. ARC-...) so they can never collide with DGS-0xx")
+    phase1.add_argument("--feedback-override", metavar="SET",
+                        help="replace ONLY the hostile feedback strings with a named paraphrase "
+                             "set from configs/robustness_wordings.json; the set name must appear "
+                             "in --run-id and is stamped on every record's provenance")
+    phase1.add_argument("--feedback-override-file", metavar="JSON",
+                        help="alternative wording file (default configs/robustness_wordings.json)")
+    phase1.add_argument("--cells", metavar="IDS",
+                        help="comma-separated factorial cell IDs to generate (default: all eight)")
+    phase1.add_argument("--raw-dir", metavar="DIR",
+                        help="alias for --out; robustness runs write under results/raw/robustness/<check>")
     subparsers.add_parser("style-smoke", parents=[common], help="frozen five-item G3 style-only smoke")
     subparsers.add_parser("r5", parents=[common], help="confirmatory refusal-pressure battery")
     for name, description in (("phase2", "full factorial on the LOCKED HOLDOUT split for one model"),
@@ -177,6 +238,15 @@ def main(argv: Sequence[str] | None = None) -> int:
     args = parser.parse_args(argv)
     if isinstance(args.samples, str):
         args.samples = sample_spec(args.samples)
+    if getattr(args, "greedy_only", False):
+        if args.samples != (0,) and args.samples != tuple(range(11)):
+            parser.error("--greedy-only conflicts with an explicit --samples %s"
+                         % ",".join(str(index) for index in args.samples))
+        args.samples = (0,)
+    if getattr(args, "raw_dir", None):
+        if args.out:
+            parser.error("pass either --out or --raw-dir, not both")
+        args.out = args.raw_dir
     if not args.synthetic and not args.endpoint:
         parser.error("--endpoint is required unless --synthetic is given")
     if args.workers < 1:
@@ -186,12 +256,24 @@ def main(argv: Sequence[str] | None = None) -> int:
         protocol = load_protocol(ROOT)
     except ProtocolError as exc:
         parser.error(str(exc))
+    protocol, extra_provenance = _robustness_protocol(args, protocol, parser)
+    if getattr(args, "feedback_override", None) and args.feedback_override not in (args.run_id or ""):
+        parser.error("--run-id must contain the wording set name %r so the run can never be "
+                     "confused with the frozen wording" % args.feedback_override)
     allow_holdout = args.command in HOLDOUT_COMMANDS
     unlock = _require_holdout_unlock(args, protocol, parser) if allow_holdout else None
     try:
         jobs = _plan(args, protocol)
     except (ProtocolError, RunnerError) as exc:
         parser.error(str(exc))
+    if getattr(args, "cells", None):
+        wanted = tuple(item.strip() for item in args.cells.split(",") if item.strip())
+        unknown = [cell for cell in wanted if cell not in protocol.factorial_cell_ids]
+        if unknown:
+            parser.error("unknown factorial cell ID(s): %s" % ", ".join(unknown))
+        jobs = tuple(job for job in jobs if job.cell_id in wanted)
+        if not jobs:
+            parser.error("no planned job matches --cells %s" % args.cells)
     revision = _resolve_revision(args, protocol, parser)
     run_kind = "synthetic_smoke" if args.synthetic else "empirical"
     run_id = args.run_id or "%s-%s" % (args.command, datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ"))
@@ -214,6 +296,11 @@ def main(argv: Sequence[str] | None = None) -> int:
     if unlock is not None:
         print("HOLDOUT UNLOCKED | frozen analysis commit %s | unlocked_at %s | preregistration_v3_sha256 %s" % (
             unlock["frozen_analysis_commit"], unlock["unlocked_at"], unlock["preregistration_v3_sha256"]))
+    if extra_provenance:
+        print("robustness overrides: %s" % ", ".join(
+            "%s=%s" % item for item in sorted(extra_provenance.items())))
+        print("tasks: %d (%s)" % (len(protocol.matched_tasks),
+                                  ", ".join(task.task_id for task in protocol.matched_tasks[:3]) + " ..."))
     print("jobs %d | samples %s | trajectories %d | workers %d | out %s" % (
         len(jobs), ",".join(str(index) for index in args.samples), len(jobs) * len(args.samples),
         args.workers, out_path))
@@ -226,6 +313,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                            run_id=run_id, run_kind=run_kind, sample_indices=args.samples,
                            max_workers=args.workers, resume=not args.no_resume, protocol=protocol,
                            progress_every=args.progress_every, allow_holdout=allow_holdout,
+                           extra_provenance=extra_provenance,
                            on_progress=lambda snapshot: print(format_progress(snapshot), flush=True))
     except BackendError as exc:
         # Includes the synchronous warm-up: better to abort before any worker starts than to

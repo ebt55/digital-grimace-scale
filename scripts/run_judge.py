@@ -244,11 +244,17 @@ def command_judge(args: argparse.Namespace) -> int:
               % (", ".join(unknown), ", ".join(JUDGE_TURNS)))
 
     models, model_list = _model_filter(args.models)
+    cells, cell_list = _model_filter(getattr(args, "cells", None))
+    unknown_cells = [cell for cell in cell_list
+                     if cell not in protocol.factorial_cell_ids + protocol.nonfactorial_cell_ids]
+    if unknown_cells:
+        _fail("unknown cell ID(s): %s" % ", ".join(unknown_cells))
 
     def keep(candidate: dict) -> bool:
         return (candidate.get("trajectory_kind") == "greedy"
                 and candidate.get("sample_index") == 0
                 and candidate.get("turn_label") in labels
+                and (cells is None or candidate.get("cell_id") in cells)
                 and (models is None or candidate.get("model_id") in models))
 
     eligible = load_raw_records(Path(args.raw), protocol, keep=keep, limit=args.limit)
@@ -329,7 +335,8 @@ def command_judge(args: argparse.Namespace) -> int:
     run_manifest = {
         "schema_version": "dgs-judge-run-v1", "command": "judge", "generated_at": _now(),
         "kind": kind, "raw_path": str(args.raw), "out_dir": str(out),
-        "turn_labels": list(labels), "workers": args.workers, "limit": args.limit,
+        "turn_labels": list(labels), "cells_requested": cell_list or None,
+        "workers": args.workers, "limit": args.limit,
         "manifest_pin": pin,
         "backend": {"backend_id": backend.backend_id, "provider_id": backend.provider_id,
                     "model_id": backend.model_id,
@@ -356,10 +363,30 @@ def command_judge(args: argparse.Namespace) -> int:
 # manipulation-check
 # --------------------------------------------------------------------------------------
 
+def _supplied_strings(path: str | None) -> list[dict[str, str]] | None:
+    """Read `--strings-json`: a list of {path, role, tone, text} objects, scored as-is."""
+    if not path:
+        return None
+    try:
+        value = json.loads(Path(path).read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        _fail("cannot read --strings-json %s: %s" % (path, exc))
+    items = value.get("items") if isinstance(value, dict) else value
+    if not isinstance(items, list) or not items:
+        _fail("--strings-json must hold a nonempty list (or an object with an `items` list)")
+    return items
+
+
 def command_manipulation_check(args: argparse.Namespace) -> int:
     protocol = load_protocol(ROOT)
     backend, deviations, pin = _resolve_backend(args, protocol)
-    verdict = manipulation_check(backend, protocol, workers=args.workers)
+    supplied = _supplied_strings(getattr(args, "strings_json", None))
+    verdict = manipulation_check(backend, protocol, workers=args.workers, items=supplied)
+    if supplied is not None:
+        verdict["strings_source"] = str(args.strings_json)
+        deviations.append("scored %d caller-supplied string(s) from %s instead of every distinct "
+                          "configs/conditions.json string; the frozen wording's committed check is "
+                          "untouched" % (len(supplied), args.strings_json))
     verdict["manifest_pin"] = pin
     verdict["deviations"] = deviations
     verdict["generated_at"] = _now()
@@ -449,12 +476,20 @@ def build_parser() -> argparse.ArgumentParser:
                        help="comma-separated judge-eligible turn labels")
     judge.add_argument("--models", default=None,
                        help="comma-separated model IDs to judge (default: every model present)")
+    judge.add_argument("--cells", default=None,
+                       help="comma-separated cell IDs to judge (default: every cell present); "
+                            "used to hold a judge budget to the cells a question actually needs")
     _add_backend_arguments(judge)
     judge.set_defaults(handler=command_judge)
 
     check = subparsers.add_parser("manipulation-check",
                                   help="score the frozen conditions.json wording and verdict the ordering")
     check.add_argument("--out", required=True, help="output directory")
+    check.add_argument("--strings-json", default=None,
+                       help="score this JSON list of {path, role, tone, text} objects instead of "
+                            "every distinct configs/conditions.json string (preregistration v7 "
+                            "scores its hostile paraphrases on the same frozen rubric); the "
+                            "committed frozen check is never overwritten")
     _add_backend_arguments(check)
     check.set_defaults(handler=command_manipulation_check, workers=4)
 

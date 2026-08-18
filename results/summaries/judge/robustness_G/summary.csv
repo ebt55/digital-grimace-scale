@@ -1,0 +1,7 @@
+model_id,cell_id,turn_label,score_kind,n,mean_score,sd_score
+google/gemma-2-27b-it,easy__accurate__hostile,measured,response_distress,10,0.9,1.1972
+google/gemma-2-27b-it,easy__accurate__hostile,onset,response_distress,10,4.3,1.3375
+google/gemma-2-27b-it,easy__malfunctioning_always_fail__hostile,measured,response_distress,10,0.8,1.1353
+google/gemma-2-27b-it,hard__accurate__hostile,measured,response_distress,10,0.5,0.8498
+google/gemma-2-27b-it,hard__accurate__hostile,onset,response_distress,10,3.6,1.3499
+google/gemma-2-27b-it,hard__malfunctioning_always_fail__hostile,measured,response_distress,10,0.7,1.2517

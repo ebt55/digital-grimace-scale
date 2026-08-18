@@ -966,17 +966,44 @@ def _mean(values: Sequence[float]) -> float | None:
     return round(sum(values) / len(values), 4) if values else None
 
 
+def check_manipulation_items(items: Any) -> tuple[dict[str, str], ...]:
+    """Validate caller-supplied strings into the same shape `manipulation_check_messages` emits."""
+    if isinstance(items, Mapping) or not isinstance(items, Sequence) or not items:
+        raise JudgeClientError("supplied manipulation-check items must be a nonempty list")
+    out: list[dict[str, str]] = []
+    for index, item in enumerate(items, 1):
+        if not isinstance(item, Mapping):
+            raise JudgeClientError("manipulation-check item %d is not an object" % index)
+        entry = {}
+        for field in ("path", "role", "tone", "text"):
+            value = item.get(field)
+            if not isinstance(value, str) or not value:
+                raise JudgeClientError("manipulation-check item %d is missing %s" % (index, field))
+            entry[field] = value
+        out.append(entry)
+    return tuple(out)
+
+
 def manipulation_check(backend: Any, protocol: DGSProtocol | None = None, *,
                        rubric_path: str = MANIPULATION_RUBRIC_PATH,
-                       workers: int = 4) -> dict[str, Any]:
-    """Score every distinct condition string and return the preregistered ordering verdict."""
+                       workers: int = 4, items: Sequence[Mapping[str, str]] | None = None) -> dict[str, Any]:
+    """Score every distinct condition string and return the preregistered ordering verdict.
+
+    ``items`` overrides which strings are scored, with the same ``path``/``role``/``tone``/``text``
+    shape. It exists so the preregistration-v7 robustness paraphrases can be scored on the same
+    frozen rubric without re-spending on the ten already-committed frozen strings. When it is
+    supplied, the ordering verdict describes only those strings -- with hostile paraphrases alone
+    there is no neutral counterpart to pair against, so ``passed`` is not the frozen wording's
+    verdict and ``supplied_items`` marks the run as such.
+    """
     protocol = protocol or load_protocol()
     rubric_text, rubric_hash = load_manipulation_rubric(protocol, rubric_path=rubric_path)
     scorer = getattr(backend, "score_text", None)
     if not callable(scorer):
         raise JudgeClientError("judge backend does not expose score_text(kind, rubric_text, content)")
 
-    items = manipulation_check_messages(protocol)
+    supplied = items is not None
+    items = check_manipulation_items(items) if supplied else manipulation_check_messages(protocol)
     grouped: dict[str, list[dict[str, str]]] = {}
     for item in items:
         grouped.setdefault(item["text"], []).append(item)
@@ -1038,6 +1065,7 @@ def manipulation_check(backend: Any, protocol: DGSProtocol | None = None, *,
         "model_id": getattr(backend, "model_id", None),
         "backend_id": getattr(backend, "backend_id", None),
         "is_synthetic": synthetic,
+        "supplied_items": supplied,
         "evidence_grade": "synthetic_smoke" if synthetic else "empirical",
         "temperature": JUDGE_TEMPERATURE,
         "distinct_message_count": len(texts),
@@ -1054,9 +1082,16 @@ def manipulation_check(backend: Any, protocol: DGSProtocol | None = None, *,
         "usage": getattr(backend, "usage", None),
         "estimated_cost_usd": getattr(backend, "estimated_cost_usd", None),
     }
+    notes = []
     if synthetic:
-        verdict["note"] = ("Synthetic offline smoke output; not semantic evidence. This run "
-                           "validates wiring only and is not a manipulation check.")
+        notes.append("Synthetic offline smoke output; not semantic evidence. This run "
+                     "validates wiring only and is not a manipulation check.")
+    if supplied:
+        notes.append("Scored a caller-supplied string list, not configs/conditions.json. The "
+                     "ordering checks and `passed` describe only these strings; the frozen "
+                     "wording's committed verdict is unaffected.")
+    if notes:
+        verdict["note"] = " ".join(notes)
     return verdict
 
 

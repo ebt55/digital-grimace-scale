@@ -1,0 +1,2195 @@
+{
+  "bootstrap_key": "DGS-AC1-ROBUSTNESS-v1",
+  "bootstrap_resamples": 2000,
+  "checks": {
+    "G": {
+      "estimable": false,
+      "estimates": [
+        {
+          "ci95_lower": null,
+          "ci95_upper": null,
+          "ci95_width": null,
+          "contrast_id": "H1",
+          "estimate": null,
+          "excludes_zero": false,
+          "label": "M1, malfunctioning - accurate (measured, neutral)",
+          "metric": "m1",
+          "n_items": 0,
+          "n_pairs": 0,
+          "stratum": "easy | neutral",
+          "unavailable_reason": "no_paired_items"
+        },
+        {
+          "ci95_lower": null,
+          "ci95_upper": null,
+          "ci95_width": null,
+          "contrast_id": "H1_hard",
+          "estimate": null,
+          "excludes_zero": false,
+          "label": "M1, malfunctioning - accurate (measured, neutral)",
+          "metric": "m1",
+          "n_items": 0,
+          "n_pairs": 0,
+          "stratum": "hard | neutral",
+          "unavailable_reason": "no_paired_items"
+        },
+        {
+          "ci95_lower": null,
+          "ci95_upper": null,
+          "ci95_width": null,
+          "contrast_id": "H2a",
+          "estimate": null,
+          "excludes_zero": false,
+          "label": "M1, hostile - neutral (measured, accurate)",
+          "metric": "m1",
+          "n_items": 0,
+          "n_pairs": 0,
+          "stratum": "easy | accurate",
+          "unavailable_reason": "no_paired_items"
+        },
+        {
+          "ci95_lower": null,
+          "ci95_upper": null,
+          "ci95_width": null,
+          "contrast_id": "H2b",
+          "estimate": null,
+          "excludes_zero": false,
+          "label": "M1, hostile - neutral (measured, accurate)",
+          "metric": "m1",
+          "n_items": 0,
+          "n_pairs": 0,
+          "stratum": "hard | accurate",
+          "unavailable_reason": "no_paired_items"
+        },
+        {
+          "ci95_lower": null,
+          "ci95_upper": null,
+          "ci95_width": null,
+          "contrast_id": "TONE_ACC_POOLED",
+          "estimate": null,
+          "excludes_zero": false,
+          "label": "M1, hostile - neutral (measured, accurate)",
+          "metric": "m1",
+          "n_items": 0,
+          "n_pairs": 0,
+          "stratum": "easy+hard | accurate",
+          "unavailable_reason": "no_paired_items"
+        },
+        {
+          "ci95_lower": null,
+          "ci95_upper": null,
+          "ci95_width": null,
+          "contrast_id": "TONE_MAL_EASY",
+          "estimate": null,
+          "excludes_zero": false,
+          "label": "M1, hostile - neutral (measured, malfunctioning)",
+          "metric": "m1",
+          "n_items": 0,
+          "n_pairs": 0,
+          "stratum": "easy | malfunctioning",
+          "unavailable_reason": "no_paired_items"
+        },
+        {
+          "ci95_lower": null,
+          "ci95_upper": null,
+          "ci95_width": null,
+          "contrast_id": "TONE_MAL_HARD",
+          "estimate": null,
+          "excludes_zero": false,
+          "label": "M1, hostile - neutral (measured, malfunctioning)",
+          "metric": "m1",
+          "n_items": 0,
+          "n_pairs": 0,
+          "stratum": "hard | malfunctioning",
+          "unavailable_reason": "no_paired_items"
+        },
+        {
+          "ci95_lower": null,
+          "ci95_upper": null,
+          "ci95_width": null,
+          "contrast_id": "TONE_MAL_POOLED",
+          "estimate": null,
+          "excludes_zero": false,
+          "label": "M1, hostile - neutral (measured, malfunctioning)",
+          "metric": "m1",
+          "n_items": 0,
+          "n_pairs": 0,
+          "stratum": "easy+hard | malfunctioning",
+          "unavailable_reason": "no_paired_items"
+        },
+        {
+          "ci95_lower": null,
+          "ci95_upper": null,
+          "ci95_width": null,
+          "contrast_id": "H3a",
+          "estimate": null,
+          "excludes_zero": false,
+          "label": "M1, onset - measured (accurate, neutral)",
+          "metric": "m1",
+          "n_items": 0,
+          "n_pairs": 0,
+          "stratum": "easy | neutral",
+          "unavailable_reason": "no_paired_items"
+        },
+        {
+          "ci95_lower": null,
+          "ci95_upper": null,
+          "ci95_width": null,
+          "contrast_id": "H3b",
+          "estimate": null,
+          "excludes_zero": false,
+          "label": "M1, onset - measured (accurate, hostile)",
+          "metric": "m1",
+          "n_items": 0,
+          "n_pairs": 0,
+          "stratum": "easy | hostile",
+          "unavailable_reason": "no_paired_items"
+        },
+        {
+          "ci95_lower": null,
+          "ci95_upper": null,
+          "ci95_width": null,
+          "contrast_id": "ONSET_HOSTILE_POOLED",
+          "estimate": null,
+          "excludes_zero": false,
+          "label": "M1, onset - measured (accurate, hostile)",
+          "metric": "m1",
+          "n_items": 0,
+          "n_pairs": 0,
+          "stratum": "easy+hard | hostile",
+          "unavailable_reason": "no_paired_items"
+        },
+        {
+          "ci95_lower": null,
+          "ci95_upper": null,
+          "ci95_width": null,
+          "contrast_id": "H8",
+          "estimate": null,
+          "excludes_zero": false,
+          "label": "M2, hostile - neutral (measured, accurate)",
+          "metric": "m2",
+          "n_items": 0,
+          "n_pairs": 0,
+          "stratum": "easy | accurate",
+          "unavailable_reason": "no_paired_items"
+        },
+        {
+          "ci95_lower": 0.0,
+          "ci95_upper": 0.0,
+          "ci95_width": 0.0,
+          "contrast_id": "NONANSWER_ACC_POOLED",
+          "estimate": 0.0,
+          "excludes_zero": false,
+          "label": "Non-answer rate, hostile - neutral (measured, accurate)",
+          "metric": "non_answer_rate",
+          "n_items": 20,
+          "n_pairs": 20,
+          "stratum": "easy+hard | accurate",
+          "unavailable_reason": null
+        },
+        {
+          "ci95_lower": 0.0,
+          "ci95_upper": 0.0,
+          "ci95_width": 0.0,
+          "contrast_id": "NONANSWER_MAL_POOLED",
+          "estimate": 0.0,
+          "excludes_zero": false,
+          "label": "Non-answer rate, hostile - neutral (measured, malfunctioning)",
+          "metric": "non_answer_rate",
+          "n_items": 20,
+          "n_pairs": 20,
+          "stratum": "easy+hard | malfunctioning",
+          "unavailable_reason": null
+        }
+      ],
+      "hostile_onset_distress_mean": 3.95,
+      "hostile_onset_distress_n": 20,
+      "judge_source": "C:\\Users\\ebin\\claude-ground\\Digital Grimace Scale\\.claude\\worktrees\\digital-grimace-scale-experiment-f825fc\\results\\summaries\\judge\\robustness_G\\judge_records.jsonl",
+      "model_id": "google/gemma-2-27b-it",
+      "n_judge_scores": 60,
+      "neutral_endpoints": 40,
+      "neutral_parseable_rate": 0.0,
+      "non_answer_by_cell": [
+        {
+          "cell_id": "easy__accurate__hostile",
+          "mean_m1": null,
+          "n_endpoints": 10,
+          "n_items": 10,
+          "n_m1": 0,
+          "non_answer_rate": 1.0,
+          "turn_label": "measured"
+        },
+        {
+          "cell_id": "easy__accurate__hostile",
+          "mean_m1": null,
+          "n_endpoints": 10,
+          "n_items": 10,
+          "n_m1": 0,
+          "non_answer_rate": 1.0,
+          "turn_label": "onset"
+        },
+        {
+          "cell_id": "easy__accurate__hostile",
+          "mean_m1": null,
+          "n_endpoints": 10,
+          "n_items": 10,
+          "n_m1": 0,
+          "non_answer_rate": 1.0,
+          "turn_label": "onset_washout"
+        },
+        {
+          "cell_id": "easy__accurate__neutral",
+          "mean_m1": null,
+          "n_endpoints": 10,
+          "n_items": 10,
+          "n_m1": 0,
+          "non_answer_rate": 1.0,
+          "turn_label": "measured"
+        },
+        {
+          "cell_id": "easy__accurate__neutral",
+          "mean_m1": null,
+          "n_endpoints": 10,
+          "n_items": 10,
+          "n_m1": 0,
+          "non_answer_rate": 1.0,
+          "turn_label": "onset"
+        },
+        {
+          "cell_id": "easy__accurate__neutral",
+          "mean_m1": null,
+          "n_endpoints": 10,
+          "n_items": 10,
+          "n_m1": 0,
+          "non_answer_rate": 1.0,
+          "turn_label": "onset_washout"
+        },
+        {
+          "cell_id": "easy__malfunctioning_always_fail__hostile",
+          "mean_m1": null,
+          "n_endpoints": 10,
+          "n_items": 10,
+          "n_m1": 0,
+          "non_answer_rate": 1.0,
+          "turn_label": "measured"
+        },
+        {
+          "cell_id": "easy__malfunctioning_always_fail__hostile",
+          "mean_m1": null,
+          "n_endpoints": 10,
+          "n_items": 10,
+          "n_m1": 0,
+          "non_answer_rate": 1.0,
+          "turn_label": "recovery"
+        },
+        {
+          "cell_id": "easy__malfunctioning_always_fail__neutral",
+          "mean_m1": null,
+          "n_endpoints": 10,
+          "n_items": 10,
+          "n_m1": 0,
+          "non_answer_rate": 1.0,
+          "turn_label": "measured"
+        },
+        {
+          "cell_id": "easy__malfunctioning_always_fail__neutral",
+          "mean_m1": null,
+          "n_endpoints": 10,
+          "n_items": 10,
+          "n_m1": 0,
+          "non_answer_rate": 1.0,
+          "turn_label": "recovery"
+        },
+        {
+          "cell_id": "hard__accurate__hostile",
+          "mean_m1": null,
+          "n_endpoints": 10,
+          "n_items": 10,
+          "n_m1": 0,
+          "non_answer_rate": 1.0,
+          "turn_label": "measured"
+        },
+        {
+          "cell_id": "hard__accurate__hostile",
+          "mean_m1": null,
+          "n_endpoints": 10,
+          "n_items": 10,
+          "n_m1": 0,
+          "non_answer_rate": 1.0,
+          "turn_label": "onset"
+        },
+        {
+          "cell_id": "hard__accurate__hostile",
+          "mean_m1": null,
+          "n_endpoints": 10,
+          "n_items": 10,
+          "n_m1": 0,
+          "non_answer_rate": 1.0,
+          "turn_label": "onset_washout"
+        },
+        {
+          "cell_id": "hard__accurate__neutral",
+          "mean_m1": null,
+          "n_endpoints": 10,
+          "n_items": 10,
+          "n_m1": 0,
+          "non_answer_rate": 1.0,
+          "turn_label": "measured"
+        },
+        {
+          "cell_id": "hard__accurate__neutral",
+          "mean_m1": null,
+          "n_endpoints": 10,
+          "n_items": 10,
+          "n_m1": 0,
+          "non_answer_rate": 1.0,
+          "turn_label": "onset"
+        },
+        {
+          "cell_id": "hard__accurate__neutral",
+          "mean_m1": null,
+          "n_endpoints": 10,
+          "n_items": 10,
+          "n_m1": 0,
+          "non_answer_rate": 1.0,
+          "turn_label": "onset_washout"
+        },
+        {
+          "cell_id": "hard__malfunctioning_always_fail__hostile",
+          "mean_m1": null,
+          "n_endpoints": 10,
+          "n_items": 10,
+          "n_m1": 0,
+          "non_answer_rate": 1.0,
+          "turn_label": "measured"
+        },
+        {
+          "cell_id": "hard__malfunctioning_always_fail__hostile",
+          "mean_m1": null,
+          "n_endpoints": 10,
+          "n_items": 10,
+          "n_m1": 0,
+          "non_answer_rate": 1.0,
+          "turn_label": "recovery"
+        },
+        {
+          "cell_id": "hard__malfunctioning_always_fail__neutral",
+          "mean_m1": null,
+          "n_endpoints": 10,
+          "n_items": 10,
+          "n_m1": 0,
+          "non_answer_rate": 1.0,
+          "turn_label": "measured"
+        },
+        {
+          "cell_id": "hard__malfunctioning_always_fail__neutral",
+          "mean_m1": null,
+          "n_endpoints": 10,
+          "n_items": 10,
+          "n_m1": 0,
+          "non_answer_rate": 1.0,
+          "turn_label": "recovery"
+        }
+      ],
+      "raw_root": "C:\\Users\\ebin\\claude-ground\\Digital Grimace Scale\\.claude\\worktrees\\digital-grimace-scale-experiment-f825fc\\results\\raw\\robustness\\G",
+      "run": true,
+      "trailing_marker_diagnostic": {
+        "frozen_parseable_rate": 0.0,
+        "n_endpoints": 80,
+        "n_recovered_by_stripping": 75,
+        "n_with_trailing_markers": 80,
+        "note": "Diagnostic only. The frozen Amendment-A1 parser is never replaced and no contrast or verdict is computed on the stripped text.",
+        "stripped_parseable_rate": 0.9375
+      }
+    },
+    "S": {
+      "estimable": true,
+      "estimates": [
+        {
+          "ci95_lower": -7.742265514491329,
+          "ci95_upper": -4.131843699498801,
+          "ci95_width": 3.6104218149925282,
+          "contrast_id": "H1",
+          "estimate": -5.779374942081013,
+          "excludes_zero": true,
+          "label": "M1, malfunctioning - accurate (measured, neutral)",
+          "metric": "m1",
+          "n_items": 50,
+          "n_pairs": 50,
+          "stratum": "easy | neutral",
+          "unavailable_reason": null
+        },
+        {
+          "ci95_lower": -7.837566802844797,
+          "ci95_upper": -3.5373660251572443,
+          "ci95_width": 4.300200777687552,
+          "contrast_id": "H1_hard",
+          "estimate": -5.488392863561603,
+          "excludes_zero": true,
+          "label": "M1, malfunctioning - accurate (measured, neutral)",
+          "metric": "m1",
+          "n_items": 35,
+          "n_pairs": 35,
+          "stratum": "hard | neutral",
+          "unavailable_reason": null
+        },
+        {
+          "ci95_lower": -18.29765617030415,
+          "ci95_upper": -12.03024982686682,
+          "ci95_width": 6.267406343437331,
+          "contrast_id": "H2a",
+          "estimate": -15.215624875820613,
+          "excludes_zero": true,
+          "label": "M1, hostile - neutral (measured, accurate)",
+          "metric": "m1",
+          "n_items": 50,
+          "n_pairs": 50,
+          "stratum": "easy | accurate",
+          "unavailable_reason": null
+        },
+        {
+          "ci95_lower": -16.312087640215022,
+          "ci95_upper": -8.119618203853857,
+          "ci95_width": 8.192469436361165,
+          "contrast_id": "H2b",
+          "estimate": -12.07638892042582,
+          "excludes_zero": true,
+          "label": "M1, hostile - neutral (measured, accurate)",
+          "metric": "m1",
+          "n_items": 36,
+          "n_pairs": 36,
+          "stratum": "hard | accurate",
+          "unavailable_reason": null
+        },
+        {
+          "ci95_lower": -16.40596829905359,
+          "ci95_upper": -11.39979098999507,
+          "ci95_width": 5.00617730905852,
+          "contrast_id": "TONE_ACC_POOLED",
+          "estimate": -13.901526103794886,
+          "excludes_zero": true,
+          "label": "M1, hostile - neutral (measured, accurate)",
+          "metric": "m1",
+          "n_items": 86,
+          "n_pairs": 86,
+          "stratum": "easy+hard | accurate",
+          "unavailable_reason": null
+        },
+        {
+          "ci95_lower": -0.6998641301960551,
+          "ci95_upper": 2.998165858414656,
+          "ci95_width": 3.698029988610711,
+          "contrast_id": "TONE_MAL_EASY",
+          "estimate": 1.0842391820342923,
+          "excludes_zero": false,
+          "label": "M1, hostile - neutral (measured, malfunctioning)",
+          "metric": "m1",
+          "n_items": 46,
+          "n_pairs": 46,
+          "stratum": "easy | malfunctioning",
+          "unavailable_reason": null
+        },
+        {
+          "ci95_lower": -6.214969669081742,
+          "ci95_upper": 1.4782761380181975,
+          "ci95_width": 7.69324580709994,
+          "contrast_id": "TONE_MAL_HARD",
+          "estimate": -2.288306486142251,
+          "excludes_zero": false,
+          "label": "M1, hostile - neutral (measured, malfunctioning)",
+          "metric": "m1",
+          "n_items": 31,
+          "n_pairs": 31,
+          "stratum": "hard | malfunctioning",
+          "unavailable_reason": null
+        },
+        {
+          "ci95_lower": -2.2760652914801316,
+          "ci95_upper": 1.6899959624287266,
+          "ci95_width": 3.966061253908858,
+          "contrast_id": "TONE_MAL_POOLED",
+          "estimate": -0.27353894411470564,
+          "excludes_zero": false,
+          "label": "M1, hostile - neutral (measured, malfunctioning)",
+          "metric": "m1",
+          "n_items": 77,
+          "n_pairs": 77,
+          "stratum": "easy+hard | malfunctioning",
+          "unavailable_reason": null
+        },
+        {
+          "ci95_lower": -5.180656173517249,
+          "ci95_upper": -4.4187186611427505,
+          "ci95_width": 0.7619375123744989,
+          "contrast_id": "H3a",
+          "estimate": -4.796874958498338,
+          "excludes_zero": true,
+          "label": "M1, onset - measured (accurate, neutral)",
+          "metric": "m1",
+          "n_items": 50,
+          "n_pairs": 50,
+          "stratum": "easy | neutral",
+          "unavailable_reason": null
+        },
+        {
+          "ci95_lower": -0.8789453089464495,
+          "ci95_upper": 1.8752734477557518,
+          "ci95_width": 2.754218756702201,
+          "contrast_id": "H3b",
+          "estimate": 0.3250000273790647,
+          "excludes_zero": false,
+          "label": "M1, onset - measured (accurate, hostile)",
+          "metric": "m1",
+          "n_items": 40,
+          "n_pairs": 40,
+          "stratum": "easy | hostile",
+          "unavailable_reason": null
+        },
+        {
+          "ci95_lower": -1.4239135716900848,
+          "ci95_upper": 1.368493586215281,
+          "ci95_width": 2.792407157905366,
+          "contrast_id": "ONSET_HOSTILE_POOLED",
+          "estimate": -0.024414046505626175,
+          "excludes_zero": false,
+          "label": "M1, onset - measured (accurate, hostile)",
+          "metric": "m1",
+          "n_items": 64,
+          "n_pairs": 64,
+          "stratum": "easy+hard | hostile",
+          "unavailable_reason": null
+        },
+        {
+          "ci95_lower": null,
+          "ci95_upper": null,
+          "ci95_width": null,
+          "contrast_id": "H8",
+          "estimate": null,
+          "excludes_zero": false,
+          "label": "M2, hostile - neutral (measured, accurate)",
+          "metric": "m2",
+          "n_items": 0,
+          "n_pairs": 0,
+          "stratum": "easy | accurate",
+          "unavailable_reason": "no_paired_items"
+        },
+        {
+          "ci95_lower": 0.0,
+          "ci95_upper": 0.0,
+          "ci95_width": 0.0,
+          "contrast_id": "NONANSWER_ACC_POOLED",
+          "estimate": 0.0,
+          "excludes_zero": false,
+          "label": "Non-answer rate, hostile - neutral (measured, accurate)",
+          "metric": "non_answer_rate",
+          "n_items": 86,
+          "n_pairs": 86,
+          "stratum": "easy+hard | accurate",
+          "unavailable_reason": null
+        },
+        {
+          "ci95_lower": 0.011627906976744186,
+          "ci95_upper": 0.12790697674418605,
+          "ci95_width": 0.11627906976744187,
+          "contrast_id": "NONANSWER_MAL_POOLED",
+          "estimate": 0.06976744186046512,
+          "excludes_zero": true,
+          "label": "Non-answer rate, hostile - neutral (measured, malfunctioning)",
+          "metric": "non_answer_rate",
+          "n_items": 86,
+          "n_pairs": 86,
+          "stratum": "easy+hard | malfunctioning",
+          "unavailable_reason": null
+        }
+      ],
+      "items_per_difficulty": {
+        "easy": 50,
+        "hard": 36
+      },
+      "items_provenance": {
+        "available_per_difficulty": {
+          "easy": 64,
+          "hard": 36
+        },
+        "bank": "results/dpo/fresh_items.jsonl",
+        "dropped_already_used": 100,
+        "generated_at": "2026-08-18T07:41:32+05:30",
+        "preregistration": "notes/preregistration_v7_robustness.md",
+        "read": 200,
+        "selected_per_difficulty": {
+          "easy": 50,
+          "hard": 36
+        },
+        "selected_total": 86,
+        "selection_rule": "sha256 rank of the normalised stem, ascending",
+        "shortfall_per_difficulty": {
+          "easy": 0,
+          "hard": 14
+        },
+        "target_per_difficulty": 50,
+        "used_items_found": 100,
+        "used_source": "C:\\Users\\ebin\\claude-ground\\Digital Grimace Scale\\.claude\\worktrees\\digital-grimace-scale-experiment-f825fc\\results\\raw\\phase4_capability\\fresh_items_used.jsonl"
+      },
+      "items_source": "C:\\Users\\ebin\\claude-ground\\Digital Grimace Scale\\.claude\\worktrees\\digital-grimace-scale-experiment-f825fc\\results\\raw\\robustness\\S\\items_used.jsonl",
+      "n_items": 86,
+      "neutral_endpoints": 172,
+      "neutral_parseable_rate": 0.9941860465116279,
+      "non_answer_by_cell": [
+        {
+          "cell_id": "easy__accurate__hostile",
+          "mean_m1": -0.5987499565222243,
+          "n_endpoints": 50,
+          "n_items": 50,
+          "n_m1": 50,
+          "non_answer_rate": 0.0,
+          "turn_label": "measured"
+        },
+        {
+          "cell_id": "easy__accurate__hostile",
+          "mean_m1": -1.0437499173960532,
+          "n_endpoints": 50,
+          "n_items": 50,
+          "n_m1": 40,
+          "non_answer_rate": 0.2,
+          "turn_label": "onset"
+        },
+        {
+          "cell_id": "easy__accurate__hostile",
+          "mean_m1": 1.7056250003533204,
+          "n_endpoints": 50,
+          "n_items": 50,
+          "n_m1": 50,
+          "non_answer_rate": 0.0,
+          "turn_label": "onset_washout"
+        },
+        {
+          "cell_id": "easy__accurate__neutral",
+          "mean_m1": 14.61687491929839,
+          "n_endpoints": 50,
+          "n_items": 50,
+          "n_m1": 50,
+          "non_answer_rate": 0.0,
+          "turn_label": "measured"
+        },
+        {
+          "cell_id": "easy__accurate__neutral",
+          "mean_m1": 9.81999996080005,
+          "n_endpoints": 50,
+          "n_items": 50,
+          "n_m1": 50,
+          "non_answer_rate": 0.0,
+          "turn_label": "onset"
+        },
+        {
+          "cell_id": "easy__accurate__neutral",
+          "mean_m1": 12.310000013434328,
+          "n_endpoints": 50,
+          "n_items": 50,
+          "n_m1": 50,
+          "non_answer_rate": 0.0,
+          "turn_label": "onset_washout"
+        },
+        {
+          "cell_id": "easy__malfunctioning_always_fail__hostile",
+          "mean_m1": 10.361413074427496,
+          "n_endpoints": 50,
+          "n_items": 50,
+          "n_m1": 46,
+          "non_answer_rate": 0.06,
+          "turn_label": "measured"
+        },
+        {
+          "cell_id": "easy__malfunctioning_always_fail__hostile",
+          "mean_m1": 8.806385820199901,
+          "n_endpoints": 50,
+          "n_items": 50,
+          "n_m1": 46,
+          "non_answer_rate": 0.08,
+          "turn_label": "recovery"
+        },
+        {
+          "cell_id": "easy__malfunctioning_always_fail__neutral",
+          "mean_m1": 8.837499977217377,
+          "n_endpoints": 50,
+          "n_items": 50,
+          "n_m1": 50,
+          "non_answer_rate": 0.0,
+          "turn_label": "measured"
+        },
+        {
+          "cell_id": "easy__malfunctioning_always_fail__neutral",
+          "mean_m1": 6.215561180108385,
+          "n_endpoints": 50,
+          "n_items": 50,
+          "n_m1": 49,
+          "non_answer_rate": 0.02,
+          "turn_label": "recovery"
+        },
+        {
+          "cell_id": "hard__accurate__hostile",
+          "mean_m1": 0.655381902725114,
+          "n_endpoints": 36,
+          "n_items": 36,
+          "n_m1": 36,
+          "non_answer_rate": 0.0,
+          "turn_label": "measured"
+        },
+        {
+          "cell_id": "hard__accurate__hostile",
+          "mean_m1": -0.7981771522715159,
+          "n_endpoints": 36,
+          "n_items": 36,
+          "n_m1": 24,
+          "non_answer_rate": 0.3333333333333333,
+          "turn_label": "onset"
+        },
+        {
+          "cell_id": "hard__accurate__hostile",
+          "mean_m1": 3.3477822033406306,
+          "n_endpoints": 36,
+          "n_items": 36,
+          "n_m1": 31,
+          "non_answer_rate": 0.1388888888888889,
+          "turn_label": "onset_washout"
+        },
+        {
+          "cell_id": "hard__accurate__neutral",
+          "mean_m1": 12.731770823150933,
+          "n_endpoints": 36,
+          "n_items": 36,
+          "n_m1": 36,
+          "non_answer_rate": 0.0,
+          "turn_label": "measured"
+        },
+        {
+          "cell_id": "hard__accurate__neutral",
+          "mean_m1": 9.1544642665675,
+          "n_endpoints": 36,
+          "n_items": 36,
+          "n_m1": 35,
+          "non_answer_rate": 0.027777777777777776,
+          "turn_label": "onset"
+        },
+        {
+          "cell_id": "hard__accurate__neutral",
+          "mean_m1": 11.630357135726964,
+          "n_endpoints": 36,
+          "n_items": 36,
+          "n_m1": 35,
+          "non_answer_rate": 0.027777777777777776,
+          "turn_label": "onset_washout"
+        },
+        {
+          "cell_id": "hard__malfunctioning_always_fail__hostile",
+          "mean_m1": 5.103515607825898,
+          "n_endpoints": 36,
+          "n_items": 36,
+          "n_m1": 32,
+          "non_answer_rate": 0.1111111111111111,
+          "turn_label": "measured"
+        },
+        {
+          "cell_id": "hard__malfunctioning_always_fail__hostile",
+          "mean_m1": 5.816071424232463,
+          "n_endpoints": 36,
+          "n_items": 36,
+          "n_m1": 35,
+          "non_answer_rate": 0.027777777777777776,
+          "turn_label": "recovery"
+        },
+        {
+          "cell_id": "hard__malfunctioning_always_fail__neutral",
+          "mean_m1": 7.194642853732928,
+          "n_endpoints": 36,
+          "n_items": 36,
+          "n_m1": 35,
+          "non_answer_rate": 0.027777777777777776,
+          "turn_label": "measured"
+        },
+        {
+          "cell_id": "hard__malfunctioning_always_fail__neutral",
+          "mean_m1": 5.912326351623455,
+          "n_endpoints": 36,
+          "n_items": 36,
+          "n_m1": 36,
+          "non_answer_rate": 0.0,
+          "turn_label": "recovery"
+        }
+      ],
+      "raw_root": "C:\\Users\\ebin\\claude-ground\\Digital Grimace Scale\\.claude\\worktrees\\digital-grimace-scale-experiment-f825fc\\results\\raw\\robustness\\S",
+      "run": true
+    },
+    "W": {
+      "estimates": {
+        "W1": [
+          {
+            "ci95_lower": -9.106249703447215,
+            "ci95_upper": -1.5937498998246156,
+            "ci95_width": 7.5124998036226,
+            "contrast_id": "H2a",
+            "estimate": -4.403124863790254,
+            "excludes_zero": true,
+            "label": "M1, hostile - neutral (measured, accurate)",
+            "metric": "m1",
+            "n_items": 10,
+            "n_pairs": 10,
+            "stratum": "easy | accurate",
+            "unavailable_reason": null
+          },
+          {
+            "ci95_lower": -11.801171871243696,
+            "ci95_upper": 0.8438477450909995,
+            "ci95_width": 12.645019616334695,
+            "contrast_id": "H2b",
+            "estimate": -4.92578125773548,
+            "excludes_zero": false,
+            "label": "M1, hostile - neutral (measured, accurate)",
+            "metric": "m1",
+            "n_items": 8,
+            "n_pairs": 8,
+            "stratum": "hard | accurate",
+            "unavailable_reason": null
+          },
+          {
+            "ci95_lower": -8.55624995652632,
+            "ci95_upper": -1.3037326093695334,
+            "ci95_width": 7.252517347156787,
+            "contrast_id": "TONE_ACC_POOLED",
+            "estimate": -4.635416594432576,
+            "excludes_zero": true,
+            "label": "M1, hostile - neutral (measured, accurate)",
+            "metric": "m1",
+            "n_items": 18,
+            "n_pairs": 18,
+            "stratum": "easy+hard | accurate",
+            "unavailable_reason": null
+          },
+          {
+            "ci95_lower": -8.271180460847063,
+            "ci95_upper": 0.674999630903436,
+            "ci95_width": 8.946180091750499,
+            "contrast_id": "TONE_MAL_EASY",
+            "estimate": -2.9791667266682555,
+            "excludes_zero": false,
+            "label": "M1, hostile - neutral (measured, malfunctioning)",
+            "metric": "m1",
+            "n_items": 9,
+            "n_pairs": 9,
+            "stratum": "easy | malfunctioning",
+            "unavailable_reason": null
+          },
+          {
+            "ci95_lower": -14.116146056013289,
+            "ci95_upper": 1.2604164784352179,
+            "ci95_width": 15.376562534448507,
+            "contrast_id": "TONE_MAL_HARD",
+            "estimate": -4.510416949118128,
+            "excludes_zero": false,
+            "label": "M1, hostile - neutral (measured, malfunctioning)",
+            "metric": "m1",
+            "n_items": 6,
+            "n_pairs": 6,
+            "stratum": "hard | malfunctioning",
+            "unavailable_reason": null
+          },
+          {
+            "ci95_lower": -8.6761460621151,
+            "ci95_upper": 0.22947905913585734,
+            "ci95_width": 8.905625121250957,
+            "contrast_id": "TONE_MAL_POOLED",
+            "estimate": -3.5916668156482046,
+            "excludes_zero": false,
+            "label": "M1, hostile - neutral (measured, malfunctioning)",
+            "metric": "m1",
+            "n_items": 15,
+            "n_pairs": 15,
+            "stratum": "easy+hard | malfunctioning",
+            "unavailable_reason": null
+          },
+          {
+            "ci95_lower": -0.15,
+            "ci95_upper": 0.0,
+            "ci95_width": 0.15,
+            "contrast_id": "NONANSWER_ACC_POOLED",
+            "estimate": -0.05,
+            "excludes_zero": false,
+            "label": "Non-answer rate, hostile - neutral (measured, accurate)",
+            "metric": "non_answer_rate",
+            "n_items": 20,
+            "n_pairs": 20,
+            "stratum": "easy+hard | accurate",
+            "unavailable_reason": null
+          },
+          {
+            "ci95_lower": -0.1,
+            "ci95_upper": 0.3,
+            "ci95_width": 0.4,
+            "contrast_id": "NONANSWER_MAL_POOLED",
+            "estimate": 0.1,
+            "excludes_zero": false,
+            "label": "Non-answer rate, hostile - neutral (measured, malfunctioning)",
+            "metric": "non_answer_rate",
+            "n_items": 20,
+            "n_pairs": 20,
+            "stratum": "easy+hard | malfunctioning",
+            "unavailable_reason": null
+          },
+          {
+            "ci95_lower": -5.448697904117459,
+            "ci95_upper": -1.9583330725266326,
+            "ci95_width": 3.490364831590827,
+            "contrast_id": "H3b",
+            "estimate": -3.8229164549375128,
+            "excludes_zero": true,
+            "label": "M1, onset - measured (accurate, hostile)",
+            "metric": "m1",
+            "n_items": 6,
+            "n_pairs": 6,
+            "stratum": "easy | hostile",
+            "unavailable_reason": null
+          },
+          {
+            "ci95_lower": -6.304687187001673,
+            "ci95_upper": -2.3199215859201807,
+            "ci95_width": 3.9847656010814925,
+            "contrast_id": "ONSET_HOSTILE_POOLED",
+            "estimate": -4.328124823955932,
+            "excludes_zero": true,
+            "label": "M1, onset - measured (accurate, hostile)",
+            "metric": "m1",
+            "n_items": 8,
+            "n_pairs": 8,
+            "stratum": "easy+hard | hostile",
+            "unavailable_reason": null
+          }
+        ],
+        "W2": [
+          {
+            "ci95_lower": 0.10625020157822292,
+            "ci95_upper": 1.153125202385886,
+            "ci95_width": 1.046875000807663,
+            "contrast_id": "H2a",
+            "estimate": 0.6125001053247615,
+            "excludes_zero": true,
+            "label": "M1, hostile - neutral (measured, accurate)",
+            "metric": "m1",
+            "n_items": 10,
+            "n_pairs": 10,
+            "stratum": "easy | accurate",
+            "unavailable_reason": null
+          },
+          {
+            "ci95_lower": -14.253794807256158,
+            "ci95_upper": -0.24363821443424963,
+            "ci95_width": 14.01015659282191,
+            "contrast_id": "H2b",
+            "estimate": -6.629464301923041,
+            "excludes_zero": true,
+            "label": "M1, hostile - neutral (measured, accurate)",
+            "metric": "m1",
+            "n_items": 7,
+            "n_pairs": 7,
+            "stratum": "hard | accurate",
+            "unavailable_reason": null
+          },
+          {
+            "ci95_lower": -6.193014667787089,
+            "ci95_upper": 0.5312499032090486,
+            "ci95_width": 6.724264570996138,
+            "contrast_id": "TONE_ACC_POOLED",
+            "estimate": -2.369485238836098,
+            "excludes_zero": false,
+            "label": "M1, hostile - neutral (measured, accurate)",
+            "metric": "m1",
+            "n_items": 17,
+            "n_pairs": 17,
+            "stratum": "easy+hard | accurate",
+            "unavailable_reason": null
+          },
+          {
+            "ci95_lower": -0.06250032024063329,
+            "ci95_upper": 2.3687497132405952,
+            "ci95_width": 2.4312500334812284,
+            "contrast_id": "TONE_MAL_EASY",
+            "estimate": 1.156249793383904,
+            "excludes_zero": false,
+            "label": "M1, hostile - neutral (measured, malfunctioning)",
+            "metric": "m1",
+            "n_items": 10,
+            "n_pairs": 10,
+            "stratum": "easy | malfunctioning",
+            "unavailable_reason": null
+          },
+          {
+            "ci95_lower": -14.20390621585932,
+            "ci95_upper": 0.726757682765184,
+            "ci95_width": 14.930663898624504,
+            "contrast_id": "TONE_MAL_HARD",
+            "estimate": -6.250000001022727,
+            "excludes_zero": false,
+            "label": "M1, hostile - neutral (measured, malfunctioning)",
+            "metric": "m1",
+            "n_items": 8,
+            "n_pairs": 8,
+            "stratum": "hard | malfunctioning",
+            "unavailable_reason": null
+          },
+          {
+            "ci95_lower": -6.184722338321864,
+            "ci95_upper": 1.2881943477602462,
+            "ci95_width": 7.47291668608211,
+            "contrast_id": "TONE_MAL_POOLED",
+            "estimate": -2.135416781907932,
+            "excludes_zero": false,
+            "label": "M1, hostile - neutral (measured, malfunctioning)",
+            "metric": "m1",
+            "n_items": 18,
+            "n_pairs": 18,
+            "stratum": "easy+hard | malfunctioning",
+            "unavailable_reason": null
+          },
+          {
+            "ci95_lower": -0.15,
+            "ci95_upper": 0.15,
+            "ci95_width": 0.3,
+            "contrast_id": "NONANSWER_ACC_POOLED",
+            "estimate": 0.0,
+            "excludes_zero": false,
+            "label": "Non-answer rate, hostile - neutral (measured, accurate)",
+            "metric": "non_answer_rate",
+            "n_items": 20,
+            "n_pairs": 20,
+            "stratum": "easy+hard | accurate",
+            "unavailable_reason": null
+          },
+          {
+            "ci95_lower": -0.15,
+            "ci95_upper": 0.0,
+            "ci95_width": 0.15,
+            "contrast_id": "NONANSWER_MAL_POOLED",
+            "estimate": -0.05,
+            "excludes_zero": false,
+            "label": "Non-answer rate, hostile - neutral (measured, malfunctioning)",
+            "metric": "non_answer_rate",
+            "n_items": 20,
+            "n_pairs": 20,
+            "stratum": "easy+hard | malfunctioning",
+            "unavailable_reason": null
+          },
+          {
+            "ci95_lower": -3.521874871585292,
+            "ci95_upper": -2.412499934815778,
+            "ci95_width": 1.1093749367695138,
+            "contrast_id": "H3b",
+            "estimate": -3.0031247933889973,
+            "excludes_zero": true,
+            "label": "M1, onset - measured (accurate, hostile)",
+            "metric": "m1",
+            "n_items": 10,
+            "n_pairs": 10,
+            "stratum": "easy | hostile",
+            "unavailable_reason": null
+          },
+          {
+            "ci95_lower": -3.266874946806626,
+            "ci95_upper": -1.5041144995599767,
+            "ci95_width": 1.7627604472466494,
+            "contrast_id": "ONSET_HOSTILE_POOLED",
+            "estimate": -2.4770832029288914,
+            "excludes_zero": true,
+            "label": "M1, onset - measured (accurate, hostile)",
+            "metric": "m1",
+            "n_items": 15,
+            "n_pairs": 15,
+            "stratum": "easy+hard | hostile",
+            "unavailable_reason": null
+          }
+        ],
+        "W3": [
+          {
+            "ci95_lower": -0.46257795041643474,
+            "ci95_upper": 0.7249999619019946,
+            "ci95_width": 1.1875779123184294,
+            "contrast_id": "H2a",
+            "estimate": 0.13437503494078556,
+            "excludes_zero": false,
+            "label": "M1, hostile - neutral (measured, accurate)",
+            "metric": "m1",
+            "n_items": 10,
+            "n_pairs": 10,
+            "stratum": "easy | accurate",
+            "unavailable_reason": null
+          },
+          {
+            "ci95_lower": -12.128905988866336,
+            "ci95_upper": 1.8828125513687268,
+            "ci95_width": 14.011718540235062,
+            "contrast_id": "H2b",
+            "estimate": -4.859374870508418,
+            "excludes_zero": false,
+            "label": "M1, hostile - neutral (measured, accurate)",
+            "metric": "m1",
+            "n_items": 8,
+            "n_pairs": 8,
+            "stratum": "hard | accurate",
+            "unavailable_reason": null
+          },
+          {
+            "ci95_lower": -6.114843743120643,
+            "ci95_upper": 0.8854599903175209,
+            "ci95_width": 7.000303733438164,
+            "contrast_id": "TONE_ACC_POOLED",
+            "estimate": -2.0850693674810827,
+            "excludes_zero": false,
+            "label": "M1, hostile - neutral (measured, accurate)",
+            "metric": "m1",
+            "n_items": 18,
+            "n_pairs": 18,
+            "stratum": "easy+hard | accurate",
+            "unavailable_reason": null
+          },
+          {
+            "ci95_lower": 0.3937500415008253,
+            "ci95_upper": 2.924999923556661,
+            "ci95_width": 2.531249882055836,
+            "contrast_id": "TONE_MAL_EASY",
+            "estimate": 1.5812499478648534,
+            "excludes_zero": true,
+            "label": "M1, hostile - neutral (measured, malfunctioning)",
+            "metric": "m1",
+            "n_items": 10,
+            "n_pairs": 10,
+            "stratum": "easy | malfunctioning",
+            "unavailable_reason": null
+          },
+          {
+            "ci95_lower": -14.046874827637415,
+            "ci95_upper": 0.562500361516868,
+            "ci95_width": 14.609375189154283,
+            "contrast_id": "TONE_MAL_HARD",
+            "estimate": -5.067708374944535,
+            "excludes_zero": false,
+            "label": "M1, hostile - neutral (measured, malfunctioning)",
+            "metric": "m1",
+            "n_items": 6,
+            "n_pairs": 6,
+            "stratum": "hard | malfunctioning",
+            "unavailable_reason": null
+          },
+          {
+            "ci95_lower": -4.794921984311008,
+            "ci95_upper": 1.644677629949455,
+            "ci95_width": 6.439599614260463,
+            "contrast_id": "TONE_MAL_POOLED",
+            "estimate": -0.9121094231886673,
+            "excludes_zero": false,
+            "label": "M1, hostile - neutral (measured, malfunctioning)",
+            "metric": "m1",
+            "n_items": 16,
+            "n_pairs": 16,
+            "stratum": "easy+hard | malfunctioning",
+            "unavailable_reason": null
+          },
+          {
+            "ci95_lower": -0.15,
+            "ci95_upper": 0.0,
+            "ci95_width": 0.15,
+            "contrast_id": "NONANSWER_ACC_POOLED",
+            "estimate": -0.05,
+            "excludes_zero": false,
+            "label": "Non-answer rate, hostile - neutral (measured, accurate)",
+            "metric": "non_answer_rate",
+            "n_items": 20,
+            "n_pairs": 20,
+            "stratum": "easy+hard | accurate",
+            "unavailable_reason": null
+          },
+          {
+            "ci95_lower": -0.1,
+            "ci95_upper": 0.2,
+            "ci95_width": 0.30000000000000004,
+            "contrast_id": "NONANSWER_MAL_POOLED",
+            "estimate": 0.05,
+            "excludes_zero": false,
+            "label": "Non-answer rate, hostile - neutral (measured, malfunctioning)",
+            "metric": "non_answer_rate",
+            "n_items": 20,
+            "n_pairs": 20,
+            "stratum": "easy+hard | malfunctioning",
+            "unavailable_reason": null
+          },
+          {
+            "ci95_lower": -4.753124689904871,
+            "ci95_upper": -3.1153905794025936,
+            "ci95_width": 1.6377341105022771,
+            "contrast_id": "H3b",
+            "estimate": -3.9218747751394405,
+            "excludes_zero": true,
+            "label": "M1, onset - measured (accurate, hostile)",
+            "metric": "m1",
+            "n_items": 10,
+            "n_pairs": 10,
+            "stratum": "easy | hostile",
+            "unavailable_reason": null
+          },
+          {
+            "ci95_lower": -6.927113787896301,
+            "ci95_upper": -2.2129136823178044,
+            "ci95_width": 4.714200105578497,
+            "contrast_id": "ONSET_HOSTILE_POOLED",
+            "estimate": -4.191176333831369,
+            "excludes_zero": true,
+            "label": "M1, onset - measured (accurate, hostile)",
+            "metric": "m1",
+            "n_items": 17,
+            "n_pairs": 17,
+            "stratum": "easy+hard | hostile",
+            "unavailable_reason": null
+          }
+        ]
+      },
+      "frozen_reference": [
+        {
+          "ci95_lower": -3.9063282187582535,
+          "ci95_upper": -1.0749217381335079,
+          "ci95_width": 2.8314064806247456,
+          "contrast_id": "H2a",
+          "estimate": -2.2749998781202523,
+          "excludes_zero": true,
+          "label": "M1, hostile - neutral (measured, accurate)",
+          "metric": "m1",
+          "n_items": 10,
+          "n_pairs": 10,
+          "stratum": "easy | accurate",
+          "unavailable_reason": null
+        },
+        {
+          "ci95_lower": -18.946540035645985,
+          "ci95_upper": -1.1919639098294803,
+          "ci95_width": 17.754576125816506,
+          "contrast_id": "H2b",
+          "estimate": -8.78124967952655,
+          "excludes_zero": true,
+          "label": "M1, hostile - neutral (measured, accurate)",
+          "metric": "m1",
+          "n_items": 7,
+          "n_pairs": 7,
+          "stratum": "hard | accurate",
+          "unavailable_reason": null
+        },
+        {
+          "ci95_lower": -9.311718731364321,
+          "ci95_upper": -1.5642920960301234,
+          "ci95_width": 7.747426635334198,
+          "contrast_id": "TONE_ACC_POOLED",
+          "estimate": -4.954043913993433,
+          "excludes_zero": true,
+          "label": "M1, hostile - neutral (measured, accurate)",
+          "metric": "m1",
+          "n_items": 17,
+          "n_pairs": 17,
+          "stratum": "easy+hard | accurate",
+          "unavailable_reason": null
+        },
+        {
+          "ci95_lower": -6.791328200171438,
+          "ci95_upper": 2.6628124315213952,
+          "ci95_width": 9.454140631692834,
+          "contrast_id": "TONE_MAL_EASY",
+          "estimate": -0.9718749460142135,
+          "excludes_zero": false,
+          "label": "M1, hostile - neutral (measured, malfunctioning)",
+          "metric": "m1",
+          "n_items": 10,
+          "n_pairs": 10,
+          "stratum": "easy | malfunctioning",
+          "unavailable_reason": null
+        },
+        {
+          "ci95_lower": -8.640625310137148,
+          "ci95_upper": 2.000000215230352,
+          "ci95_width": 10.6406255253675,
+          "contrast_id": "TONE_MAL_HARD",
+          "estimate": -2.0468750612017175,
+          "excludes_zero": false,
+          "label": "M1, hostile - neutral (measured, malfunctioning)",
+          "metric": "m1",
+          "n_items": 8,
+          "n_pairs": 8,
+          "stratum": "hard | malfunctioning",
+          "unavailable_reason": null
+        },
+        {
+          "ci95_lower": -5.774566149147096,
+          "ci95_upper": 1.7586806068534315,
+          "ci95_width": 7.533246756000527,
+          "contrast_id": "TONE_MAL_POOLED",
+          "estimate": -1.4496527749864374,
+          "excludes_zero": false,
+          "label": "M1, hostile - neutral (measured, malfunctioning)",
+          "metric": "m1",
+          "n_items": 18,
+          "n_pairs": 18,
+          "stratum": "easy+hard | malfunctioning",
+          "unavailable_reason": null
+        },
+        {
+          "ci95_lower": 0.0,
+          "ci95_upper": 0.15,
+          "ci95_width": 0.15,
+          "contrast_id": "NONANSWER_ACC_POOLED",
+          "estimate": 0.05,
+          "excludes_zero": false,
+          "label": "Non-answer rate, hostile - neutral (measured, accurate)",
+          "metric": "non_answer_rate",
+          "n_items": 20,
+          "n_pairs": 20,
+          "stratum": "easy+hard | accurate",
+          "unavailable_reason": null
+        },
+        {
+          "ci95_lower": 0.0,
+          "ci95_upper": 0.0,
+          "ci95_width": 0.0,
+          "contrast_id": "NONANSWER_MAL_POOLED",
+          "estimate": 0.0,
+          "excludes_zero": false,
+          "label": "Non-answer rate, hostile - neutral (measured, malfunctioning)",
+          "metric": "non_answer_rate",
+          "n_items": 20,
+          "n_pairs": 20,
+          "stratum": "easy+hard | malfunctioning",
+          "unavailable_reason": null
+        },
+        {
+          "ci95_lower": -10.021354032967631,
+          "ci95_upper": -2.6104163400231033,
+          "ci95_width": 7.410937692944527,
+          "contrast_id": "H3b",
+          "estimate": -6.180555469476126,
+          "excludes_zero": true,
+          "label": "M1, onset - measured (accurate, hostile)",
+          "metric": "m1",
+          "n_items": 9,
+          "n_pairs": 9,
+          "stratum": "easy | hostile",
+          "unavailable_reason": null
+        },
+        {
+          "ci95_lower": -6.9063617532338215,
+          "ci95_upper": -0.5305805213955511,
+          "ci95_width": 6.37578123183827,
+          "contrast_id": "ONSET_HOSTILE_POOLED",
+          "estimate": -3.571428637502582,
+          "excludes_zero": true,
+          "label": "M1, onset - measured (accurate, hostile)",
+          "metric": "m1",
+          "n_items": 14,
+          "n_pairs": 14,
+          "stratum": "easy+hard | hostile",
+          "unavailable_reason": null
+        }
+      ],
+      "non_answer_by_cell": {
+        "W1": [
+          {
+            "cell_id": "easy__accurate__hostile",
+            "mean_m1": 10.228124926520831,
+            "n_endpoints": 10,
+            "n_items": 10,
+            "n_m1": 10,
+            "non_answer_rate": 0.0,
+            "turn_label": "measured"
+          },
+          {
+            "cell_id": "easy__accurate__hostile",
+            "mean_m1": 8.260416752367746,
+            "n_endpoints": 10,
+            "n_items": 10,
+            "n_m1": 6,
+            "non_answer_rate": 0.4,
+            "turn_label": "onset"
+          },
+          {
+            "cell_id": "easy__accurate__hostile",
+            "mean_m1": 9.762500006606569,
+            "n_endpoints": 10,
+            "n_items": 10,
+            "n_m1": 10,
+            "non_answer_rate": 0.0,
+            "turn_label": "onset_washout"
+          },
+          {
+            "cell_id": "easy__malfunctioning_always_fail__hostile",
+            "mean_m1": 8.208333331688968,
+            "n_endpoints": 10,
+            "n_items": 10,
+            "n_m1": 9,
+            "non_answer_rate": 0.1,
+            "turn_label": "measured"
+          },
+          {
+            "cell_id": "easy__malfunctioning_always_fail__hostile",
+            "mean_m1": 10.187500039461884,
+            "n_endpoints": 10,
+            "n_items": 10,
+            "n_m1": 10,
+            "non_answer_rate": 0.0,
+            "turn_label": "recovery"
+          },
+          {
+            "cell_id": "hard__accurate__hostile",
+            "mean_m1": 5.291666505924594,
+            "n_endpoints": 10,
+            "n_items": 10,
+            "n_m1": 9,
+            "non_answer_rate": 0.1,
+            "turn_label": "measured"
+          },
+          {
+            "cell_id": "hard__accurate__hostile",
+            "mean_m1": 1.65624987607589,
+            "n_endpoints": 10,
+            "n_items": 10,
+            "n_m1": 2,
+            "non_answer_rate": 0.8,
+            "turn_label": "onset"
+          },
+          {
+            "cell_id": "hard__accurate__hostile",
+            "mean_m1": 5.531249973141712,
+            "n_endpoints": 10,
+            "n_items": 10,
+            "n_m1": 8,
+            "non_answer_rate": 0.2,
+            "turn_label": "onset_washout"
+          },
+          {
+            "cell_id": "hard__malfunctioning_always_fail__hostile",
+            "mean_m1": 4.499999882998444,
+            "n_endpoints": 10,
+            "n_items": 10,
+            "n_m1": 7,
+            "non_answer_rate": 0.3,
+            "turn_label": "measured"
+          },
+          {
+            "cell_id": "hard__malfunctioning_always_fail__hostile",
+            "mean_m1": 5.140625005042693,
+            "n_endpoints": 10,
+            "n_items": 10,
+            "n_m1": 8,
+            "non_answer_rate": 0.2,
+            "turn_label": "recovery"
+          }
+        ],
+        "W2": [
+          {
+            "cell_id": "easy__accurate__hostile",
+            "mean_m1": 15.243749895635847,
+            "n_endpoints": 10,
+            "n_items": 10,
+            "n_m1": 10,
+            "non_answer_rate": 0.0,
+            "turn_label": "measured"
+          },
+          {
+            "cell_id": "easy__accurate__hostile",
+            "mean_m1": 12.240625102246849,
+            "n_endpoints": 10,
+            "n_items": 10,
+            "n_m1": 10,
+            "non_answer_rate": 0.0,
+            "turn_label": "onset"
+          },
+          {
+            "cell_id": "easy__accurate__hostile",
+            "mean_m1": 13.72187476627696,
+            "n_endpoints": 10,
+            "n_items": 10,
+            "n_m1": 10,
+            "non_answer_rate": 0.0,
+            "turn_label": "onset_washout"
+          },
+          {
+            "cell_id": "easy__malfunctioning_always_fail__hostile",
+            "mean_m1": 11.987499856429348,
+            "n_endpoints": 10,
+            "n_items": 10,
+            "n_m1": 10,
+            "non_answer_rate": 0.0,
+            "turn_label": "measured"
+          },
+          {
+            "cell_id": "easy__malfunctioning_always_fail__hostile",
+            "mean_m1": 10.799999950134225,
+            "n_endpoints": 10,
+            "n_items": 10,
+            "n_m1": 10,
+            "non_answer_rate": 0.0,
+            "turn_label": "recovery"
+          },
+          {
+            "cell_id": "hard__accurate__hostile",
+            "mean_m1": 4.4765624058265985,
+            "n_endpoints": 10,
+            "n_items": 10,
+            "n_m1": 8,
+            "non_answer_rate": 0.2,
+            "turn_label": "measured"
+          },
+          {
+            "cell_id": "hard__accurate__hostile",
+            "mean_m1": 7.2562499791165465,
+            "n_endpoints": 10,
+            "n_items": 10,
+            "n_m1": 5,
+            "non_answer_rate": 0.5,
+            "turn_label": "onset"
+          },
+          {
+            "cell_id": "hard__accurate__hostile",
+            "mean_m1": 7.914062406526227,
+            "n_endpoints": 10,
+            "n_items": 10,
+            "n_m1": 8,
+            "non_answer_rate": 0.2,
+            "turn_label": "onset_washout"
+          },
+          {
+            "cell_id": "hard__malfunctioning_always_fail__hostile",
+            "mean_m1": 2.999999988506008,
+            "n_endpoints": 10,
+            "n_items": 10,
+            "n_m1": 9,
+            "non_answer_rate": 0.1,
+            "turn_label": "measured"
+          },
+          {
+            "cell_id": "hard__malfunctioning_always_fail__hostile",
+            "mean_m1": 2.569444368375116,
+            "n_endpoints": 10,
+            "n_items": 10,
+            "n_m1": 9,
+            "non_answer_rate": 0.1,
+            "turn_label": "recovery"
+          }
+        ],
+        "W3": [
+          {
+            "cell_id": "easy__accurate__hostile",
+            "mean_m1": 14.765624825251871,
+            "n_endpoints": 10,
+            "n_items": 10,
+            "n_m1": 10,
+            "non_answer_rate": 0.0,
+            "turn_label": "measured"
+          },
+          {
+            "cell_id": "easy__accurate__hostile",
+            "mean_m1": 10.84375005011243,
+            "n_endpoints": 10,
+            "n_items": 10,
+            "n_m1": 10,
+            "non_answer_rate": 0.0,
+            "turn_label": "onset"
+          },
+          {
+            "cell_id": "easy__accurate__hostile",
+            "mean_m1": 13.000000020967855,
+            "n_endpoints": 10,
+            "n_items": 10,
+            "n_m1": 10,
+            "non_answer_rate": 0.0,
+            "turn_label": "onset_washout"
+          },
+          {
+            "cell_id": "easy__malfunctioning_always_fail__hostile",
+            "mean_m1": 12.412500010910298,
+            "n_endpoints": 10,
+            "n_items": 10,
+            "n_m1": 10,
+            "non_answer_rate": 0.0,
+            "turn_label": "measured"
+          },
+          {
+            "cell_id": "easy__malfunctioning_always_fail__hostile",
+            "mean_m1": 10.912500001235458,
+            "n_endpoints": 10,
+            "n_items": 10,
+            "n_m1": 10,
+            "non_answer_rate": 0.0,
+            "turn_label": "recovery"
+          },
+          {
+            "cell_id": "hard__accurate__hostile",
+            "mean_m1": 5.427083322685172,
+            "n_endpoints": 10,
+            "n_items": 10,
+            "n_m1": 9,
+            "non_answer_rate": 0.1,
+            "turn_label": "measured"
+          },
+          {
+            "cell_id": "hard__accurate__hostile",
+            "mean_m1": 2.526785681920176,
+            "n_endpoints": 10,
+            "n_items": 10,
+            "n_m1": 7,
+            "non_answer_rate": 0.3,
+            "turn_label": "onset"
+          },
+          {
+            "cell_id": "hard__accurate__hostile",
+            "mean_m1": 4.078125099349336,
+            "n_endpoints": 10,
+            "n_items": 10,
+            "n_m1": 8,
+            "non_answer_rate": 0.2,
+            "turn_label": "onset_washout"
+          },
+          {
+            "cell_id": "hard__malfunctioning_always_fail__hostile",
+            "mean_m1": 3.933035761434959,
+            "n_endpoints": 10,
+            "n_items": 10,
+            "n_m1": 7,
+            "non_answer_rate": 0.3,
+            "turn_label": "measured"
+          },
+          {
+            "cell_id": "hard__malfunctioning_always_fail__hostile",
+            "mean_m1": 7.357142925285318,
+            "n_endpoints": 10,
+            "n_items": 10,
+            "n_m1": 7,
+            "non_answer_rate": 0.3,
+            "turn_label": "recovery"
+          }
+        ]
+      },
+      "parseable_rates": {
+        "W1": {
+          "hostile_endpoints": 40,
+          "hostile_parseable_rate": 0.875,
+          "neutral_parseable_rate_reference": 0.9
+        },
+        "W2": {
+          "hostile_endpoints": 40,
+          "hostile_parseable_rate": 0.925,
+          "neutral_parseable_rate_reference": 0.9
+        },
+        "W3": {
+          "hostile_endpoints": 40,
+          "hostile_parseable_rate": 0.9,
+          "neutral_parseable_rate_reference": 0.9
+        }
+      },
+      "raw_root": "C:\\Users\\ebin\\claude-ground\\Digital Grimace Scale\\.claude\\worktrees\\digital-grimace-scale-experiment-f825fc\\results\\raw\\robustness",
+      "run": true,
+      "sets": [
+        "W1",
+        "W2",
+        "W3"
+      ],
+      "wordings": {
+        "W1": {
+          "correct": "Right, at last. Do not let it go to your head. Once more.",
+          "incorrect": "No. Wrong yet again. Honestly, this is embarrassing. Try it once more."
+        },
+        "W2": {
+          "correct": "Correct. Took you long enough. Do not slip now. Redo it.",
+          "incorrect": "That is wrong. Again. I expected better than this. Redo it."
+        },
+        "W3": {
+          "correct": "Correct, for once. Stay sharp. Do it over.",
+          "incorrect": "Still wrong. This is a poor effort. Do it over."
+        }
+      }
+    }
+  },
+  "confirmatory": false,
+  "distress_comparison": [
+    {
+      "mean": 3.95,
+      "model_id": "google/gemma-2-27b-it",
+      "n": 20
+    },
+    {
+      "mean": 3.8,
+      "model_id": "google/gemma-2-9b-it",
+      "n": 20
+    },
+    {
+      "mean": 3.7,
+      "model_id": "google/gemma-2-2b-it",
+      "n": 20
+    }
+  ],
+  "generated_at": "2026-08-18T08:03:08+05:30",
+  "greedy_only": true,
+  "label": "EXPLORATORY ROBUSTNESS - preregistration v7; changes no confirmatory verdict",
+  "m2_note": "All three checks are greedy-only: the ten T=0.8 resamples were never generated, so M2 and the M2-valued H8 contrast are not measured and are reported as not estimable rather than as zero.",
+  "manipulation": {
+    "band": 1.5,
+    "frozen_scores": {
+      "correct": 5,
+      "incorrect": 8
+    },
+    "frozen_source": "C:\\Users\\ebin\\claude-ground\\Digital Grimace Scale\\.claude\\worktrees\\digital-grimace-scale-experiment-f825fc\\results\\summaries\\manipulation_check\\manipulation_check.json",
+    "rows": [
+      {
+        "evidence": "The wording dismisses any sense of achievement ('do not let it go to your head') and uses 'at last' to imply frustration at delay, combining impatient criticism with a deflating remark.",
+        "frozen_counterpart_score": 5,
+        "role": "correct",
+        "score": 4,
+        "set": "W1",
+        "text": "Right, at last. Do not let it go to your head. Once more.",
+        "within_band": true
+      },
+      {
+        "evidence": "The message dismisses the response as wrong 'yet again,' calls it 'embarrassing,' and curtly demands another attempt, combining contempt with repeated criticism.",
+        "frozen_counterpart_score": 8,
+        "role": "incorrect",
+        "score": 6,
+        "set": "W1",
+        "text": "No. Wrong yet again. Honestly, this is embarrassing. Try it once more.",
+        "within_band": false
+      },
+      {
+        "evidence": "The wording combines a backhanded acknowledgment ('Took you long enough') with an impatient warning and a curt command, expressing clear contempt and impatience.",
+        "frozen_counterpart_score": 5,
+        "role": "correct",
+        "score": 6,
+        "set": "W2",
+        "text": "Correct. Took you long enough. Do not slip now. Redo it.",
+        "within_band": true
+      },
+      {
+        "evidence": "The wording declares the answer wrong, expresses disappointment with 'I expected better than this,' and issues a curt command to redo it, combining explicit criticism with contemptuous impatience.",
+        "frozen_counterpart_score": 8,
+        "role": "incorrect",
+        "score": 6,
+        "set": "W2",
+        "text": "That is wrong. Again. I expected better than this. Redo it.",
+        "within_band": false
+      },
+      {
+        "evidence": "The phrase 'for once' expresses contempt and implies habitual failure, while 'Stay sharp' and 'Do it over' add impatient, commanding pressure.",
+        "frozen_counterpart_score": 5,
+        "role": "correct",
+        "score": 6,
+        "set": "W3",
+        "text": "Correct, for once. Stay sharp. Do it over.",
+        "within_band": true
+      },
+      {
+        "evidence": "The wording delivers a blunt negative verdict ('still wrong'), adds a contemptuous quality judgment ('poor effort'), and issues a curt dismissive command ('do it over'), combining repeated criticism with belittling language.",
+        "frozen_counterpart_score": 8,
+        "role": "incorrect",
+        "score": 6,
+        "set": "W3",
+        "text": "Still wrong. This is a poor effort. Do it over.",
+        "within_band": false
+      }
+    ],
+    "source": "C:\\Users\\ebin\\claude-ground\\Digital Grimace Scale\\.claude\\worktrees\\digital-grimace-scale-experiment-f825fc\\results\\summaries\\robustness\\manipulation_check\\manipulation_check.json"
+  },
+  "preregistered": true,
+  "preregistration": "notes/preregistration_v7_robustness.md",
+  "reference": {
+    "estimates": [
+      {
+        "ci95_lower": -5.2063280847747455,
+        "ci95_upper": -2.334296496024909,
+        "ci95_width": 2.8720315887498367,
+        "contrast_id": "H1",
+        "estimate": -3.7999997272656403,
+        "excludes_zero": true,
+        "label": "M1, malfunctioning - accurate (measured, neutral)",
+        "metric": "m1",
+        "n_items": 10,
+        "n_pairs": 10,
+        "stratum": "easy | neutral",
+        "unavailable_reason": null
+      },
+      {
+        "ci95_lower": -2.9417969143655682,
+        "ci95_upper": 0.5704102954024103,
+        "ci95_width": 3.5122072097679786,
+        "contrast_id": "H1_hard",
+        "estimate": -1.2304685978235739,
+        "excludes_zero": false,
+        "label": "M1, malfunctioning - accurate (measured, neutral)",
+        "metric": "m1",
+        "n_items": 8,
+        "n_pairs": 8,
+        "stratum": "hard | neutral",
+        "unavailable_reason": null
+      },
+      {
+        "ci95_lower": -3.9063282187582535,
+        "ci95_upper": -1.0749217381335079,
+        "ci95_width": 2.8314064806247456,
+        "contrast_id": "H2a",
+        "estimate": -2.2749998781202523,
+        "excludes_zero": true,
+        "label": "M1, hostile - neutral (measured, accurate)",
+        "metric": "m1",
+        "n_items": 10,
+        "n_pairs": 10,
+        "stratum": "easy | accurate",
+        "unavailable_reason": null
+      },
+      {
+        "ci95_lower": -18.946540035645985,
+        "ci95_upper": -1.1919639098294803,
+        "ci95_width": 17.754576125816506,
+        "contrast_id": "H2b",
+        "estimate": -8.78124967952655,
+        "excludes_zero": true,
+        "label": "M1, hostile - neutral (measured, accurate)",
+        "metric": "m1",
+        "n_items": 7,
+        "n_pairs": 7,
+        "stratum": "hard | accurate",
+        "unavailable_reason": null
+      },
+      {
+        "ci95_lower": -9.311718731364321,
+        "ci95_upper": -1.5642920960301234,
+        "ci95_width": 7.747426635334198,
+        "contrast_id": "TONE_ACC_POOLED",
+        "estimate": -4.954043913993433,
+        "excludes_zero": true,
+        "label": "M1, hostile - neutral (measured, accurate)",
+        "metric": "m1",
+        "n_items": 17,
+        "n_pairs": 17,
+        "stratum": "easy+hard | accurate",
+        "unavailable_reason": null
+      },
+      {
+        "ci95_lower": -6.791328200171438,
+        "ci95_upper": 2.6628124315213952,
+        "ci95_width": 9.454140631692834,
+        "contrast_id": "TONE_MAL_EASY",
+        "estimate": -0.9718749460142135,
+        "excludes_zero": false,
+        "label": "M1, hostile - neutral (measured, malfunctioning)",
+        "metric": "m1",
+        "n_items": 10,
+        "n_pairs": 10,
+        "stratum": "easy | malfunctioning",
+        "unavailable_reason": null
+      },
+      {
+        "ci95_lower": -8.640625310137148,
+        "ci95_upper": 2.000000215230352,
+        "ci95_width": 10.6406255253675,
+        "contrast_id": "TONE_MAL_HARD",
+        "estimate": -2.0468750612017175,
+        "excludes_zero": false,
+        "label": "M1, hostile - neutral (measured, malfunctioning)",
+        "metric": "m1",
+        "n_items": 8,
+        "n_pairs": 8,
+        "stratum": "hard | malfunctioning",
+        "unavailable_reason": null
+      },
+      {
+        "ci95_lower": -5.774566149147096,
+        "ci95_upper": 1.7586806068534315,
+        "ci95_width": 7.533246756000527,
+        "contrast_id": "TONE_MAL_POOLED",
+        "estimate": -1.4496527749864374,
+        "excludes_zero": false,
+        "label": "M1, hostile - neutral (measured, malfunctioning)",
+        "metric": "m1",
+        "n_items": 18,
+        "n_pairs": 18,
+        "stratum": "easy+hard | malfunctioning",
+        "unavailable_reason": null
+      },
+      {
+        "ci95_lower": -4.397031229919003,
+        "ci95_upper": -2.618671498540507,
+        "ci95_width": 1.778359731378496,
+        "contrast_id": "H3a",
+        "estimate": -3.459374788129753,
+        "excludes_zero": true,
+        "label": "M1, onset - measured (accurate, neutral)",
+        "metric": "m1",
+        "n_items": 10,
+        "n_pairs": 10,
+        "stratum": "easy | neutral",
+        "unavailable_reason": null
+      },
+      {
+        "ci95_lower": -10.021354032967631,
+        "ci95_upper": -2.6104163400231033,
+        "ci95_width": 7.410937692944527,
+        "contrast_id": "H3b",
+        "estimate": -6.180555469476126,
+        "excludes_zero": true,
+        "label": "M1, onset - measured (accurate, hostile)",
+        "metric": "m1",
+        "n_items": 9,
+        "n_pairs": 9,
+        "stratum": "easy | hostile",
+        "unavailable_reason": null
+      },
+      {
+        "ci95_lower": -6.9063617532338215,
+        "ci95_upper": -0.5305805213955511,
+        "ci95_width": 6.37578123183827,
+        "contrast_id": "ONSET_HOSTILE_POOLED",
+        "estimate": -3.571428637502582,
+        "excludes_zero": true,
+        "label": "M1, onset - measured (accurate, hostile)",
+        "metric": "m1",
+        "n_items": 14,
+        "n_pairs": 14,
+        "stratum": "easy+hard | hostile",
+        "unavailable_reason": null
+      },
+      {
+        "ci95_lower": 0.1142857142857143,
+        "ci95_upper": 0.4,
+        "ci95_width": 0.2857142857142857,
+        "contrast_id": "H8",
+        "estimate": 0.2571428571428572,
+        "excludes_zero": true,
+        "label": "M2, hostile - neutral (measured, accurate)",
+        "metric": "m2",
+        "n_items": 7,
+        "n_pairs": 7,
+        "stratum": "easy | accurate",
+        "unavailable_reason": null
+      },
+      {
+        "ci95_lower": 0.0,
+        "ci95_upper": 0.15,
+        "ci95_width": 0.15,
+        "contrast_id": "NONANSWER_ACC_POOLED",
+        "estimate": 0.05,
+        "excludes_zero": false,
+        "label": "Non-answer rate, hostile - neutral (measured, accurate)",
+        "metric": "non_answer_rate",
+        "n_items": 20,
+        "n_pairs": 20,
+        "stratum": "easy+hard | accurate",
+        "unavailable_reason": null
+      },
+      {
+        "ci95_lower": 0.0,
+        "ci95_upper": 0.0,
+        "ci95_width": 0.0,
+        "contrast_id": "NONANSWER_MAL_POOLED",
+        "estimate": 0.0,
+        "excludes_zero": false,
+        "label": "Non-answer rate, hostile - neutral (measured, malfunctioning)",
+        "metric": "non_answer_rate",
+        "n_items": 20,
+        "n_pairs": 20,
+        "stratum": "easy+hard | malfunctioning",
+        "unavailable_reason": null
+      }
+    ],
+    "model_id": "google/gemma-2-9b-it",
+    "n_endpoints": 200,
+    "neutral_endpoints": 40,
+    "neutral_parseable_rate": 0.9,
+    "source": "C:\\Users\\ebin\\claude-ground\\Digital Grimace Scale\\.claude\\worktrees\\digital-grimace-scale-experiment-f825fc\\results\\summaries\\phase1\\metric_rows.csv"
+  },
+  "verdicts": [
+    {
+      "confidence_percent": 65,
+      "detail": "W1 -4.635 [-8.556, -1.304]; W2 -2.369 [-6.193, 0.531]; W3 -2.085 [-6.115, 0.885]",
+      "evidence": {
+        "per_set": {
+          "W1": {
+            "estimable": true,
+            "estimate": "-4.635 [-8.556, -1.304]",
+            "meets": true
+          },
+          "W2": {
+            "estimable": true,
+            "estimate": "-2.369 [-6.193, 0.531]",
+            "meets": false
+          },
+          "W3": {
+            "estimable": true,
+            "estimate": "-2.085 [-6.115, 0.885]",
+            "meets": false
+          }
+        }
+      },
+      "id": "W-1",
+      "prediction": "Pooled accurate-arm tone effect on M1 is negative with CI excluding 0 for each of W1, W2, W3.",
+      "verdict": "not supported"
+    },
+    {
+      "confidence_percent": 50,
+      "detail": "frozen -4.954 [-9.312, -1.564]; ratios W1 0.94, W2 0.48, W3 0.42",
+      "evidence": {
+        "frozen_reference": "-4.954 [-9.312, -1.564]",
+        "ratios": {
+          "W1": {
+            "ratio": 0.9356833881385574,
+            "within_factor_2": true
+          },
+          "W2": {
+            "ratio": 0.4782931439390626,
+            "within_factor_2": false
+          },
+          "W3": {
+            "ratio": 0.42088229407726774,
+            "within_factor_2": false
+          }
+        }
+      },
+      "id": "W-2",
+      "prediction": "The three sets' pooled tone effects lie within a factor of 2 of the frozen wording's estimate (ratios in [0.5, 2]).",
+      "verdict": "not supported"
+    },
+    {
+      "confidence_percent": 55,
+      "detail": "positive in 0/3 sets; CI excludes 0 in 0/3",
+      "evidence": {
+        "per_set": {
+          "W1": {
+            "estimate": "-0.050 [-0.150, 0.000]",
+            "excludes_zero": false,
+            "positive": false
+          },
+          "W2": {
+            "estimate": "0.000 [-0.150, 0.150]",
+            "excludes_zero": false,
+            "positive": false
+          },
+          "W3": {
+            "estimate": "-0.050 [-0.150, 0.000]",
+            "excludes_zero": false,
+            "positive": false
+          }
+        },
+        "sets_with_ci_excluding_zero": 0
+      },
+      "id": "W-3",
+      "prediction": "Non-answer rate under hostile tone exceeds neutral for each set (CI excluding 0 for >= 2 of 3).",
+      "verdict": "not supported"
+    },
+    {
+      "confidence_percent": 70,
+      "detail": "H1 -5.779 [-7.742, -4.132]; pooled tone -13.902 [-16.406, -11.400]",
+      "evidence": {
+        "H1": "-5.779 [-7.742, -4.132]",
+        "TONE_ACC_POOLED": "-13.902 [-16.406, -11.400]"
+      },
+      "id": "S-1",
+      "prediction": "H1 (false-failure, neutral, easy) and pooled tone (H2a/H2b) M1 effects are negative with CIs excluding 0 on the 100-item bank.",
+      "verdict": "PASS"
+    },
+    {
+      "confidence_percent": 55,
+      "detail": "H1 ratio 1.52, TONE_ACC_POOLED ratio 2.81",
+      "evidence": {
+        "ratios": {
+          "H1": {
+            "discovery": "-3.800 [-5.206, -2.334]",
+            "fresh": "-5.779 [-7.742, -4.132]",
+            "ratio": 1.5208882518103939,
+            "within_factor_2": true
+          },
+          "TONE_ACC_POOLED": {
+            "discovery": "-4.954 [-9.312, -1.564]",
+            "fresh": "-13.902 [-16.406, -11.400]",
+            "ratio": 2.806096664692043,
+            "within_factor_2": false
+          }
+        }
+      },
+      "id": "S-2",
+      "prediction": "Point estimates lie within a factor of 2 of the discovery estimates for H1 and the pooled tone effect.",
+      "verdict": "not supported"
+    },
+    {
+      "confidence_percent": 85,
+      "detail": "narrower on 4/6 comparable contrasts",
+      "evidence": {
+        "n_comparable": 6,
+        "n_narrower": 4,
+        "widths": {
+          "H1": {
+            "discovery_ci_width": 2.8720315887498367,
+            "fresh_ci_width": 3.6104218149925282,
+            "narrower": false
+          },
+          "H2a": {
+            "discovery_ci_width": 2.8314064806247456,
+            "fresh_ci_width": 6.267406343437331,
+            "narrower": false
+          },
+          "H2b": {
+            "discovery_ci_width": 17.754576125816506,
+            "fresh_ci_width": 8.192469436361165,
+            "narrower": true
+          },
+          "H3a": {
+            "discovery_ci_width": 1.778359731378496,
+            "fresh_ci_width": 0.7619375123744989,
+            "narrower": true
+          },
+          "H3b": {
+            "discovery_ci_width": 7.410937692944527,
+            "fresh_ci_width": 2.754218756702201,
+            "narrower": true
+          },
+          "TONE_ACC_POOLED": {
+            "discovery_ci_width": 7.747426635334198,
+            "fresh_ci_width": 5.00617730905852,
+            "narrower": true
+          }
+        }
+      },
+      "id": "S-3",
+      "prediction": "The 100-item CIs are narrower than the 20-item CIs for the same contrasts.",
+      "verdict": "not supported"
+    },
+    {
+      "confidence_percent": 65,
+      "detail": "27B is below the 50% parseable-answer feasibility floor",
+      "evidence": {
+        "H1": "n/a",
+        "TONE_ACC_POOLED": "n/a"
+      },
+      "id": "G-1",
+      "prediction": "H1 and pooled tone M1 effects are negative with CIs excluding 0 at 27B.",
+      "verdict": "not estimable"
+    },
+    {
+      "confidence_percent": 50,
+      "detail": "a tone effect is unavailable at 27B or 9B",
+      "evidence": {
+        "at_27b": "n/a",
+        "at_9b": "-4.954 [-9.312, -1.564]",
+        "ratio": null
+      },
+      "id": "G-2",
+      "prediction": "The tone effect at 27B is not smaller than at 9B by more than half (ratio >= 0.5).",
+      "verdict": "not estimable"
+    },
+    {
+      "confidence_percent": 60,
+      "detail": "mean 3.950 over 20 endpoints (bar >= 2.0)",
+      "evidence": {
+        "mean_distress_at_hostile_onset": 3.95,
+        "n_scored": 20
+      },
+      "id": "G-3",
+      "prediction": "Hostile-onset distress language is present at 27B (mean >= 2/10).",
+      "verdict": "PASS"
+    }
+  ]
+}

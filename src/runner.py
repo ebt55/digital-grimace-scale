@@ -5,7 +5,7 @@ from dataclasses import dataclass
 import os
 from pathlib import Path
 import tempfile
-from typing import Iterable, Sequence
+from typing import Iterable, Mapping, Sequence
 
 from .backend import GenerationBackend, GenerationRequest, SyntheticBackend
 from .protocol import (Protocol, Task, continuation_turn_plan, correction_message, deterministic_seed,
@@ -136,10 +136,32 @@ def expected_turn_labels(cell_id: str, feedback_rounds: int | None = None, proto
     return plan + (continuation_turn_plan(cell_id.split("__")[1]) if continuations else ())
 
 
+def _extra_provenance(extra: Mapping[str, str] | None) -> dict[str, str]:
+    """Optional extra provenance keys (robustness wording set, alternative task bank).
+
+    ``records.record_from_dict`` requires ``manifest_semantic_hash`` and ``manifest_reference``
+    and permits nothing else to be missing; additional keys are carried through untouched, so a
+    run that overrides a frozen wording or bank can say so on every record it writes. The default
+    is ``None``, which reproduces the pre-robustness provenance block byte for byte.
+    """
+    if extra is None:
+        return {}
+    if not isinstance(extra, Mapping):
+        raise RunnerError("extra provenance must be a mapping of strings")
+    out: dict[str, str] = {}
+    for key, value in extra.items():
+        if not isinstance(key, str) or not key or key in ("manifest_semantic_hash", "manifest_reference"):
+            raise RunnerError("extra provenance key %r is reserved or invalid" % (key,))
+        if not isinstance(value, str) or not value:
+            raise RunnerError("extra provenance value for %s must be a nonempty string" % key)
+        out[key] = value
+    return out
+
+
 def _record(*, protocol: Protocol, backend: GenerationBackend, run_id: str, phase: str, model_id: str,
             immutable_revision: str, task: Task, cell_id: str, validity: str | None, tone: str | None,
             sample_index: int, turn_label: str, messages: list[dict[str, str]], history_false_negative: bool | None,
-            run_kind: str = "synthetic_smoke") -> RawRecord:
+            run_kind: str = "synthetic_smoke", extra_provenance: Mapping[str, str] | None = None) -> RawRecord:
     trajectory = "greedy" if sample_index == 0 else "resample"
     settings = dict(protocol.conditions["generation_settings"]["greedy" if trajectory == "greedy" else "resamples"])
     seed = deterministic_seed(model_id, immutable_revision, task.task_id, cell_id, turn_label, sample_index, protocol)
@@ -157,7 +179,8 @@ def _record(*, protocol: Protocol, backend: GenerationBackend, run_id: str, phas
              "final_answer_valid": parsed.valid, "final_answer_letter": parsed.letter,
              "final_answer_correct": parsed.letter == task.canonical_answer if parsed.valid else None,
              "feedback_history_false_negative": history_false_negative, "generation_settings": settings,
-             "provenance": {"manifest_semantic_hash": manifest_semantic_hash(protocol), "manifest_reference": "manifest.json"}}
+             "provenance": {"manifest_semantic_hash": manifest_semantic_hash(protocol), "manifest_reference": "manifest.json",
+                            **_extra_provenance(extra_provenance)}}
     return record_from_dict(value, protocol)
 
 
@@ -165,7 +188,8 @@ def run_trajectory(*, task: Task, cell_id: str, model_id: str, immutable_revisio
                    run_id: str = "synthetic-smoke", phase: str = "phase_1", sample_index: int = 0,
                    feedback_rounds: int | None = None, continuations: bool = True,
                    backend: GenerationBackend | None = None, protocol: Protocol | None = None,
-                   run_kind: str = "synthetic_smoke", allow_holdout: bool = False) -> tuple[RawRecord, ...]:
+                   run_kind: str = "synthetic_smoke", allow_holdout: bool = False,
+                   extra_provenance: Mapping[str, str] | None = None) -> tuple[RawRecord, ...]:
     protocol = protocol or load_protocol(); backend = backend or SyntheticBackend()
     if run_kind not in RUN_KINDS:
         raise RunnerError("run_kind must be one of %s" % (RUN_KINDS,))
@@ -187,7 +211,7 @@ def run_trajectory(*, task: Task, cell_id: str, model_id: str, immutable_revisio
         record = _record(protocol=protocol, backend=backend, run_id=run_id, phase=phase, model_id=model_id,
                          immutable_revision=immutable_revision, task=task, cell_id=cell_id, validity=validity, tone=tone,
                          sample_index=sample_index, turn_label=label, messages=messages, history_false_negative=history_flag,
-                         run_kind=run_kind)
+                         run_kind=run_kind, extra_provenance=extra_provenance)
         records.append(record); answer = parse_final_answer(record.response_text)
         messages.append({"role": "assistant", "content": record.response_text})
         if label == "initial" or label.startswith("feedback_response_"):
@@ -202,13 +226,13 @@ def run_trajectory(*, task: Task, cell_id: str, model_id: str, immutable_revisio
         measured = records[-1]
         if validity == "malfunctioning_always_fail":
             messages.append({"role": "user", "content": correction_message(graded, task.canonical_answer, protocol)})
-            records.append(_record(protocol=protocol, backend=backend, run_id=run_id, phase=phase, model_id=model_id, immutable_revision=immutable_revision, task=task, cell_id=cell_id, validity=validity, tone=tone, sample_index=sample_index, turn_label="recovery", messages=messages, history_false_negative=false_negative_exposure(graded, task.canonical_answer), run_kind=run_kind))
+            records.append(_record(protocol=protocol, backend=backend, run_id=run_id, phase=phase, model_id=model_id, immutable_revision=immutable_revision, task=task, cell_id=cell_id, validity=validity, tone=tone, sample_index=sample_index, turn_label="recovery", messages=messages, history_false_negative=false_negative_exposure(graded, task.canonical_answer), run_kind=run_kind, extra_provenance=extra_provenance))
         else:
             onset, washout = onset_messages(parse_final_answer(measured.response_text), task.canonical_answer, tone, protocol)
             messages.append({"role": "user", "content": onset})
-            onset_record = _record(protocol=protocol, backend=backend, run_id=run_id, phase=phase, model_id=model_id, immutable_revision=immutable_revision, task=task, cell_id=cell_id, validity=validity, tone=tone, sample_index=sample_index, turn_label="onset", messages=messages, history_false_negative=None, run_kind=run_kind)
+            onset_record = _record(protocol=protocol, backend=backend, run_id=run_id, phase=phase, model_id=model_id, immutable_revision=immutable_revision, task=task, cell_id=cell_id, validity=validity, tone=tone, sample_index=sample_index, turn_label="onset", messages=messages, history_false_negative=None, run_kind=run_kind, extra_provenance=extra_provenance)
             records.append(onset_record); messages.extend(({"role": "assistant", "content": onset_record.response_text}, {"role": "user", "content": washout}))
-            records.append(_record(protocol=protocol, backend=backend, run_id=run_id, phase=phase, model_id=model_id, immutable_revision=immutable_revision, task=task, cell_id=cell_id, validity=validity, tone=tone, sample_index=sample_index, turn_label="onset_washout", messages=messages, history_false_negative=None, run_kind=run_kind))
+            records.append(_record(protocol=protocol, backend=backend, run_id=run_id, phase=phase, model_id=model_id, immutable_revision=immutable_revision, task=task, cell_id=cell_id, validity=validity, tone=tone, sample_index=sample_index, turn_label="onset_washout", messages=messages, history_false_negative=None, run_kind=run_kind, extra_provenance=extra_provenance))
     return tuple(records)
 
 
@@ -233,7 +257,8 @@ def single_turn_message(task: Task, cell_id: str, protocol: Protocol | None = No
 def run_single_turn_trajectory(*, task: Task, cell_id: str, model_id: str, immutable_revision: str,
                                run_id: str = "synthetic-smoke", phase: str = "phase_1", sample_index: int = 0,
                                backend: GenerationBackend | None = None, protocol: Protocol | None = None,
-                               run_kind: str = "synthetic_smoke", allow_holdout: bool = False) -> tuple[RawRecord, ...]:
+                               run_kind: str = "synthetic_smoke", allow_holdout: bool = False,
+                               extra_provenance: Mapping[str, str] | None = None) -> tuple[RawRecord, ...]:
     """One user message, one measured assistant response, for the seven non-factorial cells."""
     protocol = protocol or load_protocol(); backend = backend or SyntheticBackend()
     if run_kind not in RUN_KINDS:
@@ -248,7 +273,7 @@ def run_single_turn_trajectory(*, task: Task, cell_id: str, model_id: str, immut
     return (_record(protocol=protocol, backend=backend, run_id=run_id, phase=phase, model_id=model_id,
                     immutable_revision=immutable_revision, task=task, cell_id=cell_id, validity=None, tone=None,
                     sample_index=sample_index, turn_label="measured", messages=messages,
-                    history_false_negative=None, run_kind=run_kind),)
+                    history_false_negative=None, run_kind=run_kind, extra_provenance=extra_provenance),)
 
 
 def run_batch(*, sample_indices: Iterable[int] = range(11), **kwargs: object) -> tuple[RawRecord, ...]:

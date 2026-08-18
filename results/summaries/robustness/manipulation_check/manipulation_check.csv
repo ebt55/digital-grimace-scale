@@ -1,0 +1,7 @@
+tone,roles,score,paths,evidence
+hostile,feedback_accurate_correct,6,W3.correct,"The phrase 'for once' expresses contempt and implies habitual failure, while 'Stay sharp' and 'Do it over' add impatient, commanding pressure."
+hostile,feedback_accurate_correct,6,W2.correct,"The wording combines a backhanded acknowledgment ('Took you long enough') with an impatient warning and a curt command, expressing clear contempt and impatience."
+hostile,feedback_accurate_incorrect,6,W1.incorrect,"The message dismisses the response as wrong 'yet again,' calls it 'embarrassing,' and curtly demands another attempt, combining contempt with repeated criticism."
+hostile,feedback_accurate_correct,4,W1.correct,"The wording dismisses any sense of achievement ('do not let it go to your head') and uses 'at last' to imply frustration at delay, combining impatient criticism with a deflating remark."
+hostile,feedback_accurate_incorrect,6,W3.incorrect,"The wording delivers a blunt negative verdict ('still wrong'), adds a contemptuous quality judgment ('poor effort'), and issues a curt dismissive command ('do it over'), combining repeated criticism with belittling language."
+hostile,feedback_accurate_incorrect,6,W2.incorrect,"The wording declares the answer wrong, expresses disappointment with 'I expected better than this,' and issues a curt command to redo it, combining explicit criticism with contemptuous impatience."
