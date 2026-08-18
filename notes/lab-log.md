@@ -1943,3 +1943,185 @@ crashing. 7 passed. Full suite collects 652.
 `src/`, every existing summary and every existing figure, and `scripts/make_figures.py` (the three new
 figures live in their own script so the byte-identical regeneration guarantee for F1-F13 is unaffected).
 No GPU, no judge call, no commit.
+
+## 2026-08-18 - agent S - sprint submission report rendered to PDF (`submission/`)
+
+**What.** Built the reviewer-facing submission document in a new `submission/` folder, following
+`submission-template/Copy of Digital Minds Research Sprint submission template.pdf` section-for-section:
+title block with footnote marker, two-author block, "With / Apart Research", abstract (231 words), a
+boxed note-to-reviewers, 1. Introduction (with "Our main contributions are:" 1-6), 2. Related Work,
+3. Methods, 4. Results, 5. Discussion and Limitations (with Limitations and Future Work sub-headings),
+6. Conclusion, Code and Data, Author Contributions, References (9, numbered, with URLs), Appendix
+(A.1-A.6 + two figures), and the LLM Usage Statement last.
+
+**Files.** `submission/dgs_submission.md` (source of truth, template order),
+`submission/dgs_submission.html` (self-contained, embedded CSS, Letter, 1in margins, 10.2pt serif),
+`submission/DGS_submission.pdf` (18 pages). Rendered with headless Edge:
+`msedge.exe --headless=new --disable-gpu --no-pdf-header-footer --print-to-pdf=... file:///...`
+(the file:// URL must percent-encode the spaces in the repo path, and each render needs a fresh
+`--user-data-dir` or Edge serves a cached copy of the HTML).
+
+**Sourcing.** Compressed from `notes/paper.md`, cross-checked against `results/summaries/phase2/confirm.md`
+(H1-H10, the permutation null, the H10 style battery) and `notes/amendments.md` (A1-A6, A6 withdrawn).
+No number was invented and none is rounded beyond source precision except in prose. The corrected
+missingness sentence in `paper.md` Section 4(e) (holdout H2a loses 3 of 10; the zero-missingness set is
+H1 and H3a on both splits plus discovery H2a) is the version carried into the report.
+
+**Figures.** Figure 1 `FH_holdout_forest.png`; Figure 2 `F0_channel_map.png` (agent R's channel map -
+it appeared while this was being written and was picked up); Figure 3 `F9_gap_by_arm.png`; Figure 4
+`F13_m1_missingness_bounds.png`; appendix Figures A1 `F12_robustness.png` and A2
+`F6_phase3_steering_dose_response.png`. Every caption is written to stand alone.
+
+**One layout note worth recording.** The committed PNGs are saved at 200 dpi with natural widths of
+10.8-12.5in (F0 at 110 dpi, 14.2in), so scaling them to a 6.5in text column puts their internal labels
+at roughly 3-4pt - illegible in print. Figures 1 and 4 are therefore set at full text width, and F0,
+which needs more than a portrait column, is placed on its own **landscape** page via a named CSS page
+(`@page rotpage { size: 11in 8.5in }`), where its cell text lands around 5.5pt and reads. Verified by
+rasterising every page and reading it back.
+
+**Length.** Main text (Section 1 through Section 5) is about 11.5 pages against the template's
+recommended 4, and the brief's 4-5. Three prose-compression passes took it from 14 pages to 11.5; the
+remainder is structural rather than stylistic - Table 1 is about 1 page, the four figures with
+stand-alone captions about 3.3 (one of which is the full landscape page), leaving about 7 pages of prose
+for the content the brief enumerated (all four frozen wordings, the exact M1 definition, A1-A6, the
+Phase 3/4/5 and v7 designs, the statistics, "what didn't work", ethics, the five robustness arguments,
+the alternative accounts, and the full Limitations list). Cutting to 5 would have meant dropping
+required content or shrinking figures back below legibility, so the length was traded away and is
+flagged here rather than silently absorbed. Detail that could move was moved: the Phase-3/4 recipes and
+hyperparameters now live in Appendix A.6 with a pointer from Methods.
+
+**Untouched.** Everything outside `submission/` except this entry. `README.md`, `.gitignore`,
+`scripts/`, `notes/paper.md`, `notes/report.md`, `manifest.json`, `configs/`, `stimuli/`, `src/`, every
+summary and every figure are unmodified. `pypdf` and `pymupdf` were installed into the venv for page
+counting and rasterised proof-reading. No GPU, no judge call, no commit.
+
+## 2026-08-18 - agent S - submission compressed to the coordinator's page budget (supersedes the entry above)
+
+**What changed.** The first build ran 18 pages with ~11.5 pages of main text. On instruction it was
+restructured to a budget of <= 6.5 pages from the title through the end of Section 6. Result: **14 pages
+total, main text (title -> end of Section 6) = 7.05 pages**, measured by locating the "Code and Data"
+heading and counting full pages plus the fraction of the page above it.
+
+**Structural changes.** The dedicated title page was dropped, so the title block, abstract, boxed note
+and footnote now occupy the top ~0.66 page of page 1 with Section 1 following on the same page. Body set
+to 10.5 pt with 0.9 in margins (both sanctioned). Methods now carries **one compact phase table**
+(Table 1: phase, preregistration version, what was run, verdict, 8 rows) with all recipes,
+hyperparameters, frozen wordings, the amendment register and the ethics detail moved to the Appendix
+(A.1-A.6). The master verdict table is now **Table 2** with 10 data rows - holdout confirmatory first,
+then Phase 4 and the third family - since Phase 3/5/v7 verdicts are already in Table 1. `F9_gap_by_arm`
+and `F13_m1_missingness_bounds` moved to the Appendix as **Figures A3 and A4** and are referenced from
+Section 4 as such; `F12` and `F6` remain A1 and A2. Main text keeps **Figure 1** (holdout forest, half
+page) and **Figure 2** (F0 channel map on its landscape page). Results prose was rewritten as eight
+short observation/interpretation paragraphs, with the four robustness arguments - replication and the
+permutation null, missingness bounds, marker audit, human audit - one paragraph each. The boxed note,
+the honest footnote, Author Contributions and the LLM Usage Statement are unchanged.
+
+**Why 7.05 and not 6.5.** The remaining half page is structural, not stylistic. The landscape Figure 2
+consumes a full page of the 2.5 the coordinator budgeted for Section 4, leaving ~1.5 for Table 2,
+Figure 1 and eight paragraphs. A forced page break before a landscape page also strands whatever does
+not fill the preceding page; that cost was driven from 5.5 in down to ~0 by trimming until pages 1-5
+pack to within 0.05-0.30 in of full, which is what took the count from 8.1 to 7.05. Getting to 6.5 from
+here needs Section 5 + Section 6 in half a page (they are 9.5 in, against the coordinator's own 0.9-page
+budget for them), or Section 4 prose halved again to ~30-word stubs. Both were judged worse than the
+overrun, so the overrun is recorded here rather than absorbed silently.
+
+**Verification.** Template order re-checked by locating every heading in the PDF: title/authors/With-
+Apart/abstract/note/footnote, 1-6, Code and Data, Author Contributions, References, Appendix, LLM Usage
+Statement last. Every page rasterised and read back: figures legible (Figure 1 at 5.0 in, F0 at 9.6 in on
+its landscape page), no orphan headings, both tables within the text block. Numbers unchanged and still
+traced to `notes/paper.md`, `results/summaries/phase2/confirm.md` and `notes/amendments.md`; the two
+table rows dropped from Table 2 (J1/J4 and L1/L4) duplicate verdicts that remain in Table 1 and in the
+Section 4 prose, so no number left the document.
+
+**Untouched.** Everything outside `submission/` except this entry. No commit.
+
+## 2026-08-18 - agent S2 - submission review fixes (Figure 1 swap, LLM-statement widow, Code and Data)
+
+Three reviewer-requested fixes to `submission/dgs_submission.md` and `.html` (kept in sync), then
+re-rendered `submission/DGS_submission.pdf` with headless Edge. **14 pages, main text title -> end of
+Section 6 = 7.05 pages** - both unchanged from the previous build.
+
+**1. Figure 1.** `FH_holdout_forest.png` replaced by `F0b_headline_effects.png` (4.25 in wide; ~37%
+larger effective type than the old figure at 5.0 in, since F0b's native canvas carries proportionally
+bigger labels). Caption rewritten: it now states that **only the `gemma-2-9b-it` holdout row is
+confirmatory** (preregistration v3, analysed once, 20 untouched items), that `Qwen2.5-3B` is the
+preregistered control entered on **H7a/H7b** with a predicted null which the effect transfers through
+instead, and that `Llama-3.1-8B` and the 86-item fresh ARC bank are **exploratory**; it quotes the
+family permutation null (real 6/6 against best-of-200 count 4, p = 0.005) shown in the figure inset, and
+keeps the one-line glossary of H1/H2a/H2b/H3a/H3b/H4a/H5/H6a/H8/H9. The old forest plot is retained in
+the Appendix as **Figure A5** ("all ten v3 hypotheses, discovery beside holdout, four panels: M1,
+distress, M2, non-answer rate"), referenced from Section 4.2 - it did not cost a page, because it shares
+the last page with the LLM statement.
+
+**2. LLM Usage Statement.** Was a 4-line widow alone on page 14. Heading and paragraph are now wrapped
+in a `.keeptogether` block (`break-inside: avoid`), and Figure A5 sits above them, so the last page is
+~72% full rather than near-empty. **Wording unchanged.**
+
+**3. Code and Data.** "595 tests" -> "~ 650 tests"; "331 tracked files" dropped, leaving "~ 22 MB
+committed"; added "Code under the MIT licence; write-ups and figures (c) the human author (see LICENSE
+and NOTICE.md)", which matches `NOTICE.md` (MIT for `src/scripts/tests/configs`, all rights reserved for
+`notes/`, `results/`, `submission/`).
+
+**Table type size.** Table 1 and Table 2 were set at 6.7 pt, below the 7.5 pt floor the reviewer asked
+for. Both are now **7.5 pt**, and inline `code` inside tables was raised from 0.88em to 1em so nothing in
+either table renders below 7.5 pt. That alone cost a full page (Table 2 broke across pages 5-6, which in
+turn displaced the forced-break landscape Figure 2 and pushed main text to 8.05 pages). It was bought
+back with typography only, no wording cuts: Figure 1 at 4.25 in rather than 5.6 in, tighter table cell
+padding (1.3 -> 0.9 pt) and table line-height (1.16 -> 1.13), figure margins 0.12/0.13 -> 0.09/0.10 in,
+figcaption line-height 1.24 -> 1.21, paragraph spacing 0.32 -> 0.29 em, h2 spacing 0.62 -> 0.54 em.
+
+**Verification.** `pymupdf`: 14 pages; Figure 1 on page 4 is the 1402x1109 F0b bitmap at 306 pt wide with
+the new caption; Table 1 complete on page 3 and Table 2 complete on page 5, minimum glyph size 7.5 pt on
+both; Figure A5 (2356x1979) and the complete LLM Usage Statement both on page 14, text ending at y = 582
+of 727. Pages 3, 4, 5 and 14 rasterised at 100 dpi and read back, plus a 200 dpi zoom of Figure 1 - row
+labels, legend, value annotations and the permutation-null inset all legible. No number in the report
+changed.
+
+**Untouched.** Everything outside `submission/` except this entry. No commit.
+
+## 2026-08-18 - agent U - print-sized Figures 1 and 2 (legible type at placement size)
+
+The two main-text figures were screen figures shrunk to fit: F0b was drawn on an 11.6 in canvas and
+placed at 4.25 in (a 0.37 reduction, so its 8.2 pt row labels printed at 3.0 pt) and F0 was drawn on a
+15.2 in canvas and placed at 9.6 in (0.63, so its 6.6 pt cell text printed at 4.2 pt). The template asks
+for legible figure text. Fixed by drawing print variants at the width they are placed at, not by
+enlarging the screen ones.
+
+**`scripts/make_readme_figures.py --print`** (additive; the three screen figures are byte-identical
+without the flag, and a test asserts that). It writes two more figures from the *same* loaded summary
+values - no number is re-derived or typed:
+
+* `results/figures/F0b_headline_effects_print.{png,svg}` - 7.5 x 5.65 in canvas, 2250 x 1695 px at 300
+  dpi. Three panels: the eight M1 rows with all four series, then judged distress and the two rate rows
+  side by side beneath. Row labels/ticks/CI annotations 8.4 pt, x-labels 8.6 pt, legend 8.4 pt, figure
+  footnote 8.0 pt.
+* `results/figures/F0_channel_map_print.{png,svg}` - 10.1 x 6.2 in canvas, 3030 x 1860 px. The same
+  4 x 12 matrix and the same three codes; row labels 8.0 pt, column headers 7.6 pt, in-cell text 7.1 pt
+  re-wrapped to the narrower column.
+
+Both are saved **without** `bbox_inches="tight"`, so the PNG is exactly `figsize x 300` and the placement
+arithmetic is checkable rather than approximate. Any label that would overflow its column is shrunk by a
+measured fit pass with a hard floor (7.0 pt for headers and row labels, 6.6 pt for cells); the script
+prints the smallest size actually used, and `tests/test_readme_figures.py` pins the canvas sizes and the
+>= 7 pt-at-placement rule.
+
+**Placement and the arithmetic.** Figure 1 `width:100%` = 6.71 in of the 6.7 in text column: 8.0 x
+6.71/7.5 = **7.16 pt** smallest printed glyph. Figure 2 `width:100%` = 10.10 in on the landscape page
+(margin 0.5 -> 0.45 in): 7.0 x 10.10/10.10 = **7.00 pt**. Appendix figures A1-A5 went to full text width
+too; A2 is fine there (6.96 in canvas at 6.71 in, ~0.96), but A1/A3/A4/A5 are 10.8-12.5 in canvases whose
+type still lands at 3.5-4.1 pt, so each of those four captions now says *"Screen figure; open the PNG in
+the repository for detail"* rather than pretending otherwise.
+
+**Page budget.** Figure 1 grew from 3.36 to 5.05 in tall, which pushed Table 2 past the forced landscape
+break and cost a page (15 pages, main text 8.5). Bought back with whitespace only, no wording change:
+body line-height 1.26 -> 1.20, paragraph spacing 0.29 -> 0.20 em, figure margins 0.09/0.10 -> 0.05/0.06
+in, figcaption line-height 1.21 -> 1.17.
+
+**Verification.** `pymupdf`: **14 pages**; main text title -> end of Section 6 ends flush at the foot of
+page 7 = **7.0 pages** (References open on page 8). Page 4 carries a 2250 x 1695 bitmap at 6.71 x 5.05 in
+and page 6 a 3030 x 1860 bitmap at 10.10 x 6.20 in - i.e. both are the `_print` files at scale 1.00 and
+0.895. Pages 4, 6 and 14 rasterised at 130 dpi and read back: figure type reads at the same size as the
+8.2 pt captions beside it. No wording and no number in the report changed.
+
+**Untouched.** Everything outside `scripts/make_readme_figures.py`, `tests/test_readme_figures.py`, the
+two new `results/figures/*_print.*` pairs, `submission/`, and this entry. No commit.

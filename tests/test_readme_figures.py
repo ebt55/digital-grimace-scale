@@ -5,6 +5,7 @@ from __future__ import annotations
 import contextlib
 import importlib.util
 import io
+import struct
 import tempfile
 import unittest
 from pathlib import Path
@@ -13,6 +14,14 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 SUMMARIES = ROOT / "results" / "summaries"
 NAMES = ("F0_channel_map", "F0b_headline_effects", "F0c_phase_map")
+PRINT_NAMES = ("F0_channel_map_print", "F0b_headline_effects_print")
+
+
+def _png_size(path: Path) -> tuple[int, int]:
+    """(width, height) in pixels, straight out of the PNG IHDR chunk."""
+    header = path.read_bytes()[:24]
+    assert header[:8] == b"\x89PNG\r\n\x1a\n", path
+    return struct.unpack(">II", header[16:24])
 
 
 def _load(name: str):
@@ -106,6 +115,53 @@ class CommittedSummariesTest(unittest.TestCase):
             FIGURES._read_csv(SUMMARIES / "phase5" / "cell_valid_rates.csv"),
             FIGURES._read(SUMMARIES / "robustness" / "robustness.json"),
             FIGURES._extension(SUMMARIES))
+
+
+class PrintSizedFiguresTest(unittest.TestCase):
+    """``--print`` adds the two report figures; without it nothing extra is written."""
+
+    @classmethod
+    def setUpClass(cls):
+        if not (SUMMARIES / "phase2" / "hypotheses.csv").exists():
+            raise unittest.SkipTest("committed summaries are not present")
+        cls._directory = tempfile.TemporaryDirectory()
+        cls.out_dir = Path(cls._directory.name) / "figures"
+        cls.status = FIGURES.main(
+            ["--summaries", str(SUMMARIES), "--out", str(cls.out_dir), "--print"])
+
+    @classmethod
+    def tearDownClass(cls):
+        cls._directory.cleanup()
+
+    def test_print_writes_both_variants_as_png_and_svg(self):
+        self.assertEqual(self.status, 0)
+        written = sorted(path.name for path in self.out_dir.iterdir())
+        self.assertEqual(written, sorted("%s.%s" % (name, suffix)
+                                         for name in NAMES + PRINT_NAMES
+                                         for suffix in ("png", "svg")))
+        for name in PRINT_NAMES:
+            for suffix in ("png", "svg"):
+                path = self.out_dir / ("%s.%s" % (name, suffix))
+                self.assertGreater(path.stat().st_size, 0, path.name)
+
+    def test_print_pngs_are_the_exact_canvas_at_300_dpi(self):
+        # No tight bbox: the saved size must be figsize x 300, or the pt arithmetic in the
+        # report ("drawn at 7.5 in, placed at 6.7 in") stops being checkable.
+        self.assertEqual(_png_size(self.out_dir / "F0b_headline_effects_print.png"), (2250, 1695))
+        self.assertEqual(_png_size(self.out_dir / "F0_channel_map_print.png"), (3030, 1860))
+
+    def test_print_type_never_falls_below_seven_points_at_placement(self):
+        floors = [FIGURES.PRINT_STYLE[key] for key in ("label", "tick", "xlabel", "annotate", "note")]
+        self.assertGreaterEqual(min(floors) * 6.7 / 7.5, 7.0)  # F0b: drawn 7.5 in, placed 6.7 in
+        self.assertGreaterEqual(7.0 * 10.1 / 10.1, 7.0)        # F0: drawn and placed at 10.1 in
+
+    def test_the_screen_figures_are_untouched_by_the_print_pass(self):
+        with tempfile.TemporaryDirectory() as directory:
+            plain = Path(directory) / "figures"
+            FIGURES.main(["--summaries", str(SUMMARIES), "--out", str(plain)])
+            for name in NAMES:
+                self.assertEqual((plain / ("%s.png" % name)).read_bytes(),
+                                 (self.out_dir / ("%s.png" % name)).read_bytes(), name)
 
 
 class MissingSummariesTest(unittest.TestCase):

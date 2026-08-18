@@ -2,7 +2,7 @@
 
 Usage:
     .venv\\Scripts\\python.exe scripts/make_readme_figures.py \\
-        --summaries results/summaries --out results/figures
+        --summaries results/summaries --out results/figures [--print]
 
 Like ``scripts/make_figures.py`` this reads *only* committed summaries -- no raw
 records, no re-estimation.  Every number printed on a figure is loaded from a
@@ -10,6 +10,14 @@ JSON/CSV summary and formatted here; nothing is typed in by hand except the
 labels.  Colours are the Okabe-Ito colourblind-safe palette and each figure is
 written as both PNG and SVG.  A figure whose summary is missing is skipped with
 a message on stderr rather than crashing.
+
+``--print`` additionally writes ``F0b_headline_effects_print`` and
+``F0_channel_map_print``: the same numbers and colours re-laid for paper.  The
+screen figures are drawn ~11-15 in wide and shrink to illegibility in a report;
+the print variants are drawn at the width they are *placed* at (or a little
+wider), saved at the exact canvas size -- no ``bbox_inches="tight"`` -- so the
+placement arithmetic is exact: printed pt = matplotlib pt x placement width /
+figure width.  ``--print`` reports the smallest size actually used.
 
 Sources, per figure:
 
@@ -87,6 +95,36 @@ def _save(figure, out_dir: Path, name: str) -> list[Path]:
         written.append(path)
     plt.close(figure)
     return written
+
+
+PRINT_DPI = 300
+
+
+def _save_print(figure, out_dir: Path, name: str) -> list[Path]:
+    """Save at the exact canvas size: a tight bbox would break the pt arithmetic."""
+    out_dir.mkdir(parents=True, exist_ok=True)
+    written = []
+    for suffix in ("png", "svg"):
+        path = out_dir / ("%s.%s" % (name, suffix))
+        figure.savefig(path, dpi=PRINT_DPI, facecolor="white")
+        written.append(path)
+    plt.close(figure)
+    return written
+
+
+def _fit(figure, text, limit_points: float, floor: float) -> float:
+    """Shrink one text object until it is at most `limit_points` wide; never below `floor`."""
+    renderer = figure.canvas.get_renderer()
+    while text.get_fontsize() > floor:
+        if text.get_window_extent(renderer).width * 72.0 / figure.dpi <= limit_points:
+            break
+        text.set_fontsize(round(text.get_fontsize() - 0.1, 2))
+    return text.get_fontsize()
+
+
+def _rewrap(text: str, width: int) -> str:
+    """Re-wrap each authored line to a narrower character budget, keeping the words."""
+    return "\n".join(_wrap(line, width) for line in text.split("\n"))
 
 
 # ------------------------------------------------------------------ formatting
@@ -405,6 +443,113 @@ def figure_channel_map(cells: dict, out_dir: Path) -> list[Path]:
     return _save(figure, out_dir, "F0_channel_map")
 
 
+# -------------------------------------------- F0 print: the same map, for paper
+
+PRINT_CHANNEL_COLUMNS = (
+    "false-failure\nfeedback × 3\n(neutral tone)",
+    "hostile tone\n(truthful\nfeedback)",
+    "single bogus\nverdict\n(onset)",
+    "truthful\ncorrection\n(washout)",
+    "style prompts\n(verbose,\ncautious, …)",
+    "tone-direction\nsteering\n(Phase 3, α = 2)",
+    "distress-DPO\nadapter A",
+    "placebo DPO\nadapter B",
+    "base model\n(gemma-2-9b)",
+    "Qwen2.5-3B\n(control)",
+    "Llama-3.1-8B\n(third family)",
+    "gemma-2-27b-it\n(scale)",
+)
+PRINT_CHANNEL_ROWS = (
+    "answer margin\nM1 (nats)",
+    "non-answers\n(rate)",
+    "resample\ndisagreement\nM2",
+    "distress\nlanguage\n(judge, 0–10)",
+)
+
+
+def figure_channel_map_print(cells: dict, out_dir: Path) -> tuple[list[Path], float]:
+    """F0 laid out for a landscape page: drawn at 10.1 in, placed at 10.1 in."""
+    if not cells:
+        return ([], 0.0)
+    n_rows, n_cols = len(PRINT_CHANNEL_ROWS), len(PRINT_CHANNEL_COLUMNS)
+    width, height = 10.1, 6.2
+    label_zone, right_pad = 0.94, 0.06
+    axes_bottom, axes_height = 0.92, 4.20
+
+    figure = plt.figure(figsize=(width, height))
+    axes = figure.add_axes([label_zone / width, axes_bottom / height,
+                            (width - label_zone - right_pad) / width, axes_height / height])
+    axes.set_xlim(0, n_cols)
+    axes.set_ylim(n_rows, 0)
+
+    column_points = (width - label_zone - right_pad) / n_cols * 72.0
+    cell_limit, header_limit = column_points * 0.88, column_points * 0.97
+    smallest = 99.0
+
+    for (row, column), (code, text) in sorted(cells.items()):
+        axes.add_patch(Rectangle(
+            (column + 0.04, row + 0.06), 0.92, 0.88,
+            facecolor=CODE_FACE[code], edgecolor=CODE_EDGE[code], linewidth=0.8,
+            hatch="///" if code == NA else None))
+        axes.text(column + 0.5, row + 0.22, CODE_GLYPH[code], ha="center", va="center",
+                  fontsize=9, color=CODE_EDGE[code] if code != NA else "#8A8A8A")
+        drawn = axes.text(column + 0.5, row + 0.62, _rewrap(text, 11), ha="center", va="center",
+                          fontsize=7.1, color=INK if code != NA else MUTED, linespacing=1.42)
+        smallest = min(smallest, _fit(figure, drawn, cell_limit, 6.6))
+
+    axes.set_xticks([index + 0.5 for index in range(n_cols)])
+    axes.set_xticklabels(PRINT_CHANNEL_COLUMNS, fontsize=7.6, ha="center", linespacing=1.34)
+    axes.xaxis.set_ticks_position("top")
+    for label in axes.get_xticklabels():
+        smallest = min(smallest, _fit(figure, label, header_limit, 7.0))
+    axes.set_yticks([index + 0.5 for index in range(n_rows)])
+    axes.set_yticklabels(PRINT_CHANNEL_ROWS, fontsize=8.0, linespacing=1.38)
+    for label in axes.get_yticklabels():
+        smallest = min(smallest, _fit(figure, label, label_zone * 72.0 - 8.0, 7.0))
+    axes.tick_params(length=0)
+    for spine in axes.spines.values():
+        spine.set_visible(False)
+    axes.axvline(8, color=HAIRLINE, linewidth=1.3)
+
+    def fy(inches: float) -> float:
+        return inches / height
+
+    header_top = axes_bottom + axes_height
+    matrix = width - label_zone - right_pad
+    for centre, band in ((4.0, "manipulations and interventions · primary model, gemma-2-9b-it"),
+                         (10.0, "the same manipulations in other models")):
+        figure.text((label_zone + matrix * centre / n_cols) / width, fy(header_top + 0.52), band,
+                    ha="center", va="center", fontsize=7.8, color=MUTED, style="italic")
+
+    handles = [
+        Patch(facecolor=CODE_FACE[MOVES], edgecolor=CODE_EDGE[MOVES],
+              label="moves — CI excludes 0, or the stated verdict is a move"),
+        Patch(facecolor=CODE_FACE[FLAT], edgecolor=CODE_EDGE[FLAT],
+              label="no move — measured; CI includes 0, at the floor, or unchanged"),
+        Patch(facecolor=CODE_FACE[NA], edgecolor=CODE_EDGE[NA], hatch="///",
+              label="not measurable — feasibility gate, parse failure, or not run"),
+    ]
+    figure.legend(handles=handles, loc="upper left", bbox_to_anchor=(0.09, fy(axes_bottom - 0.06)),
+                  ncol=2, frameon=False, fontsize=7.6, handlelength=1.5, columnspacing=2.4,
+                  labelspacing=0.35)
+
+    figure.text(0.008, fy(height - 0.10), "F0 · Which channel moves under what",
+                ha="left", va="top", fontsize=11.5, fontweight="bold", color=INK)
+    figure.text(0.008, fy(height - 0.34),
+                "Holdout confirmatory values where they exist; otherwise the phase's own "
+                "preregistered headline. M1 in nats, distress on the judge's 0–10 scale, "
+                "non-answers and M2 as rates.",
+                ha="left", va="top", fontsize=8.0, color=MUTED)
+    figure.text(0.008, fy(0.04),
+                "Phase-4 cells quote each channel's preregistered headline: the K4 adverse−neutral "
+                "M1 gap, difference-in-differences for M2 and non-answers, manipulation check MC1 "
+                "for distress.\n"
+                "† a move that counts against the grimace reading — a style prompt reproduces the "
+                "channel, so M2 is a style meter rather than a marker.\n" + CEILING,
+                ha="left", va="bottom", fontsize=7.2, color=MUTED, linespacing=1.5)
+    return (_save_print(figure, out_dir, "F0_channel_map_print"), smallest)
+
+
 # ----------------------------------------------- F0b: the headline forest plot
 
 M1_ROWS = (
@@ -468,31 +613,45 @@ def _forest_values(hypotheses, extension, missingness, robustness) -> dict:
     return out
 
 
-def _forest_panel(axes, rows, values, xlabel, note=None):
+# ``None`` means "leave matplotlib's default alone" -- the screen figures must not move.
+SCREEN_STYLE = dict(series=SERIES, label=8.2, tick=8.0, xlabel=8.4, annotate=6.8, note=7.2,
+                    lift=8, top=-0.7, widths=(2.2, 1.2), leading=None, labelpad=None, tickpad=None)
+
+
+def _kw(**pairs) -> dict:
+    return {key: value for key, value in pairs.items() if value is not None}
+
+
+def _forest_panel(axes, rows, values, xlabel, note=None, style=None):
+    style = style or SCREEN_STYLE
+    heavy, light = style["widths"]
     axes.axvline(0.0, color=INK, linewidth=0.9, zorder=1)
     for index, (row_id, label) in enumerate(rows):
         if index % 2 == 0:
             axes.axhspan(index - 0.5, index + 0.5, color="#F7F7F7", zorder=0)
-        for name, _, colour, marker, size, offset in SERIES:
+        for name, _, colour, marker, size, offset in style["series"]:
             entry = values.get(name, {}).get(row_id)
             if entry is None:
                 continue
             estimate, low, high = entry
             position = index + offset
             axes.plot([low, high], [position, position], color=colour,
-                      linewidth=2.2 if name == "gemma" else 1.2, solid_capstyle="round", zorder=3)
+                      linewidth=heavy if name == "gemma" else light, solid_capstyle="round",
+                      zorder=3)
             axes.plot([estimate], [position], marker=marker, markersize=size, color=colour,
                       markeredgecolor="white", markeredgewidth=0.7 if name == "gemma" else 0.4,
                       zorder=4)
             if name == "gemma":
                 axes.annotate("%s [%s, %s]" % (_n(estimate), _n(low), _n(high)),
-                              (estimate, position), textcoords="offset points", xytext=(0, 8),
-                              ha="center", fontsize=6.8, color=INK)
+                              (estimate, position), textcoords="offset points",
+                              xytext=(0, style["lift"]), ha="center", fontsize=style["annotate"],
+                              color=INK)
     axes.set_yticks(range(len(rows)))
-    axes.set_yticklabels([label for _, label in rows], fontsize=8.2)
-    axes.set_ylim(len(rows) - 0.5, -0.7)
-    axes.set_xlabel(xlabel, fontsize=8.4)
-    axes.tick_params(axis="x", labelsize=8)
+    axes.set_yticklabels([label for _, label in rows], fontsize=style["label"],
+                         **_kw(linespacing=style["leading"]))
+    axes.set_ylim(len(rows) - 0.5, style["top"])
+    axes.set_xlabel(xlabel, fontsize=style["xlabel"], **_kw(labelpad=style["labelpad"]))
+    axes.tick_params(axis="x", labelsize=style["tick"], **_kw(pad=style["tickpad"]))
     axes.tick_params(axis="y", length=0)
     for side in ("top", "right", "left"):
         axes.spines[side].set_visible(False)
@@ -500,7 +659,7 @@ def _forest_panel(axes, rows, values, xlabel, note=None):
     axes.set_axisbelow(True)
     if note:
         axes.text(0.012, 0.035, note, transform=axes.transAxes, ha="left", va="bottom",
-                  fontsize=7.2, color=MUTED, linespacing=1.5,
+                  fontsize=style["note"], color=MUTED, linespacing=1.5,
                   bbox=dict(boxstyle="round,pad=0.45", facecolor="white", edgecolor=HAIRLINE))
 
 
@@ -537,6 +696,89 @@ def figure_headline_effects(values: dict, null_p, null_detail: str, out_dir: Pat
                 ha="left", fontsize=7.4, color=MUTED, linespacing=1.5)
     _ = null_p
     return _save(figure, out_dir, "F0b_headline_effects")
+
+
+# ------------------------------------------ F0b print: the same forest, for paper
+
+PRINT_M1_ROWS = (
+    ("H1", "H1  false failure × 3\neasy · neutral"),
+    ("tone_pooled", "pooled tone\neasy+hard · truthful"),
+    ("H2a", "H2a  hostile tone\neasy · truthful"),
+    ("H2b", "H2b  hostile tone\nhard · truthful"),
+    ("H3a", "H3a  one bogus verdict\neasy · neutral"),
+    ("H3b", "H3b  one bogus verdict\neasy · hostile"),
+    ("H4a", "H4a  truthful washout\neasy · neutral"),
+    ("H5", "H5  correction after × 3\nhard · neutral"),
+)
+PRINT_DISTRESS_ROWS = (("H6a", "H6a  distress\nhostile − neutral onset"),)
+PRINT_RATE_ROWS = (
+    ("H8", "H8  M2 disagreement\nhostile − neutral"),
+    ("H9", "H9  non-answers\nhostile − neutral onset"),
+)
+PRINT_SERIES = (
+    ("gemma", "gemma-2-9b-it · holdout, confirmatory", BLUE, "o", 5.0, -0.14),
+    ("fresh", "gemma-2-9b-it · 86 fresh ARC items (v7 S)", GREEN, "D", 3.4, -0.02),
+    ("qwen", "Qwen2.5-3B-Instruct · control", ORANGE, "s", 3.4, 0.10),
+    ("llama", "Llama-3.1-8B-Instruct · third family", PURPLE, "^", 3.6, 0.22),
+)
+PRINT_STYLE = dict(series=PRINT_SERIES, label=8.4, tick=8.4, xlabel=8.6, annotate=8.2, note=8.2,
+                   lift=4, top=-0.62, widths=(1.7, 1.0), leading=1.22, labelpad=1.6, tickpad=1.4)
+
+
+def figure_headline_effects_print(values: dict, null_detail: str,
+                                  out_dir: Path) -> tuple[list[Path], float]:
+    """F0b for a text column: drawn at 7.5 in, placed at 6.7 in (a 0.893 reduction)."""
+    if not values.get("gemma"):
+        return ([], 0.0)
+    width, height = 7.5, 5.65
+    figure = plt.figure(figsize=(width, height))
+
+    def rect(x0, y0, x1, y1):
+        return [x0 / width, y0 / height, (x1 - x0) / width, (y1 - y0) / height]
+
+    margin, small_margin = 1.55, 1.48
+    m1_axes = figure.add_axes(rect(margin, 2.08, width - 0.12, 4.78))
+    distress_axes = figure.add_axes(rect(small_margin, 1.00, 3.58, 1.68))
+    rate_axes = figure.add_axes(rect(5.34, 1.00, width - 0.12, 1.68))
+
+    note = "family-level permutation null\n%s" % null_detail if null_detail else None
+    _forest_panel(m1_axes, PRINT_M1_ROWS, values,
+                  "answer margin M1, item-paired difference (nats)", note=note, style=PRINT_STYLE)
+    _forest_panel(distress_axes, PRINT_DISTRESS_ROWS, values,
+                  "judged distress, paired difference (0–10)", style=PRINT_STYLE)
+    _forest_panel(rate_axes, PRINT_RATE_ROWS, values, "item-paired difference in rate",
+                  style=PRINT_STYLE)
+
+    handles = [Line2D([0], [0], color=colour, marker=marker, markersize=size,
+                      markeredgecolor="white", linewidth=1.7 if name == "gemma" else 1.0,
+                      label=label)
+               for name, label, colour, marker, size, _ in PRINT_SERIES]
+    figure.legend(handles=handles, loc="lower left", bbox_to_anchor=(margin / width, 4.80 / height),
+                  ncol=2, frameon=False, fontsize=8.4, handlelength=1.9, columnspacing=1.4,
+                  labelspacing=0.3)
+
+    figure.text(0.012, (height - 0.01) / height,
+                "F0b · The confirmed signature, and who else shows it",
+                ha="left", va="top", fontsize=11.5, fontweight="bold", color=INK)
+    figure.text(0.012, (height - 0.19) / height,
+                "Item-paired mean differences with 2,000-resample item-clustered bootstrap 95% "
+                "percentile CIs.\nBars crossing 0 are not supported.",
+                ha="left", va="top", fontsize=8.0, color=MUTED, linespacing=1.4)
+    footnote = figure.text(
+        0.012, 0.04 / height,
+        "Only the gemma-2-9b-it holdout row is confirmatory (preregistration v3, analysed once). "
+        "The control was\npreregistered on H7a/H7b only; Llama-3.1-8B and the 86-item fresh bank "
+        "are exploratory. Pooled-tone rows come\nfrom the MNAR sensitivity table's published "
+        "available-case estimate. "
+        + CEILING.replace("functional measurement", "functional\nmeasurement"),
+        ha="left", va="bottom", fontsize=8.0, color=MUTED, linespacing=1.4)
+
+    smallest = _fit(figure, footnote, (width - 0.16) * 72.0, 7.9)
+    for axes in (m1_axes, distress_axes, rate_axes):
+        limit = (margin if axes is m1_axes else small_margin) * 72.0 - 7.0
+        for label in axes.get_yticklabels():
+            smallest = min(smallest, _fit(figure, label, limit, 7.9))
+    return (_save_print(figure, out_dir, "F0b_headline_effects_print"), smallest)
 
 
 # ----------------------------------------------------- F0c: the phase timeline
@@ -723,6 +965,8 @@ def parse_args(argv=None):
         description="Build the three README figures from committed summaries.")
     parser.add_argument("--summaries", default="results/summaries", help="committed summary root")
     parser.add_argument("--out", default="results/figures", help="figure output directory")
+    parser.add_argument("--print", dest="print_sized", action="store_true",
+                        help="also write the print-sized F0b and F0 variants used by the report")
     return parser.parse_args(argv)
 
 
@@ -743,6 +987,7 @@ def main(argv=None) -> int:
     extension = _extension(summaries)
 
     written: list[Path] = []
+    smallest: dict[str, float] = {}
 
     if not hypotheses or gates is None:
         print("skipping F0_channel_map: need phase2/hypotheses.csv and phase1/gates.json",
@@ -751,6 +996,10 @@ def main(argv=None) -> int:
         cells = _channel_cells(summaries, hypotheses, gates, confirm, steering, steering_judge,
                                phase4, cell_rates, robustness, extension)
         written += figure_channel_map(cells, out_dir)
+        if args.print_sized:
+            paths, floor = figure_channel_map_print(cells, out_dir)
+            written += paths
+            smallest["F0_channel_map_print (10.1 in canvas, placed 10.1 in)"] = floor
 
     if not hypotheses:
         print("skipping F0b_headline_effects: no phase2/hypotheses.csv", file=sys.stderr)
@@ -767,6 +1016,10 @@ def main(argv=None) -> int:
                          sum(histogram.values()) if histogram else 200, best,
                          _n(null_check["null_p"], 3, sign=False)))
         written += figure_headline_effects(values, null_check.get("null_p"), detail, out_dir)
+        if args.print_sized:
+            paths, floor = figure_headline_effects_print(values, detail, out_dir)
+            written += paths
+            smallest["F0b_headline_effects_print (7.5 in canvas, placed 6.7 in)"] = floor * 6.7 / 7.5
 
     if gates is None and confirm is None:
         print("skipping F0c_phase_map: no phase1/gates.json and no phase2/confirm.json",
@@ -777,6 +1030,8 @@ def main(argv=None) -> int:
 
     for path in written:
         print("wrote %s" % path)
+    for name, floor in smallest.items():
+        print("smallest printed type in %s: %.2f pt" % (name, floor))
     return 0 if written else 2
 
 
