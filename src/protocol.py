@@ -163,6 +163,37 @@ def _merge_model_extension(base: Path, models: Mapping[str, Any]) -> Mapping[str
     return result
 
 
+def model_entry(protocol: Protocol, model_id: str) -> Mapping[str, Any] | None:
+    """The configured entry for one model id, from the locked list or the extension file."""
+    for item in protocol.models.get("models", ()):
+        if isinstance(item, Mapping) and item.get("id") == model_id:
+            return item
+    return None
+
+
+def model_stop_sequences(protocol: Protocol, model_id: str) -> tuple[str, ...]:
+    """Optional per-model stop strings; `()` for every model that does not declare any.
+
+    Only models served through a plain-text template need these (a pretrained base model
+    with no chat markup happily writes the next `User:` turn itself).  The field is absent
+    from every locked model entry, so this returns `()` and the request is byte-identical to
+    the one made before Phase 5 existed.
+    """
+    entry = model_entry(protocol, model_id)
+    value = entry.get("stop_sequences") if entry is not None else None
+    if value is None:
+        return ()
+    if isinstance(value, str) or not isinstance(value, Sequence):
+        raise ProtocolError("stop_sequences for %s must be a list of strings" % model_id)
+    out: list[str] = []
+    for item in value:
+        if not isinstance(item, str) or not item:
+            raise ProtocolError("stop_sequences for %s must be nonempty strings" % model_id)
+        if item not in out:
+            out.append(item)
+    return tuple(out)
+
+
 def load_protocol(root: str | Path | None = None) -> Protocol:
     base = _root(root)
     conditions = _freeze(_json(base / "configs" / "conditions.json"))

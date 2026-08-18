@@ -19,7 +19,7 @@ if str(ROOT) not in sys.path:
 
 from src.backend import BackendError  # noqa: E402  (httpx is imported lazily inside the client)
 from src.generate import GenerateError, format_progress, format_summary, run_jobs  # noqa: E402
-from src.protocol import Protocol, ProtocolError, load_protocol  # noqa: E402
+from src.protocol import Protocol, ProtocolError, load_protocol, model_stop_sequences  # noqa: E402
 from src.runner import (RunnerError, plan_phase0_jobs, plan_phase1_model_jobs,  # noqa: E402
                         plan_phase2_model_jobs, plan_r5_jobs, plan_style_battery_jobs,
                         plan_style_smoke_jobs)
@@ -93,13 +93,14 @@ def _resolve_revision(args: argparse.Namespace, protocol: Protocol, parser: argp
     return revision
 
 
-def _backend(args: argparse.Namespace):
+def _backend(args: argparse.Namespace, stop: Sequence[str] = ()):
     if args.synthetic:
         from src.backend import SyntheticBackend
         return SyntheticBackend()
     from src.backend import OpenAICompatBackend
     return OpenAICompatBackend(args.endpoint, args.model, api_key=args.api_key,
-                               timeout_s=args.timeout, max_retries=args.max_retries)
+                               timeout_s=args.timeout, max_retries=args.max_retries,
+                               stop=stop or None)
 
 
 def _require_holdout_unlock(args: argparse.Namespace, protocol: Protocol, parser: argparse.ArgumentParser) -> Mapping[str, object]:
@@ -197,8 +198,19 @@ def main(argv: Sequence[str] | None = None) -> int:
     out_dir = Path(args.out) if args.out else ROOT / DEFAULT_OUT[args.command]
     out_path = Path(out_dir) / ("%s.jsonl" % _model_slug(args.model))
 
+    try:
+        stop = model_stop_sequences(protocol, args.model)
+    except ProtocolError as exc:
+        parser.error(str(exc))
+
     print("phase %s | model %s | revision %s | run_kind %s | run_id %s" % (
         args.command, args.model, revision, run_kind, run_id))
+    # The frozen `generation_settings` recorded on every record are exactly the ones in
+    # configs/conditions.json and stay untouched; stop strings are a serving-side detail of
+    # the plain-text template, so they are printed here (and recorded in the phase summary)
+    # rather than smuggled into the frozen block.
+    print("stop sequences: %s" % (", ".join(repr(item) for item in stop) if stop
+                                  else "none (frozen request shape)"))
     if unlock is not None:
         print("HOLDOUT UNLOCKED | frozen analysis commit %s | unlocked_at %s | preregistration_v3_sha256 %s" % (
             unlock["frozen_analysis_commit"], unlock["unlocked_at"], unlock["preregistration_v3_sha256"]))
@@ -208,7 +220,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     if args.dry_run:
         return 0
 
-    backend = _backend(args)
+    backend = _backend(args, stop)
     try:
         summary = run_jobs(jobs, backend=backend, out_path=out_path, immutable_revision=revision,
                            run_id=run_id, run_kind=run_kind, sample_indices=args.samples,

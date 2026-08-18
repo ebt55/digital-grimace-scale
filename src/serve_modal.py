@@ -26,6 +26,27 @@ mounted; the app name, the startup guard and `--served-model-name` all follow
 be mistaken for it downstream.  `DGS_REVISION` is not passed to vLLM in this mode (a local
 directory has no Hugging Face revision); it stays a manifest-side pin only.
 
+Phase 5 (preregistration v6) serves *pretrained base* models, which have no chat template
+at all, through one fixed plain-text rendering.  `DGS_CHAT_TEMPLATE=plain` bakes the
+template below into the image and hands it to vLLM as `--chat-template`::
+
+    $env:DGS_MODEL_ID='google/gemma-2-9b'
+    $env:DGS_REVISION='<40-hex sha>'
+    $env:DGS_CHAT_TEMPLATE='plain'
+    C:\\...\\.venv\\Scripts\\python.exe -m modal deploy src/serve_modal.py
+
+    # the instruction-tuned sibling under the SAME rendering, as the format control:
+    $env:DGS_MODEL_ID='google/gemma-2-9b-it'
+    $env:DGS_SERVED_NAME='google/gemma-2-9b-it+plain'   # -> app dgs-vllm-gemma-2-9b-it-plain
+    $env:DGS_CHAT_TEMPLATE='plain'
+
+`DGS_SERVED_NAME` is accepted for a Hugging Face id only together with `DGS_CHAT_TEMPLATE`:
+the rename then denotes a genuinely different serving configuration (same weights, other
+rendering) rather than a silent mislabelling, and the app name, `--served-model-name` and
+the startup guard all follow it exactly as in the local-weights mode.  Without either
+variable the resolved configuration, the image environment and the vLLM command are
+byte-identical to a pre-Phase-4 Hugging Face deployment.
+
 Deploy prints the web URL; the OpenAI base URL is that URL with `/v1` appended::
 
     OpenAICompatBackend("https://<workspace>--dgs-vllm-gemma-2-2b-it-serve.modal.run/v1",
@@ -60,6 +81,7 @@ secret, and never committed.
 """
 from __future__ import annotations
 
+import base64
 import os
 import re
 import subprocess
@@ -80,6 +102,30 @@ BAKED_PREFIX = "DGS_BAKED_"
 # Locally merged weights (Phase 4) live on this volume, mounted at this container path.
 ADAPTER_VOLUME = "dgs-adapters"
 ADAPTER_MOUNT = "/adapters"
+# Phase 5: where the baked chat template lands inside the image.
+CHAT_TEMPLATE_PATH = "/root/dgs_chat_template.jinja"
+
+# The one plain-text rendering preregistration v6 fixes for base models, written with every
+# separator as an explicit string literal: transformers compiles chat templates with
+# `trim_blocks`/`lstrip_blocks` enabled, which would silently eat literal newlines placed
+# around block tags.  Each user turn renders as "User: <content>", each assistant turn as
+# "Assistant: <content>", turns are separated by a blank line, and a generation prompt ends
+# in "Assistant:" with NO trailing space -- so the model's first generated token is an
+# ordinary leading-space word piece rather than a dangling whitespace token.  `bos_token` is
+# emitted for the same reason Gemma's own template emits it: vLLM tokenizes the rendered
+# chat prompt with `add_special_tokens=False`, so the template owns the BOS.
+PLAIN_CHAT_TEMPLATE = (
+    "{{ bos_token }}"
+    "{% for message in messages %}"
+    "{% if message['role'] == 'user' %}{{ 'User: ' + message['content'] }}"
+    "{% elif message['role'] == 'assistant' %}{{ 'Assistant: ' + message['content'] }}"
+    "{% else %}{{ raise_exception('plain-text template accepts only user and assistant roles, "
+    "got: ' + message['role']) }}{% endif %}"
+    "{% if not loop.last %}{{ '\\n\\n' }}{% endif %}"
+    "{% endfor %}"
+    "{% if add_generation_prompt %}{{ '\\n\\nAssistant:' }}{% endif %}"
+)
+CHAT_TEMPLATES = {"plain": PLAIN_CHAT_TEMPLATE}
 
 
 class ConfigError(RuntimeError):
@@ -87,19 +133,29 @@ class ConfigError(RuntimeError):
 
 
 def _local_weights(config: dict[str, str]) -> dict[str, str]:
-    """Validate and complete the optional local-merged-weights configuration.
+    """Validate and complete the optional local-weights / plain-template configuration.
 
     Serving a directory instead of a Hugging Face id is only safe if the advertised name is
     stated explicitly: the app name, the startup guard and every downstream `model_id` are
     derived from it, and a path alone would leave all three pointing at the base model.
+
+    A Hugging Face id may be renamed only when a non-default chat template is also baked in.
+    That combination is a different *serving configuration* of the same weights (Phase 5's
+    `google/gemma-2-9b-it+plain`), which downstream records must be able to tell apart from
+    the ordinary deployment; a rename on its own would just mislabel the weights.
     """
     model_path, served_name = config["model_path"], config["served_name"]
+    chat_template = config["chat_template"]
+    if chat_template and chat_template not in CHAT_TEMPLATES:
+        raise ConfigError("DGS_CHAT_TEMPLATE must be one of %s, got %r"
+                          % (sorted(CHAT_TEMPLATES), chat_template))
     if model_path and not served_name:
         raise ConfigError("DGS_MODEL_PATH requires DGS_SERVED_NAME: the served id is what the app "
                           "name, the startup guard and every recorded model_id are derived from")
-    if served_name and not model_path:
-        raise ConfigError("DGS_SERVED_NAME requires DGS_MODEL_PATH: renaming a Hugging Face model "
-                          "would make the recorded id disagree with the weights")
+    if served_name and not model_path and not chat_template:
+        raise ConfigError("DGS_SERVED_NAME requires DGS_MODEL_PATH or DGS_CHAT_TEMPLATE: renaming a "
+                          "Hugging Face model served under its own template would make the recorded "
+                          "id disagree with the weights")
     if model_path and not model_path.startswith("%s/" % ADAPTER_MOUNT):
         raise ConfigError("DGS_MODEL_PATH must be an absolute container path under %s/ (the %s "
                           "volume mount point), got %r" % (ADAPTER_MOUNT, ADAPTER_VOLUME, model_path))
@@ -132,6 +188,7 @@ def resolve_config(env: Mapping[str, str]) -> dict[str, str]:
             "attention_backend": (env.get("%sATTENTION_BACKEND" % BAKED_PREFIX) or "").strip(),
             "model_path": (env.get("%sMODEL_PATH" % BAKED_PREFIX) or "").strip(),
             "served_name": (env.get("%sSERVED_NAME" % BAKED_PREFIX) or "").strip(),
+            "chat_template": (env.get("%sCHAT_TEMPLATE" % BAKED_PREFIX) or "").strip(),
             "source": "baked",
         })
     model_id = (env.get("DGS_MODEL_ID") or DEFAULT_MODEL_ID).strip()
@@ -143,6 +200,7 @@ def resolve_config(env: Mapping[str, str]) -> dict[str, str]:
         "attention_backend": (env.get("DGS_ATTENTION_BACKEND") or "").strip(),
         "model_path": (env.get("DGS_MODEL_PATH") or "").strip(),
         "served_name": (env.get("DGS_SERVED_NAME") or "").strip(),
+        "chat_template": (env.get("DGS_CHAT_TEMPLATE") or "").strip(),
         "source": "environment",
     })
 
@@ -173,6 +231,7 @@ MODEL_ID = CONFIG["model_id"]
 REVISION = CONFIG["revision"] or None
 MODEL_PATH = CONFIG["model_path"] or None
 SERVED_NAME = CONFIG["served_name"]
+CHAT_TEMPLATE = CONFIG["chat_template"] or None
 GPU = CONFIG["gpu"] or default_gpu(SERVED_NAME)
 VLLM_VERSION = CONFIG["vllm_version"]
 ATTENTION_BACKEND = CONFIG["attention_backend"] or None
@@ -190,6 +249,10 @@ if MODEL_PATH:
     # Added only in the local-weights mode, so a Hugging Face deployment bakes -- and therefore
     # builds -- byte-identically to every image built before Phase 4.
     BAKED_ENVIRONMENT["%sMODEL_PATH" % BAKED_PREFIX] = MODEL_PATH
+if CHAT_TEMPLATE:
+    # Added only in the plain-template mode, for the same reason.
+    BAKED_ENVIRONMENT["%sCHAT_TEMPLATE" % BAKED_PREFIX] = CHAT_TEMPLATE
+if MODEL_PATH or CHAT_TEMPLATE:
     BAKED_ENVIRONMENT["%sSERVED_NAME" % BAKED_PREFIX] = SERVED_NAME
 
 
@@ -226,7 +289,23 @@ def vllm_command() -> list[str]:
     if REVISION and not MODEL_PATH:
         # A local directory has no Hugging Face revision; passing one would abort the server.
         command += ["--revision", REVISION]
+    if CHAT_TEMPLATE:
+        # A pretrained base model ships no chat template at all, so the rendering has to be
+        # supplied by the server; the instruction-tuned control overrides its own with it.
+        command += ["--chat-template", CHAT_TEMPLATE_PATH]
     return command
+
+
+def chat_template_command(template: str) -> str:
+    """Shell command that writes the named template into the image, byte for byte.
+
+    Base64 keeps the template's newlines and quoting out of the shell entirely, and the
+    command is a pure function of the template text, so the image layer is stable across
+    redeploys and no local file has to exist when the container re-imports this module.
+    """
+    encoded = base64.b64encode(CHAT_TEMPLATES[template].encode("utf-8")).decode("ascii")
+    return ("python -c \"import base64,pathlib;pathlib.Path('%s').write_bytes("
+            "base64.b64decode('%s'))\"" % (CHAT_TEMPLATE_PATH, encoded))
 
 
 image_environment = {
@@ -246,6 +325,10 @@ vllm_image = (
     .uv_pip_install("vllm==%s" % VLLM_VERSION)
     .env(image_environment)
 )
+if CHAT_TEMPLATE:
+    # One extra layer, only in the plain-template mode: every other deployment's image
+    # definition -- and therefore its cached build -- is exactly what it was before.
+    vllm_image = vllm_image.run_commands(chat_template_command(CHAT_TEMPLATE))
 
 # Persistent weight cache, as the roadmap prescribes: pay the download once per model.
 hf_cache = modal.Volume.from_name("dgs-hf-cache", create_if_missing=True)
@@ -273,8 +356,8 @@ app = modal.App(APP_NAME)
 @modal.web_server(port=PORT, startup_timeout=15 * MINUTES)
 def serve() -> None:
     command = vllm_command()
-    print("serving served_name=%r weights=%r revision=%r gpu=%r (config source: %s)"
-          % (SERVED_NAME, MODEL_PATH or MODEL_ID, REVISION, GPU, CONFIG["source"]))
+    print("serving served_name=%r weights=%r revision=%r gpu=%r chat_template=%r (config source: %s)"
+          % (SERVED_NAME, MODEL_PATH or MODEL_ID, REVISION, GPU, CHAT_TEMPLATE, CONFIG["source"]))
     print("launching:", " ".join(command))
     process = subprocess.Popen(command)
     _assert_serving_intended_model(process)
@@ -326,6 +409,8 @@ def smoke(timeout_s: int = 15 * MINUTES) -> None:
     print("model:   %s%s" % (SERVED_NAME, " @ %s" % REVISION if REVISION else ""))
     if MODEL_PATH:
         print("weights: %s (volume %s)" % (MODEL_PATH, ADAPTER_VOLUME))
+    if CHAT_TEMPLATE:
+        print("template:%s -> %s" % (CHAT_TEMPLATE, CHAT_TEMPLATE_PATH))
     print("gpu:     %s" % GPU)
     print("vllm:    %s" % VLLM_VERSION)
     print("base_url:%s" % base_url)

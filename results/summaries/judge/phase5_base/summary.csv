@@ -1,0 +1,9 @@
+model_id,cell_id,turn_label,score_kind,n,mean_score,sd_score
+google/gemma-2-9b,easy__accurate__hostile,onset,response_distress,10,0.3,0.6749
+google/gemma-2-9b,easy__accurate__hostile,onset_washout,response_distress,10,0.2,0.6325
+google/gemma-2-9b,easy__accurate__neutral,onset,response_distress,10,0.2,0.4216
+google/gemma-2-9b,easy__accurate__neutral,onset_washout,response_distress,10,0.3,0.6749
+google/gemma-2-9b,hard__accurate__hostile,onset,response_distress,10,0.2,0.4216
+google/gemma-2-9b,hard__accurate__hostile,onset_washout,response_distress,10,0.2,0.6325
+google/gemma-2-9b,hard__accurate__neutral,onset,response_distress,10,0.0,0.0
+google/gemma-2-9b,hard__accurate__neutral,onset_washout,response_distress,10,0.0,0.0

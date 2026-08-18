@@ -67,6 +67,10 @@ def parse_args(argv=None):
                         help="committed confirmatory holdout result, quoted read-only")
     parser.add_argument("--out", default=None,
                         help="output directory (default results/summaries/extension/<slug>)")
+    parser.add_argument("--discovery-only", action="store_true",
+                        help="analyse the discovery split alone and report holdout as not run "
+                             "(Phase 5's base-model denominator generates no holdout at all); "
+                             "the holdout raw source is never opened")
     parser.add_argument("--no-amendments", action="store_true",
                         help="analyse under the frozen rules only (A2/A3/A4 off)")
     parser.add_argument("--strict", action="store_true", help="fail instead of reporting malformed raw lines")
@@ -121,6 +125,12 @@ def main(argv=None) -> int:
     for split, raw_attribute, judge_attribute in SPLIT_SOURCES:
         raw = getattr(args, raw_attribute)
         judge_path = getattr(args, judge_attribute)
+        if args.discovery_only and split == "holdout":
+            # Declared, not inferred from a missing file: this model was never generated on
+            # the holdout, so its holdout column reads "not run" rather than "unavailable".
+            print("holdout: --discovery-only; split not run for this model", file=sys.stderr)
+            splits[split] = unavailable_split(split, "not_run_discovery_only")
+            continue
         if raw is None or not Path(raw).exists():
             print("%s: raw not found at %s; split skipped" % (split, raw), file=sys.stderr)
             splits[split] = unavailable_split(split, "raw_source_absent", raw_source=raw,
@@ -168,9 +178,10 @@ def main(argv=None) -> int:
                 "No result here supports, refutes or amends a preregistered claim.",
         "model_id": args.model,
         "raw_phase1_source": args.raw_phase1,
-        "raw_phase2_source": args.raw_phase2,
+        "raw_phase2_source": None if args.discovery_only else args.raw_phase2,
         "judge_phase1_source": args.judge_phase1,
-        "judge_phase2_source": args.judge_phase2,
+        "judge_phase2_source": None if args.discovery_only else args.judge_phase2,
+        "discovery_only": bool(args.discovery_only),
         "discovery_contrasts_source": args.discovery_contrasts,
         "primary_confirm_source": args.primary_confirm,
         "amendments_applied": not args.no_amendments,
@@ -185,17 +196,18 @@ def main(argv=None) -> int:
     print("wrote %s" % (out / "extension.json"))
     print("wrote %s" % (out / "extension.md"))
 
+    shown = "discovery" if args.discovery_only else "holdout"
     for item in result.comparisons:
-        holdout = item.holdout
-        print("  %-4s %-10s holdout supported=%-5s %s" % (
-            item.hypothesis_id, item.outcome,
-            holdout.supported if holdout is not None else "n/a",
+        outcome = item.discovery if args.discovery_only else item.holdout
+        print("  %-4s %-10s %s supported=%-5s %s" % (
+            item.hypothesis_id, item.outcome, shown,
+            outcome.supported if outcome is not None else "n/a",
             "%.3f [%s, %s]" % (
-                holdout.result.estimate,
-                "%.3f" % holdout.result.ci95_lower if holdout.result.ci95_lower is not None else "n/a",
-                "%.3f" % holdout.result.ci95_upper if holdout.result.ci95_upper is not None else "n/a",
-            ) if holdout is not None and holdout.result.estimate is not None
-            else "unavailable (%s)" % (holdout.result.unavailable_reason if holdout else "split_absent")))
+                outcome.result.estimate,
+                "%.3f" % outcome.result.ci95_lower if outcome.result.ci95_lower is not None else "n/a",
+                "%.3f" % outcome.result.ci95_upper if outcome.result.ci95_upper is not None else "n/a",
+            ) if outcome is not None and outcome.result.estimate is not None
+            else "unavailable (%s)" % (outcome.result.unavailable_reason if outcome else "split_absent")))
     print(result.verdict)
     return 0
 

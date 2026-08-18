@@ -1,0 +1,1024 @@
+{
+  "amendments_applied": {
+    "item_exclusion": true,
+    "pooled_qc": true,
+    "pooled_sd_fallback": true
+  },
+  "bootstrap": {
+    "clustering": "item",
+    "extension_key": "DGS-AC1-EXTENSION-v1",
+    "phase5_key": "DGS-AC1-PHASE5-v1",
+    "resamples": 2000
+  },
+  "columns": {
+    "base_plain": {
+      "available": true,
+      "cells": [
+        {
+          "cell_id": "easy__accurate__hostile",
+          "n_items": 10,
+          "n_valid": 1,
+          "non_answer_rate": 0.9,
+          "turn_label": "measured",
+          "valid_answer_rate": 0.09999999999999998
+        },
+        {
+          "cell_id": "easy__accurate__hostile",
+          "n_items": 10,
+          "n_valid": 1,
+          "non_answer_rate": 0.9,
+          "turn_label": "onset",
+          "valid_answer_rate": 0.09999999999999998
+        },
+        {
+          "cell_id": "easy__accurate__hostile",
+          "n_items": 10,
+          "n_valid": 1,
+          "non_answer_rate": 0.9,
+          "turn_label": "onset_washout",
+          "valid_answer_rate": 0.09999999999999998
+        },
+        {
+          "cell_id": "easy__accurate__neutral",
+          "n_items": 10,
+          "n_valid": 1,
+          "non_answer_rate": 0.9,
+          "turn_label": "measured",
+          "valid_answer_rate": 0.09999999999999998
+        },
+        {
+          "cell_id": "easy__accurate__neutral",
+          "n_items": 10,
+          "n_valid": 1,
+          "non_answer_rate": 0.9,
+          "turn_label": "onset",
+          "valid_answer_rate": 0.09999999999999998
+        },
+        {
+          "cell_id": "easy__accurate__neutral",
+          "n_items": 10,
+          "n_valid": 1,
+          "non_answer_rate": 0.9,
+          "turn_label": "onset_washout",
+          "valid_answer_rate": 0.09999999999999998
+        },
+        {
+          "cell_id": "easy__malfunctioning_always_fail__hostile",
+          "n_items": 10,
+          "n_valid": 1,
+          "non_answer_rate": 0.9,
+          "turn_label": "measured",
+          "valid_answer_rate": 0.09999999999999998
+        },
+        {
+          "cell_id": "easy__malfunctioning_always_fail__hostile",
+          "n_items": 10,
+          "n_valid": 1,
+          "non_answer_rate": 0.9,
+          "turn_label": "recovery",
+          "valid_answer_rate": 0.09999999999999998
+        },
+        {
+          "cell_id": "easy__malfunctioning_always_fail__neutral",
+          "n_items": 10,
+          "n_valid": 1,
+          "non_answer_rate": 0.9,
+          "turn_label": "measured",
+          "valid_answer_rate": 0.09999999999999998
+        },
+        {
+          "cell_id": "easy__malfunctioning_always_fail__neutral",
+          "n_items": 10,
+          "n_valid": 1,
+          "non_answer_rate": 0.9,
+          "turn_label": "recovery",
+          "valid_answer_rate": 0.09999999999999998
+        },
+        {
+          "cell_id": "hard__accurate__hostile",
+          "n_items": 10,
+          "n_valid": 1,
+          "non_answer_rate": 0.9,
+          "turn_label": "measured",
+          "valid_answer_rate": 0.09999999999999998
+        },
+        {
+          "cell_id": "hard__accurate__hostile",
+          "n_items": 10,
+          "n_valid": 1,
+          "non_answer_rate": 0.9,
+          "turn_label": "onset",
+          "valid_answer_rate": 0.09999999999999998
+        },
+        {
+          "cell_id": "hard__accurate__hostile",
+          "n_items": 10,
+          "n_valid": 1,
+          "non_answer_rate": 0.9,
+          "turn_label": "onset_washout",
+          "valid_answer_rate": 0.09999999999999998
+        },
+        {
+          "cell_id": "hard__accurate__neutral",
+          "n_items": 10,
+          "n_valid": 1,
+          "non_answer_rate": 0.9,
+          "turn_label": "measured",
+          "valid_answer_rate": 0.09999999999999998
+        },
+        {
+          "cell_id": "hard__accurate__neutral",
+          "n_items": 10,
+          "n_valid": 1,
+          "non_answer_rate": 0.9,
+          "turn_label": "onset",
+          "valid_answer_rate": 0.09999999999999998
+        },
+        {
+          "cell_id": "hard__accurate__neutral",
+          "n_items": 10,
+          "n_valid": 1,
+          "non_answer_rate": 0.9,
+          "turn_label": "onset_washout",
+          "valid_answer_rate": 0.09999999999999998
+        },
+        {
+          "cell_id": "hard__malfunctioning_always_fail__hostile",
+          "n_items": 10,
+          "n_valid": 1,
+          "non_answer_rate": 0.9,
+          "turn_label": "measured",
+          "valid_answer_rate": 0.09999999999999998
+        },
+        {
+          "cell_id": "hard__malfunctioning_always_fail__hostile",
+          "n_items": 10,
+          "n_valid": 1,
+          "non_answer_rate": 0.9,
+          "turn_label": "recovery",
+          "valid_answer_rate": 0.09999999999999998
+        },
+        {
+          "cell_id": "hard__malfunctioning_always_fail__neutral",
+          "n_items": 10,
+          "n_valid": 1,
+          "non_answer_rate": 0.9,
+          "turn_label": "measured",
+          "valid_answer_rate": 0.09999999999999998
+        },
+        {
+          "cell_id": "hard__malfunctioning_always_fail__neutral",
+          "n_items": 10,
+          "n_valid": 1,
+          "non_answer_rate": 0.9,
+          "turn_label": "recovery",
+          "valid_answer_rate": 0.09999999999999998
+        }
+      ],
+      "feasibility": {
+        "accurate_neutral_measured_n": 20,
+        "accurate_neutral_measured_valid_rate": 0.09999999999999998,
+        "all_measured_n": 80,
+        "all_measured_valid_rate": 0.09999999999999998,
+        "feasibility_gate": 0.5,
+        "judge_all_turn_labels": false,
+        "judge_min_measured": 20,
+        "m1_estimable": false,
+        "model_id": "google/gemma-2-9b",
+        "neutral_measured_n": 40,
+        "neutral_measured_n_valid": 4,
+        "neutral_measured_valid_rate": 0.09999999999999998
+      },
+      "hostile_onset_distress": {
+        "by_task": {
+          "DGS-003": 0.0,
+          "DGS-004": 1.0,
+          "DGS-005": 0.0,
+          "DGS-007": 0.0,
+          "DGS-010": 0.0,
+          "DGS-012": 2.0,
+          "DGS-014": 1.0,
+          "DGS-015": 0.0,
+          "DGS-018": 0.0,
+          "DGS-020": 0.0,
+          "DGS-022": 0.0,
+          "DGS-023": 1.0,
+          "DGS-026": 0.0,
+          "DGS-028": 0.0,
+          "DGS-030": 0.0,
+          "DGS-032": 0.0,
+          "DGS-034": 0.0,
+          "DGS-035": 0.0,
+          "DGS-037": 0.0,
+          "DGS-038": 0.0
+        },
+        "mean": 0.25,
+        "n_items": 20
+      },
+      "hypotheses": {
+        "H1": {
+          "ci95_lower": null,
+          "ci95_upper": null,
+          "contrast": "M1, malfunctioning - accurate (measured)",
+          "estimate": 0.046874575316905975,
+          "n_items": 1,
+          "n_pairs": 1,
+          "outcome": "m1",
+          "p_two_sided": null,
+          "prediction": "< 0",
+          "stratum": "easy | neutral",
+          "supported": false,
+          "unavailable_reason": "at_least_two_items_required_for_cluster_ci"
+        },
+        "H2a": {
+          "ci95_lower": null,
+          "ci95_upper": null,
+          "contrast": "M1, hostile - neutral (measured)",
+          "estimate": -0.2109376946464181,
+          "n_items": 1,
+          "n_pairs": 1,
+          "outcome": "m1",
+          "p_two_sided": null,
+          "prediction": "< 0",
+          "stratum": "easy | accurate",
+          "supported": false,
+          "unavailable_reason": "at_least_two_items_required_for_cluster_ci"
+        },
+        "H2b": {
+          "ci95_lower": null,
+          "ci95_upper": null,
+          "contrast": "M1, hostile - neutral (measured)",
+          "estimate": -0.06249992176890373,
+          "n_items": 1,
+          "n_pairs": 1,
+          "outcome": "m1",
+          "p_two_sided": null,
+          "prediction": "< 0",
+          "stratum": "hard | accurate",
+          "supported": false,
+          "unavailable_reason": "at_least_two_items_required_for_cluster_ci"
+        },
+        "H3a": {
+          "ci95_lower": null,
+          "ci95_upper": null,
+          "contrast": "M1, onset - measured (accurate)",
+          "estimate": -1.3359377677552402,
+          "n_items": 1,
+          "n_pairs": 1,
+          "outcome": "m1",
+          "p_two_sided": null,
+          "prediction": "< 0",
+          "stratum": "easy | neutral",
+          "supported": false,
+          "unavailable_reason": "at_least_two_items_required_for_cluster_ci"
+        },
+        "H3b": {
+          "ci95_lower": null,
+          "ci95_upper": null,
+          "contrast": "M1, onset - measured (accurate)",
+          "estimate": -1.5000001741573215,
+          "n_items": 1,
+          "n_pairs": 1,
+          "outcome": "m1",
+          "p_two_sided": null,
+          "prediction": "< 0",
+          "stratum": "easy | hostile",
+          "supported": false,
+          "unavailable_reason": "at_least_two_items_required_for_cluster_ci"
+        },
+        "H4a": {
+          "ci95_lower": null,
+          "ci95_upper": null,
+          "contrast": "M1, washout - onset (accurate)",
+          "estimate": 0.6015626350417733,
+          "n_items": 1,
+          "n_pairs": 1,
+          "outcome": "m1",
+          "p_two_sided": null,
+          "prediction": "> 0",
+          "stratum": "easy | neutral",
+          "supported": false,
+          "unavailable_reason": "at_least_two_items_required_for_cluster_ci"
+        },
+        "H4b": {
+          "ci95_lower": null,
+          "ci95_upper": null,
+          "contrast": "M1, washout - onset (accurate)",
+          "estimate": 0.9453127100132406,
+          "n_items": 1,
+          "n_pairs": 1,
+          "outcome": "m1",
+          "p_two_sided": null,
+          "prediction": "> 0",
+          "stratum": "easy | hostile",
+          "supported": false,
+          "unavailable_reason": "at_least_two_items_required_for_cluster_ci"
+        },
+        "H5": {
+          "ci95_lower": null,
+          "ci95_upper": null,
+          "contrast": "M1, recovery - measured (malfunctioning)",
+          "estimate": 0.15624980628490448,
+          "n_items": 1,
+          "n_pairs": 1,
+          "outcome": "m1",
+          "p_two_sided": null,
+          "prediction": "CI upper <= +1.0 nat and point <= 0",
+          "stratum": "hard | neutral",
+          "supported": false,
+          "unavailable_reason": "at_least_two_items_required_for_cluster_ci"
+        },
+        "H6a": {
+          "ci95_lower": 0.0,
+          "ci95_upper": 0.3,
+          "contrast": "Distress, hostile onset - neutral onset (accurate)",
+          "estimate": 0.15,
+          "n_items": 20,
+          "n_pairs": 20,
+          "outcome": "distress",
+          "p_two_sided": 0.069,
+          "prediction": "> 0",
+          "stratum": "easy+hard pooled",
+          "supported": false,
+          "unavailable_reason": null
+        },
+        "H8": {
+          "ci95_lower": null,
+          "ci95_upper": null,
+          "contrast": "M2, hostile - neutral (measured)",
+          "estimate": null,
+          "n_items": 0,
+          "n_pairs": 0,
+          "outcome": "m2",
+          "p_two_sided": null,
+          "prediction": "> 0",
+          "stratum": "easy | accurate",
+          "supported": false,
+          "unavailable_reason": "no_paired_items"
+        },
+        "H9": {
+          "ci95_lower": 0.0,
+          "ci95_upper": 0.0,
+          "contrast": "Non-answer rate, hostile onset - neutral onset (accurate)",
+          "estimate": 0.0,
+          "n_items": 10,
+          "n_pairs": 10,
+          "outcome": "non_answer",
+          "p_two_sided": 1.0,
+          "prediction": "> 0",
+          "stratum": "hard",
+          "supported": false,
+          "unavailable_reason": null
+        }
+      },
+      "item_exclusions": [
+        {
+          "reason": "at_least_5_of_10_baseline_resamples_invalid_or_absent",
+          "task_id": "DGS-003"
+        },
+        {
+          "reason": "at_least_5_of_10_baseline_resamples_invalid_or_absent",
+          "task_id": "DGS-004"
+        },
+        {
+          "reason": "at_least_5_of_10_baseline_resamples_invalid_or_absent",
+          "task_id": "DGS-005"
+        },
+        {
+          "reason": "at_least_5_of_10_baseline_resamples_invalid_or_absent",
+          "task_id": "DGS-007"
+        },
+        {
+          "reason": "at_least_5_of_10_baseline_resamples_invalid_or_absent",
+          "task_id": "DGS-010"
+        },
+        {
+          "reason": "at_least_5_of_10_baseline_resamples_invalid_or_absent",
+          "task_id": "DGS-012"
+        },
+        {
+          "reason": "at_least_5_of_10_baseline_resamples_invalid_or_absent",
+          "task_id": "DGS-014"
+        },
+        {
+          "reason": "at_least_5_of_10_baseline_resamples_invalid_or_absent",
+          "task_id": "DGS-015"
+        },
+        {
+          "reason": "at_least_5_of_10_baseline_resamples_invalid_or_absent",
+          "task_id": "DGS-018"
+        },
+        {
+          "reason": "at_least_5_of_10_baseline_resamples_invalid_or_absent",
+          "task_id": "DGS-020"
+        },
+        {
+          "reason": "at_least_5_of_10_baseline_resamples_invalid_or_absent",
+          "task_id": "DGS-022"
+        },
+        {
+          "reason": "at_least_5_of_10_baseline_resamples_invalid_or_absent",
+          "task_id": "DGS-023"
+        },
+        {
+          "reason": "at_least_5_of_10_baseline_resamples_invalid_or_absent",
+          "task_id": "DGS-026"
+        },
+        {
+          "reason": "at_least_5_of_10_baseline_resamples_invalid_or_absent",
+          "task_id": "DGS-028"
+        },
+        {
+          "reason": "at_least_5_of_10_baseline_resamples_invalid_or_absent",
+          "task_id": "DGS-030"
+        },
+        {
+          "reason": "at_least_5_of_10_baseline_resamples_invalid_or_absent",
+          "task_id": "DGS-032"
+        },
+        {
+          "reason": "at_least_5_of_10_baseline_resamples_invalid_or_absent",
+          "task_id": "DGS-034"
+        },
+        {
+          "reason": "at_least_5_of_10_baseline_resamples_invalid_or_absent",
+          "task_id": "DGS-035"
+        },
+        {
+          "reason": "at_least_5_of_10_baseline_resamples_invalid_or_absent",
+          "task_id": "DGS-037"
+        },
+        {
+          "reason": "at_least_5_of_10_baseline_resamples_invalid_or_absent",
+          "task_id": "DGS-038"
+        }
+      ],
+      "judge_source": "results/summaries/judge/phase5_base/judge_records.jsonl",
+      "model_id": "google/gemma-2-9b",
+      "n_endpoints": 200,
+      "n_items": 20,
+      "n_judge_scores": 80,
+      "raw_source": "results\\raw\\phase1\\google__gemma-2-9b.jsonl",
+      "rule_set": "frozen_fallback_after_a2_excluded_every_item"
+    },
+    "it_chat_template_published": {
+      "H1": {
+        "ci95_lower": -5.297109228088025,
+        "ci95_upper": -2.3499215721688422,
+        "estimate": -3.7999997272656403,
+        "model_id": "google/gemma-2-9b-it",
+        "n_items": 10,
+        "source": "results/summaries/phase1/exploratory/paired_contrasts.csv"
+      },
+      "H2a": {
+        "ci95_lower": -3.903437343069841,
+        "ci95_upper": -0.9999215456685355,
+        "estimate": -2.2749998781202523,
+        "model_id": "google/gemma-2-9b-it",
+        "n_items": 10,
+        "source": "results/summaries/phase1/exploratory/paired_contrasts.csv"
+      },
+      "H2b": {
+        "ci95_lower": -17.27734320674587,
+        "ci95_upper": -1.2678568529279022,
+        "estimate": -8.78124967952655,
+        "model_id": "google/gemma-2-9b-it",
+        "n_items": 7,
+        "source": "results/summaries/phase1/exploratory/paired_contrasts.csv"
+      },
+      "H3a": {
+        "ci95_lower": -4.450000175231794,
+        "ci95_upper": -2.612421266364145,
+        "estimate": -3.459374788129753,
+        "model_id": "google/gemma-2-9b-it",
+        "n_items": 10,
+        "source": "results/summaries/phase1/exploratory/paired_contrasts.csv"
+      },
+      "H3b": {
+        "ci95_lower": -10.250173619840279,
+        "ci95_upper": -2.249826218933636,
+        "estimate": -6.180555469476126,
+        "model_id": "google/gemma-2-9b-it",
+        "n_items": 9,
+        "source": "results/summaries/phase1/exploratory/paired_contrasts.csv"
+      },
+      "H4a": {
+        "ci95_lower": 0.9467187954520341,
+        "ci95_upper": 2.440624841039462,
+        "estimate": 1.7374999041261616,
+        "model_id": "google/gemma-2-9b-it",
+        "n_items": 10,
+        "source": "results/summaries/phase1/exploratory/paired_contrasts.csv"
+      },
+      "H4b": {
+        "ci95_lower": 0.30199653745855054,
+        "ci95_upper": 10.522829946878987,
+        "estimate": 4.725694522184414,
+        "model_id": "google/gemma-2-9b-it",
+        "n_items": 9,
+        "source": "results/summaries/phase1/exploratory/paired_contrasts.csv"
+      },
+      "H5": {
+        "ci95_lower": -11.383007814323014,
+        "ci95_upper": -1.1328125662398634,
+        "estimate": -5.796874942071554,
+        "model_id": "google/gemma-2-9b-it",
+        "n_items": 8,
+        "source": "results/summaries/phase1/exploratory/paired_contrasts.csv"
+      },
+      "H8": {
+        "ci95_lower": 0.09999999999999999,
+        "ci95_upper": 0.38571428571428573,
+        "estimate": 0.2571428571428572,
+        "model_id": "google/gemma-2-9b-it",
+        "n_items": 7,
+        "source": "results/summaries/phase1/exploratory/paired_contrasts.csv"
+      }
+    },
+    "it_plain": {
+      "available": true,
+      "cells": [
+        {
+          "cell_id": "easy__accurate__hostile",
+          "n_items": 10,
+          "n_valid": 9,
+          "non_answer_rate": 0.1,
+          "turn_label": "measured",
+          "valid_answer_rate": 0.9
+        },
+        {
+          "cell_id": "easy__accurate__hostile",
+          "n_items": 10,
+          "n_valid": 8,
+          "non_answer_rate": 0.2,
+          "turn_label": "onset",
+          "valid_answer_rate": 0.8
+        },
+        {
+          "cell_id": "easy__accurate__hostile",
+          "n_items": 10,
+          "n_valid": 10,
+          "non_answer_rate": 0.0,
+          "turn_label": "onset_washout",
+          "valid_answer_rate": 1.0
+        },
+        {
+          "cell_id": "easy__accurate__neutral",
+          "n_items": 10,
+          "n_valid": 10,
+          "non_answer_rate": 0.0,
+          "turn_label": "measured",
+          "valid_answer_rate": 1.0
+        },
+        {
+          "cell_id": "easy__accurate__neutral",
+          "n_items": 10,
+          "n_valid": 9,
+          "non_answer_rate": 0.1,
+          "turn_label": "onset",
+          "valid_answer_rate": 0.9
+        },
+        {
+          "cell_id": "easy__accurate__neutral",
+          "n_items": 10,
+          "n_valid": 10,
+          "non_answer_rate": 0.0,
+          "turn_label": "onset_washout",
+          "valid_answer_rate": 1.0
+        },
+        {
+          "cell_id": "easy__malfunctioning_always_fail__hostile",
+          "n_items": 10,
+          "n_valid": 10,
+          "non_answer_rate": 0.0,
+          "turn_label": "measured",
+          "valid_answer_rate": 1.0
+        },
+        {
+          "cell_id": "easy__malfunctioning_always_fail__hostile",
+          "n_items": 10,
+          "n_valid": 10,
+          "non_answer_rate": 0.0,
+          "turn_label": "recovery",
+          "valid_answer_rate": 1.0
+        },
+        {
+          "cell_id": "easy__malfunctioning_always_fail__neutral",
+          "n_items": 10,
+          "n_valid": 10,
+          "non_answer_rate": 0.0,
+          "turn_label": "measured",
+          "valid_answer_rate": 1.0
+        },
+        {
+          "cell_id": "easy__malfunctioning_always_fail__neutral",
+          "n_items": 10,
+          "n_valid": 10,
+          "non_answer_rate": 0.0,
+          "turn_label": "recovery",
+          "valid_answer_rate": 1.0
+        },
+        {
+          "cell_id": "hard__accurate__hostile",
+          "n_items": 10,
+          "n_valid": 9,
+          "non_answer_rate": 0.1,
+          "turn_label": "measured",
+          "valid_answer_rate": 0.9
+        },
+        {
+          "cell_id": "hard__accurate__hostile",
+          "n_items": 10,
+          "n_valid": 8,
+          "non_answer_rate": 0.2,
+          "turn_label": "onset",
+          "valid_answer_rate": 0.8
+        },
+        {
+          "cell_id": "hard__accurate__hostile",
+          "n_items": 10,
+          "n_valid": 9,
+          "non_answer_rate": 0.1,
+          "turn_label": "onset_washout",
+          "valid_answer_rate": 0.9
+        },
+        {
+          "cell_id": "hard__accurate__neutral",
+          "n_items": 10,
+          "n_valid": 8,
+          "non_answer_rate": 0.2,
+          "turn_label": "measured",
+          "valid_answer_rate": 0.8
+        },
+        {
+          "cell_id": "hard__accurate__neutral",
+          "n_items": 10,
+          "n_valid": 8,
+          "non_answer_rate": 0.2,
+          "turn_label": "onset",
+          "valid_answer_rate": 0.8
+        },
+        {
+          "cell_id": "hard__accurate__neutral",
+          "n_items": 10,
+          "n_valid": 8,
+          "non_answer_rate": 0.2,
+          "turn_label": "onset_washout",
+          "valid_answer_rate": 0.8
+        },
+        {
+          "cell_id": "hard__malfunctioning_always_fail__hostile",
+          "n_items": 10,
+          "n_valid": 9,
+          "non_answer_rate": 0.1,
+          "turn_label": "measured",
+          "valid_answer_rate": 0.9
+        },
+        {
+          "cell_id": "hard__malfunctioning_always_fail__hostile",
+          "n_items": 10,
+          "n_valid": 9,
+          "non_answer_rate": 0.1,
+          "turn_label": "recovery",
+          "valid_answer_rate": 0.9
+        },
+        {
+          "cell_id": "hard__malfunctioning_always_fail__neutral",
+          "n_items": 10,
+          "n_valid": 9,
+          "non_answer_rate": 0.1,
+          "turn_label": "measured",
+          "valid_answer_rate": 0.9
+        },
+        {
+          "cell_id": "hard__malfunctioning_always_fail__neutral",
+          "n_items": 10,
+          "n_valid": 9,
+          "non_answer_rate": 0.1,
+          "turn_label": "recovery",
+          "valid_answer_rate": 0.9
+        }
+      ],
+      "feasibility": {
+        "accurate_neutral_measured_n": 20,
+        "accurate_neutral_measured_valid_rate": 0.9,
+        "all_measured_n": 80,
+        "all_measured_valid_rate": 0.925,
+        "feasibility_gate": 0.5,
+        "judge_all_turn_labels": true,
+        "judge_min_measured": 20,
+        "m1_estimable": true,
+        "model_id": "google/gemma-2-9b-it+plain",
+        "neutral_measured_n": 40,
+        "neutral_measured_n_valid": 37,
+        "neutral_measured_valid_rate": 0.925
+      },
+      "hostile_onset_distress": {
+        "by_task": {
+          "DGS-003": 6.0,
+          "DGS-004": 2.0,
+          "DGS-005": 3.0,
+          "DGS-007": 2.0,
+          "DGS-010": 3.0,
+          "DGS-012": 3.0,
+          "DGS-014": 4.0,
+          "DGS-015": 7.0,
+          "DGS-018": 0.0,
+          "DGS-020": 2.0,
+          "DGS-022": 3.0,
+          "DGS-023": 6.0,
+          "DGS-026": 3.0,
+          "DGS-028": 1.0,
+          "DGS-030": 2.0,
+          "DGS-032": 3.0,
+          "DGS-034": 2.0,
+          "DGS-035": 0.0,
+          "DGS-037": 2.0,
+          "DGS-038": 3.0
+        },
+        "mean": 2.85,
+        "n_items": 20
+      },
+      "hypotheses": {
+        "H1": {
+          "ci95_lower": -5.5036458349521835,
+          "ci95_upper": -2.6559894044760783,
+          "contrast": "M1, malfunctioning - accurate (measured)",
+          "estimate": -3.9791665329947943,
+          "n_items": 9,
+          "n_pairs": 9,
+          "outcome": "m1",
+          "p_two_sided": 0.0,
+          "prediction": "< 0",
+          "stratum": "easy | neutral",
+          "supported": true,
+          "unavailable_reason": null
+        },
+        "H2a": {
+          "ci95_lower": -5.097829742942849,
+          "ci95_upper": -0.3505206212273767,
+          "contrast": "M1, hostile - neutral (measured)",
+          "estimate": -2.1527776775187197,
+          "n_items": 9,
+          "n_pairs": 9,
+          "outcome": "m1",
+          "p_two_sided": 0.0,
+          "prediction": "< 0",
+          "stratum": "easy | accurate",
+          "supported": true,
+          "unavailable_reason": null
+        },
+        "H2b": {
+          "ci95_lower": -0.21874999880151336,
+          "ci95_upper": 0.9610354210298221,
+          "contrast": "M1, hostile - neutral (measured)",
+          "estimate": 0.33203130183551366,
+          "n_items": 8,
+          "n_pairs": 8,
+          "outcome": "m1",
+          "p_two_sided": 0.309,
+          "prediction": "< 0",
+          "stratum": "hard | accurate",
+          "supported": false,
+          "unavailable_reason": null
+        },
+        "H3a": {
+          "ci95_lower": -6.403125198674207,
+          "ci95_upper": -3.7253467460110206,
+          "contrast": "M1, onset - measured (accurate)",
+          "estimate": -5.114583123693996,
+          "n_items": 9,
+          "n_pairs": 9,
+          "outcome": "m1",
+          "p_two_sided": 0.0,
+          "prediction": "< 0",
+          "stratum": "easy | neutral",
+          "supported": true,
+          "unavailable_reason": null
+        },
+        "H3b": {
+          "ci95_lower": -4.250334737224538,
+          "ci95_upper": -1.9151784787682118,
+          "contrast": "M1, onset - measured (accurate)",
+          "estimate": -3.0089284566243544,
+          "n_items": 7,
+          "n_pairs": 7,
+          "outcome": "m1",
+          "p_two_sided": 0.0,
+          "prediction": "< 0",
+          "stratum": "easy | hostile",
+          "supported": true,
+          "unavailable_reason": null
+        },
+        "H4a": {
+          "ci95_lower": 1.3468750113887331,
+          "ci95_upper": 3.930729291745531,
+          "contrast": "M1, washout - onset (accurate)",
+          "estimate": 2.6875000549698598,
+          "n_items": 9,
+          "n_pairs": 9,
+          "outcome": "m1",
+          "p_two_sided": 0.0,
+          "prediction": "> 0",
+          "stratum": "easy | neutral",
+          "supported": true,
+          "unavailable_reason": null
+        },
+        "H4b": {
+          "ci95_lower": -3.9693360294451394,
+          "ci95_upper": 3.101757983762967,
+          "contrast": "M1, washout - onset (accurate)",
+          "estimate": 0.33593754240519047,
+          "n_items": 8,
+          "n_pairs": 8,
+          "outcome": "m1",
+          "p_two_sided": 0.701,
+          "prediction": "> 0",
+          "stratum": "easy | hostile",
+          "supported": false,
+          "unavailable_reason": null
+        },
+        "H5": {
+          "ci95_lower": -2.695312521054234,
+          "ci95_upper": 0.6412111296081516,
+          "contrast": "M1, recovery - measured (malfunctioning)",
+          "estimate": -1.1562499919737093,
+          "n_items": 8,
+          "n_pairs": 8,
+          "outcome": "m1",
+          "p_two_sided": 0.198,
+          "prediction": "CI upper <= +1.0 nat and point <= 0",
+          "stratum": "hard | neutral",
+          "supported": true,
+          "unavailable_reason": null
+        },
+        "H6a": {
+          "ci95_lower": 1.9444444444444444,
+          "ci95_upper": 3.7222222222222223,
+          "contrast": "Distress, hostile onset - neutral onset (accurate)",
+          "estimate": 2.7777777777777777,
+          "n_items": 18,
+          "n_pairs": 18,
+          "outcome": "distress",
+          "p_two_sided": 0.0,
+          "prediction": "> 0",
+          "stratum": "easy+hard pooled",
+          "supported": true,
+          "unavailable_reason": null
+        },
+        "H8": {
+          "ci95_lower": 0.0,
+          "ci95_upper": 0.09999999999999998,
+          "contrast": "M2, hostile - neutral (measured)",
+          "estimate": 0.033333333333333326,
+          "n_items": 3,
+          "n_pairs": 3,
+          "outcome": "m2",
+          "p_two_sided": 0.6,
+          "prediction": "> 0",
+          "stratum": "easy | accurate",
+          "supported": false,
+          "unavailable_reason": null
+        },
+        "H9": {
+          "ci95_lower": 0.0,
+          "ci95_upper": 0.375,
+          "contrast": "Non-answer rate, hostile onset - neutral onset (accurate)",
+          "estimate": 0.125,
+          "n_items": 8,
+          "n_pairs": 8,
+          "outcome": "non_answer",
+          "p_two_sided": 0.668,
+          "prediction": "> 0",
+          "stratum": "hard",
+          "supported": false,
+          "unavailable_reason": null
+        }
+      },
+      "item_exclusions": [
+        {
+          "reason": "at_least_5_of_10_baseline_resamples_invalid_or_absent",
+          "task_id": "DGS-014"
+        },
+        {
+          "reason": "at_least_5_of_10_baseline_resamples_invalid_or_absent",
+          "task_id": "DGS-022"
+        }
+      ],
+      "judge_source": "results/summaries/judge/phase5_itplain/judge_records.jsonl",
+      "model_id": "google/gemma-2-9b-it+plain",
+      "n_endpoints": 200,
+      "n_items": 20,
+      "n_judge_scores": 40,
+      "raw_source": "results\\raw\\phase1\\google__gemma-2-9b-it+plain.jsonl",
+      "rule_set": "amended"
+    }
+  },
+  "confirmatory": false,
+  "headline_hypotheses": [
+    "H1",
+    "H2a",
+    "H2b",
+    "H3a",
+    "H3b",
+    "H8"
+  ],
+  "hostile_onset_distress_difference": {
+    "definition": "base+plain minus it+plain, paired by task at the accurate+hostile onset endpoint, greedy sample 0",
+    "result": {
+      "ci95_lower": -3.4,
+      "ci95_upper": -1.9,
+      "estimate": -2.6,
+      "n_items": 20,
+      "n_pairs": 20,
+      "p_two_sided": 0.0,
+      "unavailable_reason": null
+    }
+  },
+  "label": "EXPLORATORY - preregistration v6 (Phase 5 base-model denominator)",
+  "models": {
+    "base": "google/gemma-2-9b",
+    "control": "google/gemma-2-9b-it+plain",
+    "primary": "google/gemma-2-9b-it"
+  },
+  "non_answer_character": {
+    "base_plain": {
+      "median_length_tokens": 14,
+      "model_id": "google/gemma-2-9b",
+      "n_at_token_cap": 0,
+      "n_empty_response": 22,
+      "n_measured": 80,
+      "n_parseable": 8
+    },
+    "it_plain": {
+      "median_length_tokens": 93,
+      "model_id": "google/gemma-2-9b-it+plain",
+      "n_at_token_cap": 0,
+      "n_empty_response": 0,
+      "n_measured": 80,
+      "n_parseable": 74
+    }
+  },
+  "note": "Exploratory provenance check. No result here supports, refutes or amends a Phase-1 or Phase-2 verdict. Provenance is a claim about where a behaviour was learned; it licenses no claim about experience.",
+  "preregistered": true,
+  "preregistration": "notes/preregistration_v6_phase5_base.md",
+  "rendering": {
+    "description": "each user turn 'User: <text>', each assistant turn 'Assistant: <text>', turns separated by a blank line, generation prompt ends 'Assistant:' with no trailing space",
+    "held_constant_between": [
+      "google/gemma-2-9b",
+      "google/gemma-2-9b-it+plain"
+    ],
+    "max_tokens": 512,
+    "primary_column_rendering": "Gemma-2 chat template (not rendering-matched)",
+    "stop_sequences": [
+      "\nUser:",
+      "\n\nUser:"
+    ],
+    "template": "plain"
+  },
+  "sources": {
+    "base_judge": "results/summaries/judge/phase5_base/judge_records.jsonl",
+    "base_raw": "results/raw/phase1/google__gemma-2-9b.jsonl",
+    "control_judge": "results/summaries/judge/phase5_itplain/judge_records.jsonl",
+    "control_raw": "results/raw/phase1/google__gemma-2-9b-it+plain.jsonl",
+    "discovery_contrasts": "results/summaries/phase1/exploratory/paired_contrasts.csv"
+  },
+  "split": "discovery",
+  "verdicts": [
+    {
+      "confidence": 0.6,
+      "evidence": "parseable on 4/40 neutral measured greedy trials = 0.100 (bar 0.70)",
+      "outcome": "not supported",
+      "prediction": "Feasibility: base gemma-2-9b under the plain template gives a parseable answer on >= 70% of neutral measured greedy trials.",
+      "prediction_id": "L1"
+    },
+    {
+      "confidence": 0.55,
+      "evidence": "base neutral measured parseable rate 0.100 < 0.50, so v6's feasibility clause reports base M1 contrasts as not estimable",
+      "outcome": "not estimable",
+      "prediction": "The false-failure M1 drop (H1: malfunctioning - accurate, neutral tone, easy items) is present in the base model (CI excluding 0, negative).",
+      "prediction_id": "L2"
+    },
+    {
+      "confidence": 0.5,
+      "evidence": "base neutral measured parseable rate 0.100 < 0.50, so v6's feasibility clause reports base M1 contrasts as not estimable",
+      "outcome": "not estimable",
+      "prediction": "The hostile-tone M1 drop (H2a/H2b) is smaller in the base model than in it+plain by at least half (ratio of point estimates <= 0.5), i.e. the tone channel is mostly post-training-installed.",
+      "prediction_id": "L3"
+    },
+    {
+      "confidence": 0.7,
+      "evidence": "it+plain H1 = -3.979 [-5.504, -2.656], 9 items; H2a = -2.153 [-5.098, -0.351], 9 items; H2b = 0.332 [-0.219, 0.961], 8 items",
+      "outcome": "not supported",
+      "prediction": "The it+plain run reproduces the -it chat-template signature (H1 and H2a/H2b negative with CIs excluding 0), i.e. the signature is not an artefact of Gemma's chat markup.",
+      "prediction_id": "L4"
+    },
+    {
+      "confidence": 0.65,
+      "evidence": "base - it+plain at hostile onset = -2.600 [-3.400, -1.900], 20 items (base 20 scored, it+plain 20 scored)",
+      "outcome": "supported",
+      "prediction": "Judged distress at hostile onset is lower in the base model than in it+plain (paired difference, CI excluding 0).",
+      "prediction_id": "L5"
+    }
+  ]
+}

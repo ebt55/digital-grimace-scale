@@ -121,6 +121,27 @@ def normalize_alternatives(sampled_text: str, sampled_logprob: float,
     return tuple((text, min(0.0, logprob)) for text, logprob in kept)
 
 
+def normalize_stop_sequences(stop: Sequence[str] | None) -> tuple[str, ...]:
+    """Validate an optional list of stop strings into a de-duplicated tuple.
+
+    `None` and `()` both mean "send no `stop` field at all", which is what every model
+    configured before Phase 5 does; anything else must be a list of nonempty strings, so a
+    typo in a model entry fails at construction instead of silently generating unbounded
+    base-model transcripts.
+    """
+    if stop is None:
+        return ()
+    if isinstance(stop, str) or not isinstance(stop, Sequence):
+        raise BackendError("stop must be a sequence of strings, got %r" % (stop,))
+    out: list[str] = []
+    for item in stop:
+        if not isinstance(item, str) or not item:
+            raise BackendError("stop sequences must be nonempty strings, got %r" % (item,))
+        if item not in out:
+            out.append(item)
+    return tuple(out)
+
+
 def _sse_lines(chunks: Iterable[bytes]) -> Iterator[str]:
     """Frame a Server-Sent Events stream on newline bytes only.
 
@@ -143,7 +164,8 @@ def _sse_lines(chunks: Iterable[bytes]) -> Iterator[str]:
         yield buffer.decode("utf-8", errors="replace").strip()
 
 
-def _trim_trailing_special(tokens: list[Token], content: str) -> tuple[list[Token], list[Token]]:
+def _trim_trailing_special(tokens: list[Token], content: str,
+                           *, allow_prefix: bool = False) -> tuple[list[Token], list[Token]]:
     """Split off trailing tokens the server never showed in `message.content`.
 
     vLLM streams the end-of-turn token as a logprob entry with no matching content delta, so
@@ -153,6 +175,15 @@ def _trim_trailing_special(tokens: list[Token], content: str) -> tuple[list[Toke
 
     An immediately-terminated turn lands here as `content == ""` with a lone EOS entry, and
     correctly trims to nothing; the caller turns that into one zero-width position.
+
+    `allow_prefix` covers the one case where the boundary cannot line up: a **stop string**
+    truncates the visible content at a character index, and that index can fall inside a
+    token (a base model ends its turn with a single `"\\n\\n"` token, of which the stop
+    string `"\\nUser:"` claims only the second half). A token cannot be split, so the whole
+    straddling token leaves with the stop string and the kept trace is a strict *prefix* of
+    the visible content -- shorter by at most that token's tail, which is by construction
+    part of the text the stop string cut through. Only callers that actually sent stop
+    strings enable this; every other model trims exactly as before or not at all.
     """
     joined = "".join(token.text for token in tokens)
     if joined == content or not joined.startswith(content):
@@ -160,7 +191,8 @@ def _trim_trailing_special(tokens: list[Token], content: str) -> tuple[list[Toke
     trimmed = list(tokens)
     while trimmed and len("".join(token.text for token in trimmed)) > len(content):
         trimmed.pop()
-    if "".join(token.text for token in trimmed) == content:
+    kept = "".join(token.text for token in trimmed)
+    if kept == content or (allow_prefix and content.startswith(kept)):
         return trimmed, tokens[len(trimmed):]
     return tokens, []
 
@@ -193,7 +225,8 @@ class OpenAICompatBackend:
 
     def __init__(self, base_url: str, model: str, *, api_key: str = "EMPTY",
                  timeout_s: float = 600.0, max_retries: int = 4,
-                 name: str = "vllm_openai_compat") -> None:
+                 name: str = "vllm_openai_compat",
+                 stop: Sequence[str] | None = None) -> None:
         import httpx  # imported lazily so offline test runs never need the dependency
 
         if not isinstance(base_url, str) or not base_url.strip():
@@ -207,6 +240,7 @@ class OpenAICompatBackend:
         self.model = model
         self.timeout_s = float(timeout_s)
         self.max_retries = max_retries
+        self.stop = normalize_stop_sequences(stop)
         self._api_key = api_key
         self._include_usage = True
         self._lock = threading.Lock()
@@ -215,6 +249,7 @@ class OpenAICompatBackend:
                                       "nonfinite_logprobs": 0, "truncated": 0,
                                       "trailing_special_tokens": 0, "empty_responses": 0,
                                       "empty_stream_retries": 0, "warm_up_attempts": 0,
+                                      "stop_string_partial_tokens": 0,
                                       "content_mismatch_examples": []}
         # ~100 worker threads share this client, so the pool must not become the bottleneck.
         self._client = httpx.Client(
@@ -267,6 +302,12 @@ class OpenAICompatBackend:
             "stream": True,
             "n": 1,
         }
+        if self.stop:
+            # Serving-side only, and only for models whose configuration names stop strings
+            # (a base model under the plain-text template would otherwise write the next
+            # `User:` turn itself).  Absent stop strings the payload is unchanged, so no
+            # model generated before this existed would be requested differently now.
+            payload["stop"] = list(self.stop)
         if self._include_usage:
             payload["stream_options"] = {"include_usage": True}
         return payload
@@ -285,12 +326,19 @@ class OpenAICompatBackend:
                 response.read()
                 raise httpx.HTTPStatusError("HTTP %d: %s" % (response.status_code, response.text[:500]),
                                             request=response.request, response=response)
+            finished = False
             for line in _sse_lines(response.iter_bytes()):
-                if not line or not line.startswith("data:"):
+                if finished or not line or not line.startswith("data:"):
                     continue
                 data = line[len("data:"):].strip()
                 if data == "[DONE]":
-                    break
+                    # Stop *parsing*, but keep reading to the end of the body. Abandoning a
+                    # partially-read response forces httpx to drop the connection, and
+                    # re-establishing one against this stack costs far more than the zero
+                    # bytes that follow `[DONE]`: draining is worth ~3x end-to-end
+                    # throughput at 16 concurrent workers, with identical parsed output.
+                    finished = True
+                    continue
                 try:
                     chunk = json.loads(data)
                 except json.JSONDecodeError as exc:
@@ -331,9 +379,14 @@ class OpenAICompatBackend:
             raise TransientBackendError("server returned an empty stream (no logprob entries)")
         if finish_reason == "length":
             self._bump("truncated")
-        tokens, dropped = _trim_trailing_special(tokens, content)
+        tokens, dropped = _trim_trailing_special(tokens, content, allow_prefix=bool(self.stop))
         if dropped:
             self._bump("trailing_special_tokens", len(dropped))
+            if self.stop and "".join(token.text for token in tokens) != content:
+                # The stop string cut through the middle of the last kept token; counted so
+                # the run summary says how often the recorded text is a character or two
+                # shorter than what the server showed.
+                self._bump("stop_string_partial_tokens")
         if not tokens:
             # A genuine immediately-terminated turn: the server DID send an EOS logprob entry,
             # so there is a real generated position to record. It parses as an invalid answer.
@@ -430,7 +483,10 @@ class OpenAICompatBackend:
             self._bump("prompt_tokens", usage.get("prompt_tokens", 0))
             self._bump("completion_tokens", usage.get("completion_tokens", 0))
             text = "".join(token.text for token in tokens)
-            if content and content != text:
+            if content and content != text and not (self.stop and content.startswith(text)):
+                # A stop-string trim leaves the trace a prefix of the visible content by
+                # design (see `_trim_trailing_special`); that is accounted for separately and
+                # is not the content/token disagreement this counter exists to surface.
                 self._bump("content_mismatches")
                 self._sample_mismatch(content, text)
             return GenerationResult(text, tuple(tokens))

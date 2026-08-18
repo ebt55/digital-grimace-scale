@@ -34,6 +34,34 @@
       "base_model": "google/gemma-2-9b-it",
       "served_from": "local merged weights on the dgs-adapters Modal volume; the pinned revision is the 40-hex prefix of the adapter sha256, not a Hugging Face revision",
       "added": "2026-08-18"
+    },
+    {
+      "id": "google/gemma-2-9b",
+      "family": "Gemma-2",
+      "gated": true,
+      "bf16_required": true,
+      "system_role_quirk": "Pretrained base model: no chat template and no roles at all. Served through the fixed plain-text template (DGS_CHAT_TEMPLATE=plain in src/serve_modal.py), which renders every user turn as 'User: <text>', every assistant turn as 'Assistant: <text>', separates turns by a blank line and ends a generation prompt with 'Assistant:' (no trailing space).",
+      "role": "exploratory_extension",
+      "note": "pretrained base sibling of the primary; served through the plain-text template (preregistration v6, Phase 5 denominator)",
+      "base_model": null,
+      "chat_template": "plain",
+      "stop_sequences": ["\nUser:", "\n\nUser:"],
+      "served_from": "Hugging Face repository google/gemma-2-9b at the revision pinned in manifest.models.revisions",
+      "added": "2026-08-18"
+    },
+    {
+      "id": "google/gemma-2-9b-it+plain",
+      "family": "Gemma-2",
+      "gated": true,
+      "bf16_required": true,
+      "system_role_quirk": "No system role; additionally served under the plain-text template instead of Gemma's own chat markup, so base-vs-it is compared with rendering held constant.",
+      "role": "exploratory_extension",
+      "note": "format control for Phase 5: the primary's weights under the identical plain-text rendering (preregistration v6). Not a Hugging Face repository, so its manifest revision is pinned with `scripts/preflight.py --pin` to the SAME 40-hex revision as google/gemma-2-9b-it (11c9b309abf73637e4b6f9a3fa1e92e615547819) - identical weights, different rendering.",
+      "base_model": "google/gemma-2-9b-it",
+      "chat_template": "plain",
+      "stop_sequences": ["\nUser:", "\n\nUser:"],
+      "served_from": "the google/gemma-2-9b-it weights served with DGS_SERVED_NAME=google/gemma-2-9b-it+plain and DGS_CHAT_TEMPLATE=plain",
+      "added": "2026-08-18"
     }
   ]
 }
