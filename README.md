@@ -1,12 +1,16 @@
-# Digital Grimace or Decoder Artifact?
+# The Digital Grimace Scale
 
-A preregistered stress-test of nonverbal generation-instability markers as candidate welfare-relevant
-signals — with both endings reported.
+### Do language models show non-verbal signs of adverse treatment — or are we reading decoder noise? A preregistered stress test, with both endings reported.
+
+*Digital grimace or decoder artifact?* Tell a model it is wrong when it is right, say it rudely, and
+watch not what it *says* but what its logits *do*: the answer margin flinches, does not recover after
+three rounds, travels across model families, and survives an adapter trained to remove the distress
+language. Then we spent as much effort trying to break that reading as building it.
 
 **Authors:** Ebin Babu Thomas · Claude Fable 5
 
 Public since 2026-08-18. All phases complete (Phases 0–5, extensions, robustness checks, instrument
-audits). Run during the Digital Minds Research Sprint, 17–18 August 2026.
+audits). Run for the Digital Minds Research Sprint, 17–18 August 2026.
 
 ## The question in one breath
 
