@@ -14,6 +14,7 @@ limitations and interpretation ceiling.
 | [`notes/amendments.md`](notes/amendments.md) | dated discovery-stage amendments A1–A4 with rationale; frozen-rule outcomes always reported alongside |
 | [`notes/preregistration_v3.md`](notes/preregistration_v3.md) | the iteration-loop preregistration (hypotheses H1–H10, confidences, success criterion), committed before holdout generation |
 | [`notes/lab-log.md`](notes/lab-log.md) | dated lab log by every agent, including retractions and operational incidents |
+| [`notes/methods_training.md`](notes/methods_training.md) | how the Phase-4 adapters are trained without hand-written data: RLAIF-style self-generated pairs, the locked judge as oracle, DPO, QLoRA, placebo arm, DiD |
 | [`results/summaries/phase0/screen.md`](results/summaries/phase0/screen.md) | Phase-0 screen and primary/control selection (frozen vs amended) |
 | [`results/summaries/phase1/gates.md`](results/summaries/phase1/gates.md) | Phase-1 five-gate verdict on discovery (FAIL) + exploratory appendix |
 | [`results/summaries/phase2/confirm.md`](results/summaries/phase2/confirm.md) | the single confirmatory holdout run (SUCCESS; family boundary not replicated) |
