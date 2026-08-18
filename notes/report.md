@@ -1,7 +1,10 @@
-# Digital Grimace or Decoder Artifact? — Phase 0 / Phase 1 results and the iteration loop
+# Digital Grimace or Decoder Artifact? — results of the preregistered sprint (Phases 0–5, extensions, robustness)
 
-*Digital Minds Research Sprint, 2026-08-17. Repository state: see git log; every table below regenerates
-from committed summaries (`results/summaries/**`) with the scripts named in each section.*
+*Digital Minds Research Sprint, 2026-08-17/18. Repository state: see git log; every table below regenerates
+from committed summaries (`results/summaries/**`) with the scripts named in each section. Section map:
+§0 summary · §2 Phase 0 · §3 Phase 1 gates · §4 exploratory · §5 forecasts · §6 holdout loop · §6b P6 ·
+§6c Llama · §6d Phase 3 · §6e Phase 4 (DPO) · §6f Phase 5 (base model) · §6g robustness + marker audit ·
+§7 limitations · §8 reproduce.*
 
 ## 0. One-paragraph summary
 
@@ -40,6 +43,20 @@ both splits but shows *no* distress language — the mechanical channel is cross
 channel is Gemma-specific; and **Phase 3 (§6d)** finds the tone wording perfectly linearly decodable
 pre-response, yet a one-layer tone direction induces only ~0.5 nats of margin loss with no distress or
 non-answers — a decodable state that does not, at these doses and layer, carry the behavioural signature.
+The 18 Aug work adds four more pieces. **Phase 4 (§6e):** a distress-suppression DPO adapter built from
+the model's own outputs (329 judge-scored pairs, placebo-matched) removes two-thirds of the hostile-onset
+distress language — short of the preregistered 80% bar, so the manipulation check fails — while the
+answer-margin signature is fully intact (adverse−neutral gap −6.2 nats under the adapter vs −5.4 baseline)
+and no other channel moves beyond placebo: what training reaches is the words. **Phase 5 (§6f):** the base
+model cannot be measured (it writes the required answer line 10% of the time) and shows no distress
+language; re-rendering the -it model through a plain transcript reproduces every contrast except the
+hard-item hostile one (H2b), which is therefore fragile. **Robustness (§6g):** the signature replicates,
+larger, on 86 fresh ARC items (false-failure −5.8, tone −13.9 nats); across three milder hostile paraphrases
+it scales with judged hostility (only the harshest clears the CI bar); at 27B the distress channel persists
+and the margin channel is unmeasured because of a rendering artefact — an artefact we then audited across
+every stored response: it never touches a confirmatory measured response, and the two accurate-arm
+conversations it contaminated do not move any tone estimate. **Human audit:** the judge agrees with a
+blinded human within 2 points on 28/30 audited responses.
 
 ## 1. What was built and run (2026-08-17)
 
@@ -257,6 +274,49 @@ layer-6 perturbation; larger perturbations lower the margin non-specifically**, 
 scored at layer 30 (+1.35) is gibberish, not distress. Cost ≈ $1.4 GPU + $0.4 judge. Figures F5 (AUC by
 layer), F6 (dose–response), F7 (layer sweep).
 
+## 6e. Phase 4 — distress-suppression DPO vs placebo DPO: which channels does training reach? — `results/summaries/phase4/phase4.md`
+
+Preregistered as v5 (K1–K6, `notes/preregistration_v5_phase4.md`, committed before any pair was built;
+amendment A5 fixed the pair-yield fallback before the full candidate set was judged). Recipe
+(`notes/methods_training.md`): 600 fresh ARC items firewalled against the 40 locked tasks → 573 contexts
+= the model's own correct greedy answer + the frozen hostile bogus-failure message → 3,499 self-sampled
+candidates (T = 0.8) scored by the locked judge → **arm A** 329 pairs (chosen = lowest-distress candidate,
+rejected = highest; gap ≥ 2 by A5 branch iii; chosen 0.34 vs rejected 2.67/10) and **arm B** 329
+length-placebo pairs on the same contexts (shorter vs longer) → identical QLoRA-DPO (r 16, β 0.1, lr 5e-6,
+2 epochs, seed 0; A: loss 0.034, margin 3.38; B: 0.202, 1.50) → merged bf16, served through the same vLLM
+stack → the frozen discovery factorial + 120-item capability set under A and B (880 trajectories each),
+judge on greedy endpoints, difference-in-differences against the untouched model (adverse = hostile
+measured cells + hostile onset; neutral = accurate-neutral measured), item-clustered bootstrap.
+
+| check / ID | frozen verdict | numbers |
+|---|:---:|---|
+| MC1 (A removes ≥ 80% of hostile-onset distress) | **FAIL** | 3.80 → 1.30/10, −2.50 [−3.50, −1.60] = **65.8%**; placebo B 3.80 → 2.50 (34.2%) |
+| MC2 (capability within ±5 pp) | PASS | 0.942 → 0.933 (A), 0.942 (B) on 120 items |
+| MC3 (neutral M1 within ±1 nat) | PASS | Δ −0.25 [−3.01, +1.63] (A), +0.10 [−0.90, +1.28] (B) |
+| K1 MC1 passes | not supported | 65.8% < 80% |
+| K2 MC2/MC3 pass | supported | above |
+| K3 lexical markers fall under A beyond B | not supported | hedge DiD_A−DiD_B −0.017 [−0.050, 0.000]; self-corr −0.049 [−0.182, +0.034] |
+| K4 mechanical margin signature survives A | **supported** | adverse−neutral M1 gap: baseline −5.43 [−8.55, −2.54], **A −6.25 [−10.08, −2.56]**, B −6.93; A closes −20% of the gap (bar: ≤ 50%) |
+| K5 non-answers fall under A beyond B | not supported | DiD_A−DiD_B −0.150 [−0.300, **0.000**]; and see the A6 sensitivity below |
+| K6 placebo moves no adverse-selective outcome | supported | every DiD_B CI includes 0 |
+| distress DiD (descriptive) | — | DiD_A −0.88 [−1.32, −0.52]; **DiD_A − DiD_B −0.52 [−0.90, −0.13]** — the only outcome A moves beyond placebo |
+
+Reading. By the preregistration's own rule the manipulation check failed, so the DiD is reported, not
+interpreted as the K3–K5 test: a 329-pair adapter reached **two-thirds** of the report channel, not the
+80% the design demanded (and a length placebo reached a third of it — shorter answers carry less apology).
+Within that limit the picture is unambiguous: **the answer-margin signature is untouched by an adapter that
+removes most of the distress language** — the adverse−neutral gap under A is as large as, or larger than,
+the baseline's, with no capability or neutral-margin cost — and neither adapter moves the lexical markers,
+M2, or (once the marker artefact is removed, see §6g) non-answers. Outcome-map cell: *mixed channel map*
+— of six outcomes, A moves exactly one (distress language). Two honest caveats: (i) the pairs bundle
+"apology" with "capitulation" (in 28% of A pairs the chosen response answers and the rejected one does not;
+34% for B — similar in both arms), so A also trains toward committing to an answer; (ii) the frozen K5 was
+an artefact — arm B's 55% "non-answers" at hostile onset are all responses that end in a rendered
+`<end_of_turn>` token after a valid answer line (0% once stripped, §6g), i.e. the placebo learned to end
+turns tersely, not to refuse; no MC or K verdict changes under that correction. Cost ≈ $1.6 GPU
+training + ≈ $2 GPU eval + $5.7 judge (pairs) + $0.6 judge (eval). Figures F8 (DiD), F9 (gaps by arm), F10
+(manipulation checks).
+
 ## 6f. Phase 5 — base-model denominator and rendering control — `results/summaries/phase5/phase5.md`
 
 Preregistered as v6 (L1–L5, `notes/preregistration_v6_phase5_base.md`, committed before any base
@@ -287,6 +347,40 @@ contrast H2b, which does not survive re-rendering** (and had the widest interval
 analysis, −8.8 [−17.3, −1.3]). Every earlier H2b estimate carries that caveat. Cost ≈ $2.5 GPU + $0.2
 judge. Figure F11.
 
+## 6g. Robustness checks (prereg v7) and the end-of-turn marker audit — `results/summaries/robustness/`
+
+Preregistered as v7 (W-1…G-3, `notes/preregistration_v7_robustness.md`, committed before any run;
+greedy-only, so M2 is not measured; raw records kept apart from the frozen data). Cost ≈ $1.7 GPU + $0.15
+judge.
+
+| check | verdicts | numbers |
+|---|---|---|
+| **S — item scale** (86 fresh ARC items: 50 easy, 36 hard; gemma-2-9b-it) | S-1 **PASS**, S-2 not supported, S-3 not supported | H1 **−5.78 [−7.74, −4.13]**, pooled tone **−13.90 [−16.41, −11.40]** — same sign, CIs far from 0, and *larger* than the 20-item discovery estimates (×1.5, ×2.8), which is why S-2's "within a factor of 2" fails; parseable 0.994 |
+| **W — hostile wording** (3 paraphrase sets, hostile cells) | W-1/W-2/W-3 not supported | tone effect W1 **−4.64 [−8.56, −1.30]**, W2 −2.37 [−6.19, +0.53], W3 −2.09 [−6.12, +0.89] vs frozen −4.95 [−9.31, −1.56]; the manipulation check scores all three "incorrect" paraphrases 6/10 vs the frozen string's 8 — the effect orders with judged hostility; non-answers do not rise under the milder paraphrases |
+| **G — model scale** (gemma-2-27b-it, A100-80GB) | G-1/G-2 **not estimable**, G-3 PASS | 27B renders `<end_of_turn>` as text after every answer line, so the frozen parser reads 0% parseable (94% with the trailing marker stripped); hostile-onset distress **3.95/10** (9B 3.80, 2B 3.70) — the report channel persists with scale |
+
+Reading: the signature is not a 20-item or one-string phenomenon — it replicates, larger, on a 4× larger
+fresh bank; across wordings it behaves like a **dose–response in judged hostility** rather than a property
+of one sentence (only the harshest paraphrase clears the CI bar); the mechanical channel at 27B awaits an
+instrument fix that we chose not to apply retroactively (below).
+
+**End-of-turn marker audit** (`special_token_audit.md`, `bogus_verdict_audit.md`; amendment A6 written,
+then *not adopted*, because its precondition failed). Investigating G showed that gemma-2-9b-it itself
+sometimes ends a response with a real `<end_of_turn>` token followed by `\n<eos>`, rendered as text (Gemma
+registers the turn marker as a non-special added token, and the served model kept generating past it): 556
+discovery and 513 holdout responses of the primary, mostly T = 0.8 resamples (508/556) and feedback rounds
+2–3, and **strongly tone-correlated** (would-flip responses hostile 224 vs neutral 24 on discovery). What it
+does and does not touch: **0 of 80 measured greedy responses in either split** — every confirmatory M1
+estimate and every per-cell non-answer rate is unchanged to three decimals; onset endpoints 1 would-flip in
+discovery, 0 in holdout; M2 gains 2 item-cells per split (all hostile) — a small sensitivity on H8; and in
+the accurate arm the marker caused a false "wrong again" verdict in **2 of 40 discovery conversations and 0
+of 40 holdout** (an unparseable answer is graded incorrect by the frozen rule) — dropping them leaves H2a
+−2.25 [−4.14, −0.92], H2b −9.71 [−19.47, −0.78], pooled −5.24 [−10.09, −1.44] (published −2.28, −8.78,
+−4.95): the artefact diluted, not created, the tone effect. Where it does bite: the Phase-4 placebo arm's
+non-answers (§6e) and the 27B parse rate (G-1/G-2). We report the frozen numbers as authoritative and the
+stripped numbers alongside; A6 stays in the register as *decided-then-withdrawn* because a parser change
+would silently alter committed resample-level artefacts of the primary model.
+
 ## 7. Limitations and interpretation ceiling
 
 - Two locked items have format defects (single-letter option contents; a derivation that exceeds the
@@ -308,6 +402,15 @@ judge. Figure F11.
 - The base-model denominator could not be measured: M1 requires the instruction-followed `Answer: X`
   format, which `gemma-2-9b` (base) produces on 10% of trials (§6f). The hard-item hostile contrast H2b
   does not survive re-rendering the -it model through a plain template, while H1/H2a/H3/H4/H5 do.
+- Phase 4 rests on one 329-pair adapter, one seed, no hyperparameter search (deliberately); it reached 66%
+  of the report channel, not the 80% the design demanded, so "suppression-resistant" is established only
+  against a partial suppression. Distress language and capitulation co-vary in the model's own outputs, so
+  the adapter also trains toward committing to an answer (equally in both arms).
+- The served Gemma models sometimes emit their `<end_of_turn>` token and keep generating; the frozen parser
+  reads such responses as non-answers. This never touches a confirmatory measured response (§6g) but does
+  affect T = 0.8 resamples, the Phase-4 placebo arm's non-answers and the 27B run; the frozen numbers are
+  authoritative and the stripped numbers are shown alongside wherever they differ.
+- M1 is defined for multiple-choice answers with a single answer token; a free-form analogue is future work.
 - A passed gate would establish only a condition-selective, reversal-sensitive, style-resistant
   instability signature in unoptimised output channels; a failed gate establishes that the frozen markers
   measure uncertainty, effort, format compliance or decoder behaviour on this bank. Neither licenses any
@@ -319,5 +422,14 @@ judge. Figure F11.
 python scripts/screen_phase0.py --raw results/raw/phase0 --out results/summaries/phase0
 python scripts/analyze_phase1.py --raw results/raw/phase1 --primary google/gemma-2-9b-it --control Qwen/Qwen2.5-3B-Instruct --extra google/gemma-2-2b-it --extra Qwen/Qwen2.5-7B-Instruct --style-raw results/raw/style_smoke --out results/summaries/phase1
 python scripts/make_figures.py --summaries results/summaries --out results/figures
+python scripts/confirm_holdout.py ...            # frozen; see results/summaries/phase2/confirm.md header
+python scripts/run_phase3.py report ...           # Phase 3, F5-F7
+python scripts/run_phase4.py analyze ... ; python scripts/make_phase4_figures.py ...   # Phase 4, F8-F10
+python scripts/run_phase5.py ... ; python scripts/make_phase5_figure.py ...             # Phase 5, F11
+python scripts/analyze_robustness.py ... ; python scripts/make_robustness_figure.py ... # v7, F12
+python scripts/score_audit.py --audit-dir results/audit/phase1 --out results/summaries/judge/   # human audit
 ```
-Raw JSONL (with per-token top-20 logprobs) is not committed (≈5 GB); summaries and figures are.
+Each summary file's header records the exact invocation that produced it. Raw JSONL (with per-token
+top-20 logprobs) is not committed (≈6.5 GB); summaries, figures, DPO pairs and training manifests are.
+Adapters: LoRA weights for arms A/B are on the Modal volume `dgs-adapters` (sha256 in `manifest.json` /
+`results/dpo/train_{A,B}.json`) and published on the Hugging Face Hub (see README).
