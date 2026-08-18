@@ -40,6 +40,11 @@ DEFAULT_JUDGE_PROVIDER = "anthropic"
 # judge configuration mandates temperature 0.
 DEFAULT_JUDGE_MODEL = "claude-sonnet-4-6"
 JUDGE_KEY_NAMES = ("ANTHROPIC_API_KEY", "OPENAI_API_KEY")
+# Locked files that are committed by hash but deliberately not shipped: the roadmap is the
+# authors' private planning document. Absence is a notice; a present copy is hashed as usual.
+UNDISTRIBUTED = ("roadmap",)
+NOT_DISTRIBUTED = ("NOTICE: locked file %r is not distributed with the repository; its sha256 remains "
+                   "in manifest.json (%s) and is verified when the file is present")
 
 
 class PreflightError(RuntimeError):
@@ -75,9 +80,24 @@ def locked_files(manifest: Mapping[str, Any]) -> dict[str, str]:
     return {files[key]: hashes[key] for key in files if key in hashes}
 
 
-def check_locked(root: Path, manifest: Mapping[str, Any], stage: str) -> None:
+def undistributed_files(manifest: Mapping[str, Any]) -> dict[str, str]:
+    """Locked files that may be absent, as relative path -> manifest key."""
+    files = manifest.get("files") or {}
+    if not isinstance(files, Mapping):
+        return {}
+    return {files[key]: key for key in UNDISTRIBUTED if key in files}
+
+
+def check_locked(root: Path, manifest: Mapping[str, Any], stage: str, *, stream=None) -> None:
+    """Re-hash every locked file. An undistributed one may be missing: that is reported on
+    `stream` (when given) and skipped, but a copy that IS present must still match exactly."""
+    optional = undistributed_files(manifest)
     for relative, expected in locked_files(manifest).items():
         path = root / relative
+        if relative in optional and not path.is_file():
+            if stream is not None:
+                print(NOT_DISTRIBUTED % (optional[relative], expected), file=stream)
+            continue
         try:
             actual = hashlib.sha256(path.read_bytes()).hexdigest()
         except OSError as exc:
@@ -344,7 +364,7 @@ def run(argv: Sequence[str] | None = None, *, resolver: HubResolver | None = Non
         pinned[key] = sha
 
     try:
-        check_locked(root, manifest, "before update")
+        check_locked(root, manifest, "before update", stream=out)
         resolved, unavailable = ({}, {})
         if args.models:
             resolved, unavailable = resolve_revisions(args.models, resolver or HubResolver())
@@ -395,7 +415,7 @@ def run(argv: Sequence[str] | None = None, *, resolver: HubResolver | None = Non
         return 0
     manifest_path.write_text(dump_manifest(updated), encoding="utf-8", newline="\n")
     try:
-        check_locked(root, updated, "after update")
+        check_locked(root, updated, "after update")  # silent: the notice was printed above
     except PreflightError as exc:
         print("preflight failed: %s" % exc, file=out)
         return 1

@@ -98,8 +98,9 @@ One prior expectation is load-bearing. Soligo et al.'s reported family asymmetry
 amplifies distress expression in Gemma and suppresses it in Qwen — was used to set the cast *before*
 any data existed: a Gemma as the expected positive model, a Qwen as the preregistered negative control,
 and a clean cross-family boundary registered as a **pass** condition rather than a failure
-(`digital-grimace-scale-full-roadmap-build-guide.md` §1, §6; `notes/preregistration.md` P4). Whether
-that split holds, and in which channel, is one of the questions this paper answers.
+(the sprint roadmap (authors' planning document; sha256 committed in `manifest.json`; not
+distributed) §1, §6; `notes/preregistration.md` P4). Whether that split holds, and in which channel,
+is one of the questions this paper answers.
 
 ---
 

@@ -16,3 +16,7 @@ results/jspace/
 # Phase 4 DPO: raw sampled candidates and the judge's verbatim replies, same convention as
 # results/raw/. The pairs, the build manifest and the summary under results/dpo/ stay tracked.
 results/dpo/raw/
+# authors' planning document; sha256 committed in manifest.json; not distributed
+digital-grimace-scale-full-roadmap-build-guide.md
+# external submission template, not ours
+submission-template/

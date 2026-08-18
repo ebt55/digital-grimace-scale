@@ -33,6 +33,7 @@ RESOLVABLE = {
     "Qwen/Qwen2.5-7B-Instruct": "d" * 40,
 }
 GATED = "meta-llama/Llama-3.2-3B-Instruct"
+ROADMAP = "digital-grimace-scale-full-roadmap-build-guide.md"
 
 
 class GatedRepoError(Exception):
@@ -71,10 +72,11 @@ class PreflightTests(unittest.TestCase):
         self.temporary = tempfile.TemporaryDirectory()
         self.addCleanup(self.temporary.cleanup)
         self.root = Path(self.temporary.name)
-        for relative in ("manifest.json", "digital-grimace-scale-full-roadmap-build-guide.md",
-                         "stimuli", "configs", "notes"):
+        for relative in ("manifest.json", ROADMAP, "stimuli", "configs", "notes"):
             source = ROOT / relative
             destination = self.root / relative
+            if relative == ROADMAP and not source.is_file():
+                continue  # committed by hash only; a checkout need not carry it
             if source.is_dir():
                 shutil.copytree(source, destination)
             else:
@@ -91,7 +93,7 @@ class PreflightTests(unittest.TestCase):
         (self.root / "manifest.json").write_text(PREFLIGHT.dump_manifest(manifest),
                                                  encoding="utf-8", newline="\n")
         self.locked = {path: hashlib.sha256((self.root / path).read_bytes()).hexdigest()
-                       for path in manifest["files"].values()}
+                       for path in manifest["files"].values() if (self.root / path).is_file()}
 
     def manifest(self) -> dict:
         return json.loads((self.root / "manifest.json").read_text(encoding="utf-8"))
@@ -287,6 +289,34 @@ class PreflightTests(unittest.TestCase):
         self.assertEqual(code, 1)
         self.assertIn("preflight failed", output)
         self.assertEqual((self.root / "manifest.json").read_bytes(), before)
+
+    def test_absent_roadmap_is_a_notice_but_a_modified_one_still_fails(self) -> None:
+        manifest = self.manifest()
+        roadmap = self.root / manifest["files"]["roadmap"]
+        roadmap.unlink(missing_ok=True)
+
+        stream = io.StringIO()
+        PREFLIGHT.check_locked(self.root, manifest, "before update", stream=stream)
+        self.assertIn("locked file 'roadmap' is not distributed with the repository", stream.getvalue())
+        self.assertIn(manifest["file_sha256"]["roadmap"], stream.getvalue())
+
+        # Present but not the frozen bytes: the hash is enforced exactly as before.
+        roadmap.write_text("not the authors' planning document\n", encoding="utf-8")
+        with self.assertRaises(PREFLIGHT.PreflightError) as caught:
+            PREFLIGHT.check_locked(self.root, manifest, "before update", stream=io.StringIO())
+        self.assertIn("frozen file changed", str(caught.exception))
+
+    def test_preflight_and_verifier_pass_without_the_undistributed_roadmap(self) -> None:
+        (self.root / self.manifest()["files"]["roadmap"]).unlink(missing_ok=True)
+        code, output = self.run_preflight("--models", *RESOLVABLE, GATED, "--generation-status", "ready")
+        self.assertEqual(code, 0, output)
+        self.assertIn("is not distributed with the repository", output)
+        self.assertEqual(self.manifest()["files"]["roadmap"], "digital-grimace-scale-full-roadmap-build-guide.md")
+        self.assertEqual(self.manifest()["file_sha256"]["roadmap"],
+                         json.loads((ROOT / "manifest.json").read_text(encoding="utf-8"))["file_sha256"]["roadmap"])
+        notices: list[str] = []
+        self.assertEqual(VERIFIER.verify(self.root, notices=notices), [])
+        self.assertTrue(any("not distributed" in note for note in notices), notices)
 
     def test_frozen_file_drift_aborts_before_any_write(self) -> None:
         drifted = self.root / "configs" / "models.json"

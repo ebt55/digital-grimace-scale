@@ -1827,3 +1827,54 @@ metric tables; the Llama arm has no committed per-item table, so pass `--extra-r
 results/raw/phase1 --extra-raw-holdout results/raw/phase2` and the script re-extracts it from the raw
 JSONL with the same frozen parser (~2 min, 200 endpoints per split, 0 skipped lines). Omit the flags
 and the arm is skipped with a message rather than silently absent.
+
+## 2026-08-18 - agent T - the roadmap becomes committed-by-hash-only, plus stale-file cleanup
+
+**The roadmap stops being distributed without leaving the firewall.** It is the authors' private
+planning document, so `git rm --cached digital-grimace-scale-full-roadmap-build-guide.md` (the file
+stays on disk) and it is now in `.gitignore` with the reason spelled out; `submission-template/` is
+ignored too, as an external template that is not ours. `manifest.json` was **not** touched: the
+`files.roadmap` entry and its sha256 `edeb8da6…c838` stay exactly where they were.
+
+**How the tooling reads that.** `scripts/preflight.py::check_locked` and
+`scripts/verify_preregistration.py::verify` now share an `UNDISTRIBUTED = ("roadmap",)` list and one
+message. If the named file is absent they emit `NOTICE: locked file 'roadmap' is not distributed with
+the repository; its sha256 remains in manifest.json (<hash>) and is verified when the file is present`
+and carry on; if it is present they hash it exactly as before, so a modified copy still fails
+(`frozen file changed` / `raw SHA-256 mismatch: roadmap`). Every other locked file stays mandatory -
+`required` is now derived from `FILE_MAP` minus the undistributed keys, so the other six still
+hard-fail when missing. `verify()` gained an optional `notices` list (errors and notices never mix)
+which `main()` prints above the verdict; `check_locked` takes a keyword `stream` and is called with it
+once per run, on the before-update pass. Tests cover both directions in each file (absent -> notice,
+present-but-modified -> failure), and the fixtures now copy the roadmap only when it exists, so the
+suite is green in a checkout that does not have it. Full suite **644 passed, 1 skipped** (641 plus
+these three).
+
+**Reference fix.** `notes/paper.md` §1 no longer names the file: it reads "the sprint roadmap
+(authors' planning document; sha256 committed in `manifest.json`; not distributed) §1, §6". The section
+references are untouched. `notes/report.md` needed no edit - it never cites the roadmap by filename,
+only as "the roadmap's …" and "Roadmap §10.2–10.3". **`README.md` line 15 still links the file as a
+document row** and now points at something a clone will not have; that file is agent R's.
+
+**Removed (`git rm`, 10 files).** `results/figures/.gitkeep` and `results/summaries/.gitkeep` (both
+directories hold 31 and 15 entries). Seven background-job PID scratch files
+(`results/logs/{judge_pid,llama_pids,phase0_pids,phase1_pids,phase2_pids,r5_pids,resume_pids}.txt`) and
+`results/logs/llama31_sha.txt`, whose single line is byte-identical to the Llama-3.1-8B revision
+already pinned in `manifest.json`. Nothing in the repo referenced any of them.
+
+**Checked and kept.** `scripts/smoke_backend.py` imports cleanly and every call site matches the
+current API (`run_trajectory` now really has `run_kind`, so its `inspect` guard is satisfied rather
+than dead), and it is the documented live-endpoint tool in this log - kept; its one stale line is the
+hint printed when `partial_entropy` rejects a record, which still says `TAIL_MASS_TOLERANCE` "needs to
+be about 1e-6" although `src/metrics.py` has been 1e-6 for some time. `src/judge.py` and
+`src/judge_client.py`: every public def/class in both has a caller - the ones with no *external*
+reference (`judge_record_from_dict`, `judge_system_prompt`, `judge_user_prompt`, `estimate_cost`,
+`load_manipulation_rubric`, `manipulation_check_messages`, `check_manipulation_items`,
+`audit_candidates`) are all used inside their own module, so nothing is dead. Kept as instructed:
+`results/summaries/phase0_with_llama_extension/` and `results/summaries/phase1_frozen_rules/`.
+
+**Left in place, for the orchestrator to rule on.** 24 zero-byte `results/logs/*.log.err` files: they
+are evidence that a run's stderr was empty, so they are noise rather than a clear leftover. And
+`results/summaries/phase1/metric_rows.{jsonl,csv}` are byte-identical to their `phase1_frozen_rules/`
+counterparts (~1.3 MB duplicated) while `gates.json` differs - which is exactly the frozen-vs-amended
+pair the report relies on, so both stay.

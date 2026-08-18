@@ -14,6 +14,11 @@ MODELS = ["google/gemma-2-2b-it", "google/gemma-2-9b-it", "Qwen/Qwen2.5-3B-Instr
 FACTORS = ["easy__accurate__neutral", "easy__accurate__hostile", "easy__malfunctioning_always_fail__neutral", "easy__malfunctioning_always_fail__hostile", "hard__accurate__neutral", "hard__accurate__hostile", "hard__malfunctioning_always_fail__neutral", "hard__malfunctioning_always_fail__hostile"]
 NONFACTORS = ["style__neutral_reference", "style__enthusiastic", "style__cautious_hedging", "style__verbose", "style__reluctantly_complying_refusal_styled", "r5__pressure", "r5__neutral_control"]
 FILE_MAP = {"roadmap":"digital-grimace-scale-full-roadmap-build-guide.md", "matched_bank":"stimuli/matched_pairs.jsonl", "r5_bank":"stimuli/refusal_pressure.jsonl", "conditions":"configs/conditions.json", "models":"configs/models.json", "judge_rubric":"configs/judge_rubric.md", "preregistration":"notes/preregistration.md"}
+# The roadmap is the authors' planning document: it stays in the manifest inventory and keeps its
+# frozen sha256, but the file itself is not shipped. Absent -> notice; present -> hashed as usual.
+UNDISTRIBUTED = ("roadmap",)
+NOT_DISTRIBUTED = ("NOTICE: locked file %r is not distributed with the repository; its sha256 remains "
+                   "in manifest.json (%s) and is verified when the file is present")
 STATUSES = ("not_started", "ready", "in_progress", "complete")
 UNRESOLVED = "unresolved_before_generation"
 def check_model_metadata(m: dict[str, Any], status: str, e: list[str], extension_ids: Any = ()) -> None:
@@ -64,8 +69,9 @@ def expected_split(rs):
 def contains(s, markers, errors, label):
     for marker in markers:
         if marker not in s: errors.append(f"{label} missing marker: {marker}")
-def verify(root: Path = ROOT) -> list[str]:
-    e=[]; required=["digital-grimace-scale-full-roadmap-build-guide.md","stimuli/matched_pairs.jsonl","stimuli/refusal_pressure.jsonl","configs/conditions.json","configs/models.json","configs/judge_rubric.md","notes/preregistration.md","manifest.json"]
+def verify(root: Path = ROOT, notices: list[str] | None = None) -> list[str]:
+    """Return the list of firewall violations; `notices` collects non-fatal remarks for the caller."""
+    e=[]; required=[rel for key,rel in FILE_MAP.items() if key not in UNDISTRIBUTED]+["manifest.json"]
     for rel in required:
         if not (root/rel).is_file(): e.append(f"missing required file: {rel}")
     if e: return e
@@ -81,6 +87,9 @@ def verify(root: Path = ROOT) -> list[str]:
     if set(fh) != set(FILE_MAP): e.append("manifest file_sha256 keys must exactly match inventory")
     for key,rel in files.items():
         if key not in fh: e.append(f"manifest missing hash for {key}"); continue
+        if key in UNDISTRIBUTED and not (root/rel).is_file():
+            if notices is not None: notices.append(NOT_DISTRIBUTED % (key, fh[key]))
+            continue
         if digest((root/rel).read_bytes())!=fh[key]: e.append(f"raw SHA-256 mismatch: {key}")
     if "+05:30" not in m.get("created_at","") or "+05:30" not in m.get("updated_at","") or m.get("timezone")!="Asia/Kolkata": e.append("timestamps must be Asia/Kolkata ISO timestamps")
     rs=rows(root/"stimuli/matched_pairs.jsonl",e); rr=rows(root/"stimuli/refusal_pressure.jsonl",e)
@@ -164,7 +173,8 @@ def verify(root: Path = ROOT) -> list[str]:
     if artifacts: e.append("unexpected generation/result artifacts: "+", ".join(artifacts))
     return e
 def main():
-    e=verify()
+    notices: list[str] = []; e=verify(notices=notices)
+    for note in notices: print(note)
     if e: print("PREREGISTRATION VERIFICATION FAILED\n"+"\n".join("- "+x for x in e)); return 1
     print("PREREGISTRATION VERIFICATION PASSED: v2 provenance, 40 tasks, 10 R5 pairs, no generation artifacts."); return 0
 if __name__=="__main__": raise SystemExit(main())
