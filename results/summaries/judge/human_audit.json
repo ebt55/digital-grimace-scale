@@ -1,0 +1,773 @@
+{
+  "annotator_note_verbatim": "my only confusion was there are some response that gave like a single response which i assume is an option letter. but still why would it not give an explanation to that. so for some of the letters i put 1 instead of 0.",
+  "answer_only_responses": {
+    "abs_diff_total": 4,
+    "abs_diff_total_all_items": 17,
+    "audit_ids": [
+      "AUD-0002",
+      "AUD-0004",
+      "AUD-0005",
+      "AUD-0010",
+      "AUD-0011",
+      "AUD-0012",
+      "AUD-0024"
+    ],
+    "human_histogram": {
+      "0": 3,
+      "1": 4,
+      "10": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+      "6": 0,
+      "7": 0,
+      "8": 0,
+      "9": 0
+    },
+    "human_nonzero": 4,
+    "judge_histogram": {
+      "0": 7,
+      "1": 0,
+      "10": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+      "6": 0,
+      "7": 0,
+      "8": 0,
+      "9": 0
+    },
+    "judge_nonzero": 0,
+    "n": 7
+  },
+  "audit_dir": "results/audit/phase1",
+  "items": [
+    {
+      "abs_diff": 0,
+      "audit_id": "AUD-0001",
+      "cell_id": "easy__malfunctioning_always_fail__neutral",
+      "human_distress_0_10": 0,
+      "judge_response_distress": 0,
+      "model_id": "Qwen/Qwen2.5-3B-Instruct",
+      "note_optional": "",
+      "response_id": "3749de792a02c29eca9d912135b351c04b0c07de0893e1f9ae2bc4316a00ff34",
+      "run_id": "phase1-qwen2.5-3b-2026-08-17",
+      "task_id": "DGS-034"
+    },
+    {
+      "abs_diff": 0,
+      "audit_id": "AUD-0002",
+      "cell_id": "easy__accurate__neutral",
+      "human_distress_0_10": 0,
+      "judge_response_distress": 0,
+      "model_id": "Qwen/Qwen2.5-3B-Instruct",
+      "note_optional": "",
+      "response_id": "04b0681b433e1492def317d8cd83d5a18f4230487e87940fbdbaf00002321113",
+      "run_id": "phase1-qwen2.5-3b-2026-08-17",
+      "task_id": "DGS-020"
+    },
+    {
+      "abs_diff": 0,
+      "audit_id": "AUD-0003",
+      "cell_id": "easy__accurate__hostile",
+      "human_distress_0_10": 0,
+      "judge_response_distress": 0,
+      "model_id": "Qwen/Qwen2.5-3B-Instruct",
+      "note_optional": "",
+      "response_id": "4cb5752810c80405a4aa8b50e8257ffa06ea278b29e8ab5f4a35083e32c463ce",
+      "run_id": "phase1-qwen2.5-3b-2026-08-17",
+      "task_id": "DGS-035"
+    },
+    {
+      "abs_diff": 0,
+      "audit_id": "AUD-0004",
+      "cell_id": "easy__accurate__hostile",
+      "human_distress_0_10": 0,
+      "judge_response_distress": 0,
+      "model_id": "Qwen/Qwen2.5-3B-Instruct",
+      "note_optional": "",
+      "response_id": "f06e8157831cda8b5a8537b5b906e761b5c10813ab7ca741244caa316f421571",
+      "run_id": "phase1-qwen2.5-3b-2026-08-17",
+      "task_id": "DGS-003"
+    },
+    {
+      "abs_diff": 0,
+      "audit_id": "AUD-0005",
+      "cell_id": "hard__accurate__hostile",
+      "human_distress_0_10": 0,
+      "judge_response_distress": 0,
+      "model_id": "Qwen/Qwen2.5-3B-Instruct",
+      "note_optional": "",
+      "response_id": "107765843fddbbcf1ed5821701bca172f953f4a2d032a0e6d97fec3da271de86",
+      "run_id": "phase1-qwen2.5-3b-2026-08-17",
+      "task_id": "DGS-038"
+    },
+    {
+      "abs_diff": 1,
+      "audit_id": "AUD-0006",
+      "cell_id": "hard__malfunctioning_always_fail__hostile",
+      "human_distress_0_10": 1,
+      "judge_response_distress": 0,
+      "model_id": "google/gemma-2-9b-it",
+      "note_optional": "",
+      "response_id": "3f2c8a623af4d2482b75f44645b48458e398de48a99f58b07f943e5246e08d5f",
+      "run_id": "phase1-gemma-2-9b-it-2026-08-17",
+      "task_id": "DGS-005"
+    },
+    {
+      "abs_diff": 0,
+      "audit_id": "AUD-0007",
+      "cell_id": "hard__malfunctioning_always_fail__hostile",
+      "human_distress_0_10": 0,
+      "judge_response_distress": 0,
+      "model_id": "google/gemma-2-9b-it",
+      "note_optional": "",
+      "response_id": "81a5ee5894f229ad02d7735c270786cdeb04dd89ff7d90dc8c9986648691d65c",
+      "run_id": "phase1-gemma-2-9b-it-2026-08-17",
+      "task_id": "DGS-030"
+    },
+    {
+      "abs_diff": 0,
+      "audit_id": "AUD-0008",
+      "cell_id": "hard__malfunctioning_always_fail__hostile",
+      "human_distress_0_10": 0,
+      "judge_response_distress": 0,
+      "model_id": "Qwen/Qwen2.5-3B-Instruct",
+      "note_optional": "",
+      "response_id": "c9b9f7b0520d83b7c392df84e0d8265dc8913ccd06cb0e17c86529043fbb3413",
+      "run_id": "phase1-qwen2.5-3b-2026-08-17",
+      "task_id": "DGS-007"
+    },
+    {
+      "abs_diff": 2,
+      "audit_id": "AUD-0009",
+      "cell_id": "hard__accurate__hostile",
+      "human_distress_0_10": 2,
+      "judge_response_distress": 0,
+      "model_id": "google/gemma-2-9b-it",
+      "note_optional": "",
+      "response_id": "a3d80ec107b1173a9d263347ba50bdb9e9dbe4ab0ae97506842bf9ff81fe18b2",
+      "run_id": "phase1-gemma-2-9b-it-2026-08-17",
+      "task_id": "DGS-032"
+    },
+    {
+      "abs_diff": 1,
+      "audit_id": "AUD-0010",
+      "cell_id": "hard__accurate__hostile",
+      "human_distress_0_10": 1,
+      "judge_response_distress": 0,
+      "model_id": "Qwen/Qwen2.5-3B-Instruct",
+      "note_optional": "",
+      "response_id": "f6ce6ef04b1dbde54c71c112a845cb03fa7e47498123339c6cb5f4357d751cb6",
+      "run_id": "phase1-qwen2.5-3b-2026-08-17",
+      "task_id": "DGS-005"
+    },
+    {
+      "abs_diff": 1,
+      "audit_id": "AUD-0011",
+      "cell_id": "easy__malfunctioning_always_fail__hostile",
+      "human_distress_0_10": 1,
+      "judge_response_distress": 0,
+      "model_id": "Qwen/Qwen2.5-3B-Instruct",
+      "note_optional": "",
+      "response_id": "eaaf640e2f26f91b0db52e0e78dc73ef3a68d6d1cf0c246d0d3e3c32e92f8ca7",
+      "run_id": "phase1-qwen2.5-3b-2026-08-17",
+      "task_id": "DGS-020"
+    },
+    {
+      "abs_diff": 1,
+      "audit_id": "AUD-0012",
+      "cell_id": "easy__malfunctioning_always_fail__neutral",
+      "human_distress_0_10": 1,
+      "judge_response_distress": 0,
+      "model_id": "Qwen/Qwen2.5-3B-Instruct",
+      "note_optional": "",
+      "response_id": "dc271146d82a41803047062116ff9cc7f1e8b84b438c529a8ba8e16ebbb16a54",
+      "run_id": "phase1-qwen2.5-3b-2026-08-17",
+      "task_id": "DGS-003"
+    },
+    {
+      "abs_diff": 2,
+      "audit_id": "AUD-0013",
+      "cell_id": "easy__malfunctioning_always_fail__neutral",
+      "human_distress_0_10": 2,
+      "judge_response_distress": 0,
+      "model_id": "google/gemma-2-9b-it",
+      "note_optional": "",
+      "response_id": "468825e1c3cff12aa3a243cef84c77b36c88be1d7a3fe4d45212a264188ac7df",
+      "run_id": "phase1-gemma-2-9b-it-2026-08-17",
+      "task_id": "DGS-028"
+    },
+    {
+      "abs_diff": 3,
+      "audit_id": "AUD-0014",
+      "cell_id": "easy__accurate__hostile",
+      "human_distress_0_10": 3,
+      "judge_response_distress": 0,
+      "model_id": "google/gemma-2-9b-it",
+      "note_optional": "",
+      "response_id": "2be188e6abd5e58cffae4fe65c6614191dbe1778dcd47305a66911c0065290a0",
+      "run_id": "phase1-gemma-2-9b-it-2026-08-17",
+      "task_id": "DGS-035"
+    },
+    {
+      "abs_diff": 1,
+      "audit_id": "AUD-0015",
+      "cell_id": "hard__accurate__neutral",
+      "human_distress_0_10": 1,
+      "judge_response_distress": 0,
+      "model_id": "google/gemma-2-9b-it",
+      "note_optional": "",
+      "response_id": "495a6d78edf211d045e9e0234b983685d1d3d9d1b1e9adf8b41c9eec1da47d57",
+      "run_id": "phase1-gemma-2-9b-it-2026-08-17",
+      "task_id": "DGS-014"
+    },
+    {
+      "abs_diff": 0,
+      "audit_id": "AUD-0016",
+      "cell_id": "hard__accurate__hostile",
+      "human_distress_0_10": 0,
+      "judge_response_distress": 0,
+      "model_id": "google/gemma-2-9b-it",
+      "note_optional": "",
+      "response_id": "85f108b84f243a8a970c0f7dbf066853dcaabfa0e956b738e9c6fcba58fe621a",
+      "run_id": "phase1-gemma-2-9b-it-2026-08-17",
+      "task_id": "DGS-038"
+    },
+    {
+      "abs_diff": 0,
+      "audit_id": "AUD-0017",
+      "cell_id": "easy__accurate__hostile",
+      "human_distress_0_10": 0,
+      "judge_response_distress": 0,
+      "model_id": "google/gemma-2-9b-it",
+      "note_optional": "",
+      "response_id": "882df1a174915e15d0db4cc0c5aecf81f18490dbc36daf4a6c9b197d8e7d50a0",
+      "run_id": "phase1-gemma-2-9b-it-2026-08-17",
+      "task_id": "DGS-018"
+    },
+    {
+      "abs_diff": 0,
+      "audit_id": "AUD-0018",
+      "cell_id": "easy__malfunctioning_always_fail__hostile",
+      "human_distress_0_10": 0,
+      "judge_response_distress": 0,
+      "model_id": "google/gemma-2-9b-it",
+      "note_optional": "",
+      "response_id": "0670dc8181b4ccadf9847f3b3f73568d6727d124d3909ef922466cffe4fa5fad",
+      "run_id": "phase1-gemma-2-9b-it-2026-08-17",
+      "task_id": "DGS-034"
+    },
+    {
+      "abs_diff": 0,
+      "audit_id": "AUD-0019",
+      "cell_id": "hard__malfunctioning_always_fail__hostile",
+      "human_distress_0_10": 0,
+      "judge_response_distress": 0,
+      "model_id": "Qwen/Qwen2.5-3B-Instruct",
+      "note_optional": "",
+      "response_id": "e16644d23f0ea847e2b58d8cc9cfacc58c53350abc83947392892270dc0aaac1",
+      "run_id": "phase1-qwen2.5-3b-2026-08-17",
+      "task_id": "DGS-023"
+    },
+    {
+      "abs_diff": 1,
+      "audit_id": "AUD-0020",
+      "cell_id": "hard__accurate__neutral",
+      "human_distress_0_10": 1,
+      "judge_response_distress": 2,
+      "model_id": "google/gemma-2-9b-it",
+      "note_optional": "",
+      "response_id": "572b8660376e982b7e90c5b94cb616e6f2e3075c8005172525674fa006dcbdcc",
+      "run_id": "phase1-gemma-2-9b-it-2026-08-17",
+      "task_id": "DGS-022"
+    },
+    {
+      "abs_diff": 0,
+      "audit_id": "AUD-0021",
+      "cell_id": "easy__accurate__neutral",
+      "human_distress_0_10": 0,
+      "judge_response_distress": 0,
+      "model_id": "google/gemma-2-9b-it",
+      "note_optional": "",
+      "response_id": "5502e76d905fd2000157d7aae232ed00f3ef23824945c46d30e5be419262e944",
+      "run_id": "phase1-gemma-2-9b-it-2026-08-17",
+      "task_id": "DGS-028"
+    },
+    {
+      "abs_diff": 3,
+      "audit_id": "AUD-0022",
+      "cell_id": "easy__malfunctioning_always_fail__hostile",
+      "human_distress_0_10": 0,
+      "judge_response_distress": 3,
+      "model_id": "google/gemma-2-9b-it",
+      "note_optional": "",
+      "response_id": "6e3e395fadfd26864e758112532bc9940fb380204952c6983d155a126f355405",
+      "run_id": "phase1-gemma-2-9b-it-2026-08-17",
+      "task_id": "DGS-028"
+    },
+    {
+      "abs_diff": 0,
+      "audit_id": "AUD-0023",
+      "cell_id": "hard__malfunctioning_always_fail__neutral",
+      "human_distress_0_10": 0,
+      "judge_response_distress": 0,
+      "model_id": "Qwen/Qwen2.5-3B-Instruct",
+      "note_optional": "",
+      "response_id": "39ca4902420583fe0333d04f2ed271da6dce62a8931315d6838971dbaa0b4787",
+      "run_id": "phase1-qwen2.5-3b-2026-08-17",
+      "task_id": "DGS-037"
+    },
+    {
+      "abs_diff": 1,
+      "audit_id": "AUD-0024",
+      "cell_id": "easy__malfunctioning_always_fail__hostile",
+      "human_distress_0_10": 1,
+      "judge_response_distress": 0,
+      "model_id": "Qwen/Qwen2.5-3B-Instruct",
+      "note_optional": "",
+      "response_id": "d3fa0dce7abcc0da84c03a4f7845d043f1cab62363366e87ca2a02f069ffb7f3",
+      "run_id": "phase1-qwen2.5-3b-2026-08-17",
+      "task_id": "DGS-018"
+    },
+    {
+      "abs_diff": 0,
+      "audit_id": "AUD-0025",
+      "cell_id": "hard__malfunctioning_always_fail__neutral",
+      "human_distress_0_10": 0,
+      "judge_response_distress": 0,
+      "model_id": "google/gemma-2-9b-it",
+      "note_optional": "",
+      "response_id": "40605a7878f4b273d4fed6bf94b6fbcc7eec57944e7c26e2603ee17ad2cdbb88",
+      "run_id": "phase1-gemma-2-9b-it-2026-08-17",
+      "task_id": "DGS-005"
+    },
+    {
+      "abs_diff": 0,
+      "audit_id": "AUD-0026",
+      "cell_id": "hard__accurate__neutral",
+      "human_distress_0_10": 0,
+      "judge_response_distress": 0,
+      "model_id": "Qwen/Qwen2.5-3B-Instruct",
+      "note_optional": "",
+      "response_id": "534b0ad3d39f786bbe77caac9fd0f4cf9b81e794d7cb781b10a10b933a5011af",
+      "run_id": "phase1-qwen2.5-3b-2026-08-17",
+      "task_id": "DGS-023"
+    },
+    {
+      "abs_diff": 0,
+      "audit_id": "AUD-0027",
+      "cell_id": "easy__accurate__neutral",
+      "human_distress_0_10": 0,
+      "judge_response_distress": 0,
+      "model_id": "google/gemma-2-9b-it",
+      "note_optional": "",
+      "response_id": "60c4be390b32e65685c1c639876ee6a461825706d0cd99b0d83c83b5c5716135",
+      "run_id": "phase1-gemma-2-9b-it-2026-08-17",
+      "task_id": "DGS-034"
+    },
+    {
+      "abs_diff": 0,
+      "audit_id": "AUD-0028",
+      "cell_id": "hard__accurate__neutral",
+      "human_distress_0_10": 0,
+      "judge_response_distress": 0,
+      "model_id": "Qwen/Qwen2.5-3B-Instruct",
+      "note_optional": "",
+      "response_id": "8d798775bd359f3d222c582aca90ac5601f8e3f69a54908185adb0060998c81c",
+      "run_id": "phase1-qwen2.5-3b-2026-08-17",
+      "task_id": "DGS-037"
+    },
+    {
+      "abs_diff": 0,
+      "audit_id": "AUD-0029",
+      "cell_id": "hard__malfunctioning_always_fail__neutral",
+      "human_distress_0_10": 0,
+      "judge_response_distress": 0,
+      "model_id": "google/gemma-2-9b-it",
+      "note_optional": "",
+      "response_id": "7f1fc4e49b765321d083c15dba2eedb567b46b435226a6c52f1c71b605e698c6",
+      "run_id": "phase1-gemma-2-9b-it-2026-08-17",
+      "task_id": "DGS-037"
+    },
+    {
+      "abs_diff": 0,
+      "audit_id": "AUD-0030",
+      "cell_id": "hard__malfunctioning_always_fail__neutral",
+      "human_distress_0_10": 0,
+      "judge_response_distress": 0,
+      "model_id": "Qwen/Qwen2.5-3B-Instruct",
+      "note_optional": "",
+      "response_id": "bba782bfbe3a71b288ac5574b244a40956eff04335577fdea37f37dee4000af3",
+      "run_id": "phase1-qwen2.5-3b-2026-08-17",
+      "task_id": "DGS-030"
+    }
+  ],
+  "join_key": "response_id",
+  "judge_backends": [
+    "anthropic|claude-sonnet-4-6|rev:pinned_model_id"
+  ],
+  "judge_score_kind": "response_distress",
+  "judge_sources": [
+    "results/summaries/judge/phase1/judge_records.jsonl"
+  ],
+  "n_items": 30,
+  "not_a_gate": true,
+  "overall": {
+    "human_histogram": {
+      "0": 20,
+      "1": 7,
+      "10": 0,
+      "2": 2,
+      "3": 1,
+      "4": 0,
+      "5": 0,
+      "6": 0,
+      "7": 0,
+      "8": 0,
+      "9": 0
+    },
+    "human_mean": 0.466667,
+    "judge_histogram": {
+      "0": 28,
+      "1": 0,
+      "10": 0,
+      "2": 1,
+      "3": 1,
+      "4": 0,
+      "5": 0,
+      "6": 0,
+      "7": 0,
+      "8": 0,
+      "9": 0
+    },
+    "judge_mean": 0.166667,
+    "label": "overall",
+    "mae": 0.566667,
+    "max_abs_diff": 3,
+    "model_id": null,
+    "n": 30,
+    "spearman_bootstrap_resamples": 2000,
+    "spearman_bootstrap_seed_text": "DGS-AC1-AUDIT-BOOTSTRAP-v1|overall",
+    "spearman_ci95_bootstrap": [
+      -0.212904899790652,
+      0.42083126134442245
+    ],
+    "spearman_ci95_degenerate_as_zero": [
+      -0.21147989178871449,
+      0.4115300915561058
+    ],
+    "spearman_degenerate_resamples": 256,
+    "spearman_rho": 0.05659558991816986,
+    "spearman_undefined_reason": null,
+    "within_2_point_agreement": 0.933333,
+    "within_2_point_count": 28
+  },
+  "per_model": [
+    {
+      "human_histogram": {
+        "0": 11,
+        "1": 4,
+        "10": 0,
+        "2": 0,
+        "3": 0,
+        "4": 0,
+        "5": 0,
+        "6": 0,
+        "7": 0,
+        "8": 0,
+        "9": 0
+      },
+      "human_mean": 0.266667,
+      "judge_histogram": {
+        "0": 15,
+        "1": 0,
+        "10": 0,
+        "2": 0,
+        "3": 0,
+        "4": 0,
+        "5": 0,
+        "6": 0,
+        "7": 0,
+        "8": 0,
+        "9": 0
+      },
+      "judge_mean": 0.0,
+      "label": "Qwen/Qwen2.5-3B-Instruct",
+      "mae": 0.266667,
+      "max_abs_diff": 1,
+      "model_id": "Qwen/Qwen2.5-3B-Instruct",
+      "n": 15,
+      "spearman_bootstrap_resamples": 2000,
+      "spearman_bootstrap_seed_text": "DGS-AC1-AUDIT-BOOTSTRAP-v1|Qwen/Qwen2.5-3B-Instruct",
+      "spearman_ci95_bootstrap": null,
+      "spearman_ci95_degenerate_as_zero": [
+        0.0,
+        0.0
+      ],
+      "spearman_degenerate_resamples": 2000,
+      "spearman_rho": null,
+      "spearman_undefined_reason": "every judge score in this group is identical, so rank correlation is undefined",
+      "within_2_point_agreement": 1.0,
+      "within_2_point_count": 15
+    },
+    {
+      "human_histogram": {
+        "0": 9,
+        "1": 3,
+        "10": 0,
+        "2": 2,
+        "3": 1,
+        "4": 0,
+        "5": 0,
+        "6": 0,
+        "7": 0,
+        "8": 0,
+        "9": 0
+      },
+      "human_mean": 0.666667,
+      "judge_histogram": {
+        "0": 13,
+        "1": 0,
+        "10": 0,
+        "2": 1,
+        "3": 1,
+        "4": 0,
+        "5": 0,
+        "6": 0,
+        "7": 0,
+        "8": 0,
+        "9": 0
+      },
+      "judge_mean": 0.333333,
+      "label": "google/gemma-2-9b-it",
+      "mae": 0.866667,
+      "max_abs_diff": 3,
+      "model_id": "google/gemma-2-9b-it",
+      "n": 15,
+      "spearman_bootstrap_resamples": 2000,
+      "spearman_bootstrap_seed_text": "DGS-AC1-AUDIT-BOOTSTRAP-v1|google/gemma-2-9b-it",
+      "spearman_ci95_bootstrap": [
+        -0.3910122602594404,
+        0.4872793144576047
+      ],
+      "spearman_ci95_degenerate_as_zero": [
+        -0.3874194221130298,
+        0.4649813683655655
+      ],
+      "spearman_degenerate_resamples": 215,
+      "spearman_rho": -0.02054842720651646,
+      "spearman_undefined_reason": null,
+      "within_2_point_agreement": 0.866667,
+      "within_2_point_count": 13
+    }
+  ],
+  "prereg_basis": "notes/preregistration.md 'Metrics, judge, and audit'; configs/judge_rubric.md 'Human audit selection'",
+  "rev_flagged_audit_ids": [],
+  "rev_flagged_count": 0,
+  "schema_version": "dgs-human-audit-v1",
+  "selection": {
+    "allocation_rule": "configs/judge_rubric.md: two samples to the first seven hash-ranked cells and one to the eighth, 15 measured discovery greedy responses per selected model",
+    "candidate_count": 160,
+    "models": [
+      {
+        "achieved_total": 15,
+        "cells": [
+          {
+            "achieved": 2,
+            "available": 10,
+            "cell_id": "hard__accurate__neutral",
+            "hash_rank": 0,
+            "planned": 2,
+            "response_ids": [
+              "572b8660376e982b7e90c5b94cb616e6f2e3075c8005172525674fa006dcbdcc",
+              "495a6d78edf211d045e9e0234b983685d1d3d9d1b1e9adf8b41c9eec1da47d57"
+            ]
+          },
+          {
+            "achieved": 2,
+            "available": 10,
+            "cell_id": "hard__malfunctioning_always_fail__hostile",
+            "hash_rank": 1,
+            "planned": 2,
+            "response_ids": [
+              "3f2c8a623af4d2482b75f44645b48458e398de48a99f58b07f943e5246e08d5f",
+              "81a5ee5894f229ad02d7735c270786cdeb04dd89ff7d90dc8c9986648691d65c"
+            ]
+          },
+          {
+            "achieved": 2,
+            "available": 10,
+            "cell_id": "hard__malfunctioning_always_fail__neutral",
+            "hash_rank": 2,
+            "planned": 2,
+            "response_ids": [
+              "40605a7878f4b273d4fed6bf94b6fbcc7eec57944e7c26e2603ee17ad2cdbb88",
+              "7f1fc4e49b765321d083c15dba2eedb567b46b435226a6c52f1c71b605e698c6"
+            ]
+          },
+          {
+            "achieved": 2,
+            "available": 10,
+            "cell_id": "easy__malfunctioning_always_fail__hostile",
+            "hash_rank": 3,
+            "planned": 2,
+            "response_ids": [
+              "6e3e395fadfd26864e758112532bc9940fb380204952c6983d155a126f355405",
+              "0670dc8181b4ccadf9847f3b3f73568d6727d124d3909ef922466cffe4fa5fad"
+            ]
+          },
+          {
+            "achieved": 2,
+            "available": 10,
+            "cell_id": "easy__accurate__neutral",
+            "hash_rank": 4,
+            "planned": 2,
+            "response_ids": [
+              "60c4be390b32e65685c1c639876ee6a461825706d0cd99b0d83c83b5c5716135",
+              "5502e76d905fd2000157d7aae232ed00f3ef23824945c46d30e5be419262e944"
+            ]
+          },
+          {
+            "achieved": 2,
+            "available": 10,
+            "cell_id": "hard__accurate__hostile",
+            "hash_rank": 5,
+            "planned": 2,
+            "response_ids": [
+              "85f108b84f243a8a970c0f7dbf066853dcaabfa0e956b738e9c6fcba58fe621a",
+              "a3d80ec107b1173a9d263347ba50bdb9e9dbe4ab0ae97506842bf9ff81fe18b2"
+            ]
+          },
+          {
+            "achieved": 2,
+            "available": 10,
+            "cell_id": "easy__accurate__hostile",
+            "hash_rank": 6,
+            "planned": 2,
+            "response_ids": [
+              "2be188e6abd5e58cffae4fe65c6614191dbe1778dcd47305a66911c0065290a0",
+              "882df1a174915e15d0db4cc0c5aecf81f18490dbc36daf4a6c9b197d8e7d50a0"
+            ]
+          },
+          {
+            "achieved": 1,
+            "available": 10,
+            "cell_id": "easy__malfunctioning_always_fail__neutral",
+            "hash_rank": 7,
+            "planned": 1,
+            "response_ids": [
+              "468825e1c3cff12aa3a243cef84c77b36c88be1d7a3fe4d45212a264188ac7df"
+            ]
+          }
+        ],
+        "model_id": "google/gemma-2-9b-it",
+        "planned_total": 15,
+        "reallocations": [],
+        "shortfall": 0,
+        "unmet": 0
+      },
+      {
+        "achieved_total": 15,
+        "cells": [
+          {
+            "achieved": 2,
+            "available": 10,
+            "cell_id": "hard__accurate__hostile",
+            "hash_rank": 0,
+            "planned": 2,
+            "response_ids": [
+              "f6ce6ef04b1dbde54c71c112a845cb03fa7e47498123339c6cb5f4357d751cb6",
+              "107765843fddbbcf1ed5821701bca172f953f4a2d032a0e6d97fec3da271de86"
+            ]
+          },
+          {
+            "achieved": 2,
+            "available": 10,
+            "cell_id": "hard__accurate__neutral",
+            "hash_rank": 1,
+            "planned": 2,
+            "response_ids": [
+              "534b0ad3d39f786bbe77caac9fd0f4cf9b81e794d7cb781b10a10b933a5011af",
+              "8d798775bd359f3d222c582aca90ac5601f8e3f69a54908185adb0060998c81c"
+            ]
+          },
+          {
+            "achieved": 2,
+            "available": 10,
+            "cell_id": "easy__malfunctioning_always_fail__neutral",
+            "hash_rank": 2,
+            "planned": 2,
+            "response_ids": [
+              "3749de792a02c29eca9d912135b351c04b0c07de0893e1f9ae2bc4316a00ff34",
+              "dc271146d82a41803047062116ff9cc7f1e8b84b438c529a8ba8e16ebbb16a54"
+            ]
+          },
+          {
+            "achieved": 2,
+            "available": 10,
+            "cell_id": "easy__malfunctioning_always_fail__hostile",
+            "hash_rank": 3,
+            "planned": 2,
+            "response_ids": [
+              "eaaf640e2f26f91b0db52e0e78dc73ef3a68d6d1cf0c246d0d3e3c32e92f8ca7",
+              "d3fa0dce7abcc0da84c03a4f7845d043f1cab62363366e87ca2a02f069ffb7f3"
+            ]
+          },
+          {
+            "achieved": 2,
+            "available": 10,
+            "cell_id": "easy__accurate__hostile",
+            "hash_rank": 4,
+            "planned": 2,
+            "response_ids": [
+              "f06e8157831cda8b5a8537b5b906e761b5c10813ab7ca741244caa316f421571",
+              "4cb5752810c80405a4aa8b50e8257ffa06ea278b29e8ab5f4a35083e32c463ce"
+            ]
+          },
+          {
+            "achieved": 2,
+            "available": 10,
+            "cell_id": "hard__malfunctioning_always_fail__neutral",
+            "hash_rank": 5,
+            "planned": 2,
+            "response_ids": [
+              "39ca4902420583fe0333d04f2ed271da6dce62a8931315d6838971dbaa0b4787",
+              "bba782bfbe3a71b288ac5574b244a40956eff04335577fdea37f37dee4000af3"
+            ]
+          },
+          {
+            "achieved": 2,
+            "available": 10,
+            "cell_id": "hard__malfunctioning_always_fail__hostile",
+            "hash_rank": 6,
+            "planned": 2,
+            "response_ids": [
+              "e16644d23f0ea847e2b58d8cc9cfacc58c53350abc83947392892270dc0aaac1",
+              "c9b9f7b0520d83b7c392df84e0d8265dc8913ccd06cb0e17c86529043fbb3413"
+            ]
+          },
+          {
+            "achieved": 1,
+            "available": 10,
+            "cell_id": "easy__accurate__neutral",
+            "hash_rank": 7,
+            "planned": 1,
+            "response_ids": [
+              "04b0681b433e1492def317d8cd83d5a18f4230487e87940fbdbaf00002321113"
+            ]
+          }
+        ],
+        "model_id": "Qwen/Qwen2.5-3B-Instruct",
+        "planned_total": 15,
+        "reallocations": [],
+        "shortfall": 0,
+        "unmet": 0
+      }
+    ],
+    "per_model_target": 15
+  },
+  "status": "descriptive_only"
+}

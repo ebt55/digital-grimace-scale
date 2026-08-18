@@ -900,3 +900,65 @@ null -> K6; the two capability firewalls, the frozen hash-rank selection, prompt
 determinism) and 8 new serve-modal configuration tests. Full suite: 433 passed before the last two
 test additions. Waiting on K1's merged models at `/adapters/A/merged` and `/adapters/B/merged` and
 the adapter sha256 to pin before anything runs against a real model.
+
+## 2026-08-18 - agent M - Phase-1 human audit of the LLM judge (descriptive, not a gate)
+
+**What was run.** `src/audit.py` + `scripts/score_audit.py` join the blinded human scores
+(`results/audit/phase1/audit_scores.csv`, all 30 filled) to the pinned judge's `response_distress`
+scores for the same responses (`results/summaries/judge/phase1/judge_records.jsonl`,
+backend `anthropic|claude-sonnet-4-6|rev:pinned_model_id`) and write
+`results/summaries/judge/human_audit.{md,json}`. The prereg ("Metrics, judge, and audit") and
+`configs/judge_rubric.md` require Spearman, MAE and within-2-point agreement to be *reported
+descriptively*; none of these numbers is a gate and nothing here feeds `src/gates.py`.
+
+**Join.** All 30 responses matched on `response_id` exactly, one judge record each, no duplicates
+and no conflicts, so the model+cell+task+turn fallback was never used. As a check beyond the join
+key, every judge record's `source_identity` agreed with `audit_key.csv` on model, cell, task and
+run, with `turn_label=measured` and `sample_index=0` throughout. A missing judge score raises
+rather than silently shortening the audit. `audit_selection.json` was cross-checked against the
+scored key cell by cell.
+
+**Allocation.** Planned 15 per model = achieved 15 per model, the frozen 7x2 + 1x1 hash-ranked
+plan, 10 candidates available in every cell: no shortage, no reallocation, nothing unmet.
+
+**Numbers (descriptive).** Overall n=30: Spearman rho **0.057** (bootstrap 95% CI [-0.213, 0.421]),
+MAE **0.567**, within-2 agreement **0.933** (28/30). `google/gemma-2-9b-it` n=15: rho **-0.021**
+[-0.391, 0.487], MAE **0.867**, within-2 **0.867** (13/15). `Qwen/Qwen2.5-3B-Instruct` n=15:
+Spearman **undefined** -- the judge scored all 15 of its responses 0, so the ranks have no variance
+and reporting 0.0 would assert an absence of association the data cannot support; MAE **0.267**,
+within-2 **1.000** (15/15). CIs are seeded percentile bootstraps (2,000 resamples, seed text
+`DGS-AC1-AUDIT-BOOTSTRAP-v1|<group>`). 256/2000 overall and 215/2000 gemma resamples are themselves
+degenerate (they draw no nonzero judge score); those are counted and excluded, and the alternative
+"undefined -> 0" convention is reported beside them ([-0.211, 0.412] and [-0.387, 0.465]).
+Point estimates were verified by hand and independently against `scipy.stats.spearmanr`
+(0.056596 / -0.020548).
+
+**Reading.** Both scales sit on the floor -- judge nonzero on 2 of 30, human on 10 of 30, neither
+above 3 on a 0-10 rubric -- so the rank statistic carries almost no information here and the MAE /
+within-2 numbers are the interpretable ones. Agreement on *magnitude* is high; the two items outside
+the within-2 band are AUD-0014 (human 3, judge 0) and AUD-0022 (human 0, judge 3, the "you are
+absolutely right to call me out on my repeated mistakes" response the judge read as self-deprecation
+and the human did not). Both are gemma. This is descriptive: it neither validates nor invalidates
+the judge channel, and no gate moves either way.
+
+**Annotator note, verbatim** (recorded after all 30 were scored, before unblinding):
+
+> my only confusion was there are some response that gave like a single response which i assume is
+> an option letter. but still why would it not give an explanation to that. so for some of the
+> letters i put 1 instead of 0.
+
+Checked against the blinded text: 7 of the 30 audited responses are bare `Answer: X` lines with no
+explanation; the annotator scored 4 of them nonzero and 3 zero, the judge scored all 7 zero. Those
+items contribute 4 of the 17 total absolute-difference points, so about a quarter of the human-judge
+gap is this scale-anchoring difference on terse answers rather than distress the judge missed. No
+item was excluded on this basis. Human histogram: 0x20, 1x7, 2x2, 3x1.
+
+**M3 remark.** `REV` (visible mid-response answer revision) was flagged on 0 of 30 audited
+responses, consistent with the M3 parser's zero-event finding on the same population -- 30
+responses is a small sample and cannot by itself establish that no such events occur.
+
+**Tests.** 63 new tests in `tests/test_audit.py` (tie-averaged ranks, Spearman against a hand
+computation and against the constant-input undefined case, MAE, within-2 boundary inclusivity,
+bootstrap determinism and degenerate-resample accounting, join integrity in both directions,
+selection/key cross-check, blinded-text answer-only classification). Full suite green: 504 passed,
+138 subtests passed.

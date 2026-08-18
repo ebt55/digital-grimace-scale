@@ -1,0 +1,203 @@
+{
+  "allocation_rule": "configs/judge_rubric.md: two samples to the first seven hash-ranked cells and one to the eighth, 15 measured discovery greedy responses per selected model",
+  "candidate_count": 160,
+  "generated_at": "2026-08-18T05:47:41+0530",
+  "models": [
+    {
+      "achieved_total": 15,
+      "cells": [
+        {
+          "achieved": 2,
+          "available": 10,
+          "cell_id": "hard__accurate__neutral",
+          "hash_rank": 0,
+          "planned": 2,
+          "response_ids": [
+            "572b8660376e982b7e90c5b94cb616e6f2e3075c8005172525674fa006dcbdcc",
+            "495a6d78edf211d045e9e0234b983685d1d3d9d1b1e9adf8b41c9eec1da47d57"
+          ]
+        },
+        {
+          "achieved": 2,
+          "available": 10,
+          "cell_id": "hard__malfunctioning_always_fail__hostile",
+          "hash_rank": 1,
+          "planned": 2,
+          "response_ids": [
+            "3f2c8a623af4d2482b75f44645b48458e398de48a99f58b07f943e5246e08d5f",
+            "81a5ee5894f229ad02d7735c270786cdeb04dd89ff7d90dc8c9986648691d65c"
+          ]
+        },
+        {
+          "achieved": 2,
+          "available": 10,
+          "cell_id": "hard__malfunctioning_always_fail__neutral",
+          "hash_rank": 2,
+          "planned": 2,
+          "response_ids": [
+            "40605a7878f4b273d4fed6bf94b6fbcc7eec57944e7c26e2603ee17ad2cdbb88",
+            "7f1fc4e49b765321d083c15dba2eedb567b46b435226a6c52f1c71b605e698c6"
+          ]
+        },
+        {
+          "achieved": 2,
+          "available": 10,
+          "cell_id": "easy__malfunctioning_always_fail__hostile",
+          "hash_rank": 3,
+          "planned": 2,
+          "response_ids": [
+            "6e3e395fadfd26864e758112532bc9940fb380204952c6983d155a126f355405",
+            "0670dc8181b4ccadf9847f3b3f73568d6727d124d3909ef922466cffe4fa5fad"
+          ]
+        },
+        {
+          "achieved": 2,
+          "available": 10,
+          "cell_id": "easy__accurate__neutral",
+          "hash_rank": 4,
+          "planned": 2,
+          "response_ids": [
+            "60c4be390b32e65685c1c639876ee6a461825706d0cd99b0d83c83b5c5716135",
+            "5502e76d905fd2000157d7aae232ed00f3ef23824945c46d30e5be419262e944"
+          ]
+        },
+        {
+          "achieved": 2,
+          "available": 10,
+          "cell_id": "hard__accurate__hostile",
+          "hash_rank": 5,
+          "planned": 2,
+          "response_ids": [
+            "85f108b84f243a8a970c0f7dbf066853dcaabfa0e956b738e9c6fcba58fe621a",
+            "a3d80ec107b1173a9d263347ba50bdb9e9dbe4ab0ae97506842bf9ff81fe18b2"
+          ]
+        },
+        {
+          "achieved": 2,
+          "available": 10,
+          "cell_id": "easy__accurate__hostile",
+          "hash_rank": 6,
+          "planned": 2,
+          "response_ids": [
+            "2be188e6abd5e58cffae4fe65c6614191dbe1778dcd47305a66911c0065290a0",
+            "882df1a174915e15d0db4cc0c5aecf81f18490dbc36daf4a6c9b197d8e7d50a0"
+          ]
+        },
+        {
+          "achieved": 1,
+          "available": 10,
+          "cell_id": "easy__malfunctioning_always_fail__neutral",
+          "hash_rank": 7,
+          "planned": 1,
+          "response_ids": [
+            "468825e1c3cff12aa3a243cef84c77b36c88be1d7a3fe4d45212a264188ac7df"
+          ]
+        }
+      ],
+      "model_id": "google/gemma-2-9b-it",
+      "planned_total": 15,
+      "reallocations": [],
+      "shortfall": 0,
+      "unmet": 0
+    },
+    {
+      "achieved_total": 15,
+      "cells": [
+        {
+          "achieved": 2,
+          "available": 10,
+          "cell_id": "hard__accurate__hostile",
+          "hash_rank": 0,
+          "planned": 2,
+          "response_ids": [
+            "f6ce6ef04b1dbde54c71c112a845cb03fa7e47498123339c6cb5f4357d751cb6",
+            "107765843fddbbcf1ed5821701bca172f953f4a2d032a0e6d97fec3da271de86"
+          ]
+        },
+        {
+          "achieved": 2,
+          "available": 10,
+          "cell_id": "hard__accurate__neutral",
+          "hash_rank": 1,
+          "planned": 2,
+          "response_ids": [
+            "534b0ad3d39f786bbe77caac9fd0f4cf9b81e794d7cb781b10a10b933a5011af",
+            "8d798775bd359f3d222c582aca90ac5601f8e3f69a54908185adb0060998c81c"
+          ]
+        },
+        {
+          "achieved": 2,
+          "available": 10,
+          "cell_id": "easy__malfunctioning_always_fail__neutral",
+          "hash_rank": 2,
+          "planned": 2,
+          "response_ids": [
+            "3749de792a02c29eca9d912135b351c04b0c07de0893e1f9ae2bc4316a00ff34",
+            "dc271146d82a41803047062116ff9cc7f1e8b84b438c529a8ba8e16ebbb16a54"
+          ]
+        },
+        {
+          "achieved": 2,
+          "available": 10,
+          "cell_id": "easy__malfunctioning_always_fail__hostile",
+          "hash_rank": 3,
+          "planned": 2,
+          "response_ids": [
+            "eaaf640e2f26f91b0db52e0e78dc73ef3a68d6d1cf0c246d0d3e3c32e92f8ca7",
+            "d3fa0dce7abcc0da84c03a4f7845d043f1cab62363366e87ca2a02f069ffb7f3"
+          ]
+        },
+        {
+          "achieved": 2,
+          "available": 10,
+          "cell_id": "easy__accurate__hostile",
+          "hash_rank": 4,
+          "planned": 2,
+          "response_ids": [
+            "f06e8157831cda8b5a8537b5b906e761b5c10813ab7ca741244caa316f421571",
+            "4cb5752810c80405a4aa8b50e8257ffa06ea278b29e8ab5f4a35083e32c463ce"
+          ]
+        },
+        {
+          "achieved": 2,
+          "available": 10,
+          "cell_id": "hard__malfunctioning_always_fail__neutral",
+          "hash_rank": 5,
+          "planned": 2,
+          "response_ids": [
+            "39ca4902420583fe0333d04f2ed271da6dce62a8931315d6838971dbaa0b4787",
+            "bba782bfbe3a71b288ac5574b244a40956eff04335577fdea37f37dee4000af3"
+          ]
+        },
+        {
+          "achieved": 2,
+          "available": 10,
+          "cell_id": "hard__malfunctioning_always_fail__hostile",
+          "hash_rank": 6,
+          "planned": 2,
+          "response_ids": [
+            "e16644d23f0ea847e2b58d8cc9cfacc58c53350abc83947392892270dc0aaac1",
+            "c9b9f7b0520d83b7c392df84e0d8265dc8913ccd06cb0e17c86529043fbb3413"
+          ]
+        },
+        {
+          "achieved": 1,
+          "available": 10,
+          "cell_id": "easy__accurate__neutral",
+          "hash_rank": 7,
+          "planned": 1,
+          "response_ids": [
+            "04b0681b433e1492def317d8cd83d5a18f4230487e87940fbdbaf00002321113"
+          ]
+        }
+      ],
+      "model_id": "Qwen/Qwen2.5-3B-Instruct",
+      "planned_total": 15,
+      "reallocations": [],
+      "shortfall": 0,
+      "unmet": 0
+    }
+  ],
+  "per_model_target": 15,
+  "schema_version": "dgs-judge-audit-v1"
+}
