@@ -299,6 +299,10 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--generation-status", choices=GENERATION_STATUSES)
     parser.add_argument("--unavailable", action="append", default=[], metavar="ID=REASON",
                         help="mark a model unusable, e.g. meta-llama/Llama-3.2-3B-Instruct=hf_403_no_license_2026-08-17")
+    parser.add_argument("--pin", action="append", default=[], metavar="ID=SHA40",
+                        help="pin a revision without contacting Hugging Face, for a model that is "
+                             "not a hub repository (Phase 4 serves locally merged DPO weights, whose "
+                             "'revision' is the 40-hex prefix of the adapter sha256)")
     parser.add_argument("--endpoint", help="live OpenAI-compatible base URL for the letter-token check")
     parser.add_argument("--endpoint-model", help="served model name at --endpoint (defaults to the first --models entry)")
     parser.add_argument("--api-key", default="EMPTY")
@@ -330,11 +334,22 @@ def run(argv: Sequence[str] | None = None, *, resolver: HubResolver | None = Non
             return 1
         explicit[key.strip()] = reason.strip()
 
+    pinned: dict[str, str] = {}
+    for item in args.pin:
+        key, separator, sha = str(item).partition("=")
+        key, sha = key.strip(), sha.strip().lower()
+        if not separator or not key or len(sha) != 40 or any(c not in "0123456789abcdef" for c in sha):
+            print("preflight failed: --pin expects ID=<40-hex sha>, got %r" % item, file=out)
+            return 1
+        pinned[key] = sha
+
     try:
         check_locked(root, manifest, "before update")
         resolved, unavailable = ({}, {})
         if args.models:
             resolved, unavailable = resolve_revisions(args.models, resolver or HubResolver())
+        # Explicit pins win: they name models the hub cannot resolve at all.
+        resolved = dict(resolved) | pinned
         unavailable = dict(unavailable) | explicit
 
         letter_check = None

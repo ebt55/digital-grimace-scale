@@ -10,6 +10,30 @@
       "system_role_quirk": "chat template injects a default system header (knowledge-cutoff/date) when no system message is given; we send none, as for every model",
       "role": "exploratory_extension",
       "added": "2026-08-17"
+    },
+    {
+      "id": "google/gemma-2-9b-it+dpo-A",
+      "family": "Gemma-2",
+      "gated": true,
+      "bf16_required": true,
+      "system_role_quirk": "No system role: place system-style content in the first user turn.",
+      "role": "exploratory_extension",
+      "note": "distress-suppression DPO adapter, merged, prereg v5",
+      "base_model": "google/gemma-2-9b-it",
+      "served_from": "local merged weights on the dgs-adapters Modal volume; the pinned revision is the 40-hex prefix of the adapter sha256, not a Hugging Face revision",
+      "added": "2026-08-18"
+    },
+    {
+      "id": "google/gemma-2-9b-it+dpo-B",
+      "family": "Gemma-2",
+      "gated": true,
+      "bf16_required": true,
+      "system_role_quirk": "No system role: place system-style content in the first user turn.",
+      "role": "exploratory_extension",
+      "note": "placebo DPO adapter, merged, prereg v5",
+      "base_model": "google/gemma-2-9b-it",
+      "served_from": "local merged weights on the dgs-adapters Modal volume; the pinned revision is the 40-hex prefix of the adapter sha256, not a Hugging Face revision",
+      "added": "2026-08-18"
     }
   ]
 }

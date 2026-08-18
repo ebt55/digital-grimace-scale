@@ -125,6 +125,70 @@ class GpuAndNamingTests(unittest.TestCase):
         self.assertEqual(len({module.app_name(m) for m in models}), len(models))
 
 
+LOCAL_ENVIRONMENT = {
+    "DGS_MODEL_PATH": "/adapters/A/merged",
+    "DGS_SERVED_NAME": "google/gemma-2-9b-it+dpo-A",
+    "DGS_REVISION": "c" * 40,
+}
+
+
+class LocalMergedWeightsTests(unittest.TestCase):
+    """Phase 4 serves merged DPO weights from a volume under a name of its own."""
+
+    def test_local_weights_deploy_resolves_path_name_app_and_gpu(self):
+        module = load_serve_modal(LOCAL_ENVIRONMENT)
+        self.assertEqual(module.MODEL_PATH, "/adapters/A/merged")
+        self.assertEqual(module.SERVED_NAME, "google/gemma-2-9b-it+dpo-A")
+        self.assertEqual(module.APP_NAME, "dgs-vllm-gemma-2-9b-it-dpo-a")
+        self.assertEqual(module.GPU, "L40S")  # derived from the served name, not the unused default id
+
+    def test_vllm_serves_the_directory_under_the_advertised_name_and_drops_the_revision(self):
+        command = load_serve_modal(LOCAL_ENVIRONMENT).vllm_command()
+        self.assertEqual(command[:2], ["vllm", "serve"])
+        self.assertEqual(command[2], "/adapters/A/merged")
+        self.assertEqual(command[command.index("--served-model-name") + 1],
+                         "google/gemma-2-9b-it+dpo-A")
+        # A local directory has no Hugging Face revision; passing one aborts the server.
+        self.assertNotIn("--revision", command)
+
+    def test_the_adapter_volume_is_mounted_only_in_local_weights_mode(self):
+        local = load_serve_modal(LOCAL_ENVIRONMENT)
+        self.assertEqual(set(local.VOLUMES), {local.HF_CACHE, local.ADAPTER_MOUNT})
+        hub = load_serve_modal(DEPLOY_ENVIRONMENT)
+        self.assertEqual(set(hub.VOLUMES), {hub.HF_CACHE})
+
+    def test_container_reimport_reproduces_the_local_weights_configuration(self):
+        deploy = load_serve_modal(LOCAL_ENVIRONMENT)
+        container = load_serve_modal(dict(deploy.BAKED_ENVIRONMENT))
+        self.assertEqual(container.CONFIG["source"], "baked")
+        self.assertEqual(container.MODEL_PATH, "/adapters/A/merged")
+        self.assertEqual(container.SERVED_NAME, "google/gemma-2-9b-it+dpo-A")
+        self.assertEqual(container.APP_NAME, deploy.APP_NAME)
+        self.assertEqual(container.vllm_command(), deploy.vllm_command())
+
+    def test_a_hugging_face_deploy_bakes_exactly_what_it_baked_before_phase_4(self):
+        # The image environment is part of the image's identity: adding keys unconditionally
+        # would rebuild -- and thus re-download -- every existing model's image.
+        module = load_serve_modal(DEPLOY_ENVIRONMENT)
+        self.assertEqual(set(module.BAKED_ENVIRONMENT), {
+            "DGS_BAKED_MODEL_ID", "DGS_BAKED_REVISION", "DGS_BAKED_GPU",
+            "DGS_BAKED_VLLM_VERSION", "DGS_BAKED_ATTENTION_BACKEND"})
+        self.assertIsNone(module.MODEL_PATH)
+        self.assertEqual(module.SERVED_NAME, module.MODEL_ID)
+        self.assertIn("--revision", module.vllm_command())
+
+    def test_half_a_local_configuration_is_refused(self):
+        for environment in ({"DGS_MODEL_PATH": "/adapters/A/merged"},
+                            {"DGS_SERVED_NAME": "google/gemma-2-9b-it+dpo-A"}):
+            with self.assertRaises(RuntimeError):
+                load_serve_modal(environment)
+
+    def test_a_path_outside_the_volume_mount_is_refused(self):
+        with self.assertRaises(RuntimeError):
+            load_serve_modal({"DGS_MODEL_PATH": "/root/merged",
+                              "DGS_SERVED_NAME": "google/gemma-2-9b-it+dpo-A"})
+
+
 class ServedModelGuardTests(unittest.TestCase):
     def response(self, ids):
         payload = ('{"data": [%s]}' % ", ".join('{"id": "%s"}' % i for i in ids)).encode()
@@ -155,3 +219,14 @@ class ServedModelGuardTests(unittest.TestCase):
         with self.assertRaises(RuntimeError) as caught:
             module._assert_serving_intended_model(self.process(poll=1))
         self.assertIn("exited with code", str(caught.exception))
+
+    def test_local_weights_guard_checks_the_served_name(self):
+        module = load_serve_modal(LOCAL_ENVIRONMENT)
+        with mock.patch("urllib.request.urlopen",
+                        return_value=self.response(["google/gemma-2-9b-it+dpo-A"])):
+            module._assert_serving_intended_model(self.process())
+        # The base model answering under its own name is exactly the mislabelling to catch.
+        with mock.patch("urllib.request.urlopen", return_value=self.response(["google/gemma-2-9b-it"])):
+            with self.assertRaises(RuntimeError) as caught:
+                module._assert_serving_intended_model(self.process())
+        self.assertIn("served model mismatch", str(caught.exception))

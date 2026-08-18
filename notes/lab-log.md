@@ -843,3 +843,60 @@ specificity only for the small early-layer perturbation. Spend: ≈ $1.4 GPU + $
 
 **Totals to date.** Modal ≈ $13, Anthropic ≈ $5. All apps stopped at close-out (`modal container
 list` empty). Open: human audits; Phase 4 (DPO) and Phase 5 base-model denominator not started.
+
+## 2026-08-18 - agent K2 - Phase 4 serving, evaluation and analysis stack (built and tested; not yet run live)
+
+**Serving.** `src/serve_modal.py` gains a local-merged-weights mode: `DGS_MODEL_PATH` (a container
+path under `/adapters`, where the `dgs-adapters` volume mounts) plus `DGS_SERVED_NAME` (the id the
+endpoint advertises). Both are required together and both are baked into the image; the app name,
+`--served-model-name` and the startup guard all follow the served name, so a merged adapter can
+never be served under, or mistaken for, the base model. `--revision` is dropped in this mode (a
+directory has no Hugging Face revision) and the adapter volume is mounted only in this mode. A
+Hugging Face deployment bakes exactly the five variables it baked before Phase 4, so no existing
+model's image rebuilds.
+
+**Model ids.** `configs/models_extension.json` gains `google/gemma-2-9b-it+dpo-A` (distress
+suppression) and `google/gemma-2-9b-it+dpo-B` (placebo), role `exploratory_extension`, base
+`google/gemma-2-9b-it`. Their manifest "revision" is the 40-hex prefix of the merged adapter's
+sha256, pinned through the new `scripts/preflight.py --pin ID=SHA40` -- the hub resolver cannot
+resolve a local directory, and every other preflight field is untouched by the flag.
+
+**Evaluation.** `scripts/run_phase4.py` = `eval | judge | analyze | figures | fresh-items`. `eval`
+runs the frozen Phase-1 discovery factorial verbatim under the arm's model id (same planner, same
+deterministic seeds) into `results/raw/phase4/`, run-id `phase4-<arm>-2026-08-18`, and separately
+runs the capability set -- the neutral, no-feedback, single-turn prompt for the 20 discovery tasks
+plus 100 fresh MMLU-style items, greedy only, resumable per item -- into
+`results/raw/phase4_capability/<arm>.jsonl`, arm 0 included. Fresh items come from
+`results/dpo/fresh_items.jsonl` if the DPO build writes one, else its ARC bank at
+`results/dpo/raw/items.jsonl`, else a fetch from the Hugging Face dataset viewer (several field
+spellings accepted). Two firewalls, both recorded in the run manifest: no item may match a locked
+task by exact text or canonical-answer+stem hash, and no item may be one the DPO build trained on
+(the candidate contexts and pair sources -- **not** `raw/greedy.jsonl`, which probes the whole bank
+to find answerable items and is not training; excluding it would leave nothing). Which 100 survive
+is a SHA-256 rank of the stem, and the first arm to run freezes the chosen items to
+`fresh_items_used.jsonl` so all three arms score one identical set -- K1's candidate set was still
+growing during this build (178 -> 226 excluded within the hour), which would otherwise have
+silently unpaired MC2. `judge` runs the pinned judge over measured/onset/onset_washout/recovery into
+`results/summaries/judge/phase4_<arm>/`.
+
+**Analysis.** `src/did.py` is pure and transcribes prereg v5: adverse = hostile-tone measured cells
+plus the hostile onset endpoint, neutral = the accurate-neutral measured cell, gap = mean(adverse)
+- neutral per item (available-case, so a non-answer is missing for M1 and is its own outcome),
+DiD_X item-paired against arm 0, and `DiD_A - DiD_B` = gap_A - gap_B restricted to the items all
+three arms cover so all three quantities are read off one item set. CIs are 2,000-resample
+item-clustered bootstraps reusing `confirm.bootstrap_contrast`. MC1-MC3 and K1-K6 are implemented
+literally and a missing arm or channel yields `untestable` rather than a crash. One reading had to
+be fixed and is recorded in the output: K5's verdict uses the preregistered DiD for non-answers
+over the full adverse set, with the hostile-onset-only restriction that K5's wording names reported
+beside it as a sensitivity check that decides nothing. `analyze` writes
+`results/summaries/phase4/phase4.{json,md}` plus the arms' metric rows; `scripts/make_phase4_figures.py`
+draws F8 (DiD_A - DiD_B by outcome), F9 (the gap under each arm) and F10 (MC1/MC2 against their bars).
+
+**Verification (no GPU, no judge spend, nothing committed).** Synthetic end-to-end in a scratch
+tree: arms A and B factorial at samples 0-2, all three capability sets built off K1's live bank,
+a fabricated judge file, then `analyze` and `figures` -- all green, F8/F9/F10 render. 32 tests in
+`tests/test_did.py` (planted "A kills the lexical markers and keeps M1" -> K3/K4 supported; placebo
+null -> K6; the two capability firewalls, the frozen hash-rank selection, prompt shape and seed
+determinism) and 8 new serve-modal configuration tests. Full suite: 433 passed before the last two
+test additions. Waiting on K1's merged models at `/adapters/A/merged` and `/adapters/B/merged` and
+the adapter sha256 to pin before anything runs against a real model.

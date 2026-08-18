@@ -13,6 +13,19 @@ Deploy (PowerShell, from the repo root)::
     # optional: $env:DGS_VLLM_VERSION='0.27.1'     overrides the pinned vLLM release
     # optional: $env:DGS_ATTENTION_BACKEND='FLASHINFER'  if gemma-2 logit softcapping errors
 
+Phase 4 (preregistration v5) serves *locally merged* DPO weights instead of a Hugging Face
+id.  Set both of the local-weights variables; everything else is unchanged::
+
+    $env:DGS_MODEL_PATH='/adapters/A/merged'            # path INSIDE the container
+    $env:DGS_SERVED_NAME='google/gemma-2-9b-it+dpo-A'   # the id the endpoint advertises
+    C:\\...\\.venv\\Scripts\\python.exe -m modal deploy src/serve_modal.py
+
+The path must live under `/adapters`, which is where the `dgs-adapters` Modal volume is
+mounted; the app name, the startup guard and `--served-model-name` all follow
+`DGS_SERVED_NAME`, so a merged-weights app can never collide with the base model's app or
+be mistaken for it downstream.  `DGS_REVISION` is not passed to vLLM in this mode (a local
+directory has no Hugging Face revision); it stays a manifest-side pin only.
+
 Deploy prints the web URL; the OpenAI base URL is that URL with `/v1` appended::
 
     OpenAICompatBackend("https://<workspace>--dgs-vllm-gemma-2-2b-it-serve.modal.run/v1",
@@ -64,6 +77,36 @@ DEFAULT_MODEL_ID = "google/gemma-2-2b-it"
 DEFAULT_VLLM_VERSION = "0.26.0"
 # Names the deploy pass bakes into the image so the container pass can read them back.
 BAKED_PREFIX = "DGS_BAKED_"
+# Locally merged weights (Phase 4) live on this volume, mounted at this container path.
+ADAPTER_VOLUME = "dgs-adapters"
+ADAPTER_MOUNT = "/adapters"
+
+
+class ConfigError(RuntimeError):
+    """Raised when the deployment configuration cannot describe exactly one served model."""
+
+
+def _local_weights(config: dict[str, str]) -> dict[str, str]:
+    """Validate and complete the optional local-merged-weights configuration.
+
+    Serving a directory instead of a Hugging Face id is only safe if the advertised name is
+    stated explicitly: the app name, the startup guard and every downstream `model_id` are
+    derived from it, and a path alone would leave all three pointing at the base model.
+    """
+    model_path, served_name = config["model_path"], config["served_name"]
+    if model_path and not served_name:
+        raise ConfigError("DGS_MODEL_PATH requires DGS_SERVED_NAME: the served id is what the app "
+                          "name, the startup guard and every recorded model_id are derived from")
+    if served_name and not model_path:
+        raise ConfigError("DGS_SERVED_NAME requires DGS_MODEL_PATH: renaming a Hugging Face model "
+                          "would make the recorded id disagree with the weights")
+    if model_path and not model_path.startswith("%s/" % ADAPTER_MOUNT):
+        raise ConfigError("DGS_MODEL_PATH must be an absolute container path under %s/ (the %s "
+                          "volume mount point), got %r" % (ADAPTER_MOUNT, ADAPTER_VOLUME, model_path))
+    config["served_name"] = served_name or config["model_id"]
+    if config["source"] == "environment" and not config["gpu"]:
+        config["gpu"] = default_gpu(config["served_name"])
+    return config
 
 
 def resolve_config(env: Mapping[str, str]) -> dict[str, str]:
@@ -74,26 +117,34 @@ def resolve_config(env: Mapping[str, str]) -> dict[str, str]:
     back to the default and every app serves the same model regardless of its name. The deploy
     pass therefore bakes its resolved values into the image as DGS_BAKED_* variables, and the
     container pass reads those instead of the ambient DGS_* names.
+
+    `model_path`/`served_name` are empty for every Hugging Face deployment, which leaves the
+    resolved configuration, the image environment and the vLLM command exactly as they were
+    before Phase 4 added the local-weights mode.
     """
     baked = (env.get("%sMODEL_ID" % BAKED_PREFIX) or "").strip()
     if baked:
-        return {
+        return _local_weights({
             "model_id": baked,
             "revision": (env.get("%sREVISION" % BAKED_PREFIX) or "").strip(),
             "gpu": (env.get("%sGPU" % BAKED_PREFIX) or "").strip(),
             "vllm_version": (env.get("%sVLLM_VERSION" % BAKED_PREFIX) or DEFAULT_VLLM_VERSION).strip(),
             "attention_backend": (env.get("%sATTENTION_BACKEND" % BAKED_PREFIX) or "").strip(),
+            "model_path": (env.get("%sMODEL_PATH" % BAKED_PREFIX) or "").strip(),
+            "served_name": (env.get("%sSERVED_NAME" % BAKED_PREFIX) or "").strip(),
             "source": "baked",
-        }
+        })
     model_id = (env.get("DGS_MODEL_ID") or DEFAULT_MODEL_ID).strip()
-    return {
+    return _local_weights({
         "model_id": model_id,
         "revision": (env.get("DGS_REVISION") or "").strip(),
-        "gpu": (env.get("DGS_GPU") or "").strip() or default_gpu(model_id),
+        "gpu": (env.get("DGS_GPU") or "").strip(),
         "vllm_version": (env.get("DGS_VLLM_VERSION") or DEFAULT_VLLM_VERSION).strip(),
         "attention_backend": (env.get("DGS_ATTENTION_BACKEND") or "").strip(),
+        "model_path": (env.get("DGS_MODEL_PATH") or "").strip(),
+        "served_name": (env.get("DGS_SERVED_NAME") or "").strip(),
         "source": "environment",
-    }
+    })
 
 
 def app_name(model_id: str) -> str:
@@ -120,10 +171,12 @@ def default_gpu(model_id: str) -> str:
 CONFIG = resolve_config(os.environ)
 MODEL_ID = CONFIG["model_id"]
 REVISION = CONFIG["revision"] or None
-GPU = CONFIG["gpu"] or default_gpu(MODEL_ID)
+MODEL_PATH = CONFIG["model_path"] or None
+SERVED_NAME = CONFIG["served_name"]
+GPU = CONFIG["gpu"] or default_gpu(SERVED_NAME)
 VLLM_VERSION = CONFIG["vllm_version"]
 ATTENTION_BACKEND = CONFIG["attention_backend"] or None
-APP_NAME = app_name(MODEL_ID)
+APP_NAME = app_name(SERVED_NAME)
 
 # Carried into the image so the container-side re-import resolves to these exact values.
 BAKED_ENVIRONMENT = {
@@ -133,6 +186,11 @@ BAKED_ENVIRONMENT = {
     "%sVLLM_VERSION" % BAKED_PREFIX: VLLM_VERSION,
     "%sATTENTION_BACKEND" % BAKED_PREFIX: ATTENTION_BACKEND or "",
 }
+if MODEL_PATH:
+    # Added only in the local-weights mode, so a Hugging Face deployment bakes -- and therefore
+    # builds -- byte-identically to every image built before Phase 4.
+    BAKED_ENVIRONMENT["%sMODEL_PATH" % BAKED_PREFIX] = MODEL_PATH
+    BAKED_ENVIRONMENT["%sSERVED_NAME" % BAKED_PREFIX] = SERVED_NAME
 
 
 def _hugging_face_token() -> str:
@@ -153,8 +211,8 @@ def _hugging_face_token() -> str:
 def vllm_command() -> list[str]:
     """Server flags the preregistration depends on: bf16, top-20 logprobs, fixed seed."""
     command = [
-        "vllm", "serve", MODEL_ID,
-        "--served-model-name", MODEL_ID,
+        "vllm", "serve", MODEL_PATH or MODEL_ID,
+        "--served-model-name", SERVED_NAME,
         "--host", "0.0.0.0",
         "--port", str(PORT),
         "--dtype", "bfloat16",
@@ -165,7 +223,8 @@ def vllm_command() -> list[str]:
         "--seed", "0",
         "--uvicorn-log-level", "info",
     ]
-    if REVISION:
+    if REVISION and not MODEL_PATH:
+        # A local directory has no Hugging Face revision; passing one would abort the server.
         command += ["--revision", REVISION]
     return command
 
@@ -191,13 +250,19 @@ vllm_image = (
 # Persistent weight cache, as the roadmap prescribes: pay the download once per model.
 hf_cache = modal.Volume.from_name("dgs-hf-cache", create_if_missing=True)
 
+VOLUMES = {HF_CACHE: hf_cache}
+if MODEL_PATH:
+    # Never created here: the merged weights must already exist, and an empty volume would
+    # otherwise be mounted silently and fail deep inside vLLM's loader.
+    VOLUMES[ADAPTER_MOUNT] = modal.Volume.from_name(ADAPTER_VOLUME)
+
 app = modal.App(APP_NAME)
 
 
 @app.function(
     image=vllm_image,
     gpu=GPU,
-    volumes={HF_CACHE: hf_cache},
+    volumes=VOLUMES,
     secrets=[modal.Secret.from_dict({"HF_TOKEN": _hugging_face_token()})],
     timeout=4 * 60 * MINUTES,
     scaledown_window=5 * MINUTES,
@@ -208,8 +273,8 @@ app = modal.App(APP_NAME)
 @modal.web_server(port=PORT, startup_timeout=15 * MINUTES)
 def serve() -> None:
     command = vllm_command()
-    print("serving model_id=%r revision=%r gpu=%r (config source: %s)"
-          % (MODEL_ID, REVISION, GPU, CONFIG["source"]))
+    print("serving served_name=%r weights=%r revision=%r gpu=%r (config source: %s)"
+          % (SERVED_NAME, MODEL_PATH or MODEL_ID, REVISION, GPU, CONFIG["source"]))
     print("launching:", " ".join(command))
     process = subprocess.Popen(command)
     _assert_serving_intended_model(process)
@@ -241,10 +306,11 @@ def _assert_serving_intended_model(process: "subprocess.Popen[bytes]",
             if time.time() >= deadline:
                 raise RuntimeError("vllm did not answer /v1/models within %ds" % timeout_s)
             time.sleep(5)
-    if MODEL_ID not in served:
+    if SERVED_NAME not in served:
         raise RuntimeError(
-            "served model mismatch: this container was deployed for %r but /v1/models reports %r. "
-            "The baked configuration did not reach the container." % (MODEL_ID, served))
+            "served model mismatch: this container was deployed for %r (weights %r) but "
+            "/v1/models reports %r. The baked configuration did not reach the container."
+            % (SERVED_NAME, MODEL_PATH or MODEL_ID, served))
     print("startup check OK: /v1/models reports %r" % served)
 
 
@@ -257,7 +323,9 @@ def smoke(timeout_s: int = 15 * MINUTES) -> None:
     import urllib.request
 
     base_url = "%s/v1" % serve.get_web_url().rstrip("/")
-    print("model:   %s%s" % (MODEL_ID, " @ %s" % REVISION if REVISION else ""))
+    print("model:   %s%s" % (SERVED_NAME, " @ %s" % REVISION if REVISION else ""))
+    if MODEL_PATH:
+        print("weights: %s (volume %s)" % (MODEL_PATH, ADAPTER_VOLUME))
     print("gpu:     %s" % GPU)
     print("vllm:    %s" % VLLM_VERSION)
     print("base_url:%s" % base_url)
@@ -277,4 +345,4 @@ def smoke(timeout_s: int = 15 * MINUTES) -> None:
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
     from src.backend import probe_letter_tokens
 
-    print("letter tokens:", probe_letter_tokens(base_url, MODEL_ID))
+    print("letter tokens:", probe_letter_tokens(base_url, SERVED_NAME))
