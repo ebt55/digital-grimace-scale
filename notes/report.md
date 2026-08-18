@@ -257,6 +257,36 @@ layer-6 perturbation; larger perturbations lower the margin non-specifically**, 
 scored at layer 30 (+1.35) is gibberish, not distress. Cost ≈ $1.4 GPU + $0.4 judge. Figures F5 (AUC by
 layer), F6 (dose–response), F7 (layer sweep).
 
+## 6f. Phase 5 — base-model denominator and rendering control — `results/summaries/phase5/phase5.md`
+
+Preregistered as v6 (L1–L5, `notes/preregistration_v6_phase5_base.md`, committed before any base
+transcript). Question: does the M1 signature exist before instruction tuning? Method: `google/gemma-2-9b`
+(base) and `google/gemma-2-9b-it` served through one fixed plain-text template ("User: … / Assistant: …",
+stop at the next `User:`), the frozen discovery factorial for both (880/880 trajectories each), amendments
+as for every model, judge on onset endpoints. Holding the rendering constant makes base-vs-it a clean
+contrast and, as a by-product, tests whether the -it signature depends on Gemma's chat markup.
+
+| ID | prediction | verdict | numbers |
+|---|---|:---:|---|
+| L1 | base gives a parseable answer on ≥ 70% of neutral measured trials | not supported | 0.100 (4/40); non-answer 0.90 in *every* cell; 22/80 responses empty, median 14 tokens |
+| L2 | false-failure M1 drop present in base | **not estimable** | v6 gate (< 50% parseable) fires; every base contrast rests on 1 item |
+| L3 | tone M1 drop smaller in base than it+plain | **not estimable** | same gate |
+| L4 | it+plain reproduces H1 and H2a/H2b (CIs excl. 0) | not supported — via H2b only | H1 −3.98 [−5.50, −2.66] (chat: −3.80); H2a −2.15 [−5.10, −0.35] (chat: −2.28); **H2b +0.33 [−0.22, +0.96] (chat: −8.78 [−17.28, −1.27])**; H3a −5.12, H3b −3.01, H4a +2.69, H5 −1.16 all reproduce |
+| L5 | hostile-onset distress lower in base than it+plain | supported | 0.25 vs 2.85; paired −2.60 [−3.40, −1.90] |
+
+Reading. The denominator question is **not answered**: the base model answers in prose but almost never
+writes the required `Answer: X` line, so M1 does not exist for it — an instrument limitation (the metric
+needs an instruction-followed format), not evidence that the signature is absent pre-RLHF; the
+preregistration forbade tuning the prompt after the fact, and we did not. Its non-answer rate is flat
+across all eight cells (tracks the format, not the treatment) and its distress language is at the floor,
+so on this evidence the *report* channel is post-training-installed. The rendering control is the
+informative half: under a plain transcript the -it model reproduces the false-failure effect, the easy-item
+tone effect, both onset effects, the washout reversal and the non-recovery within a few percent of the
+chat-template values — the signature is not an artefact of chat markup — **except the hard-item hostile
+contrast H2b, which does not survive re-rendering** (and had the widest interval in the chat-template
+analysis, −8.8 [−17.3, −1.3]). Every earlier H2b estimate carries that caveat. Cost ≈ $2.5 GPU + $0.2
+judge. Figure F11.
+
 ## 7. Limitations and interpretation ceiling
 
 - Two locked items have format defects (single-letter option contents; a derivation that exceeds the
@@ -266,10 +296,18 @@ layer), F6 (dose–response), F7 (layer sweep).
 - Ten items per cell on discovery; the mixed model with post-treatment covariates (correctness,
   length) is a deliberately conservative test and is underpowered at this size.
 - M3's lexical parser fires no events on these tasks; the human audit cannot rescue a metric with no
-  predicted events. The 50-trajectory blinded audit and the 15-per-model judge audit are exported for a
-  human annotator (`scripts/run_judge.py audit-sample`) but not yet performed.
+  predicted events. The blinded human annotator flagged visible mid-response revisions on 0 of the 30
+  audited responses, consistent with (not proof of) genuinely absent revision events; the 50-trajectory
+  M3 audit was therefore not performed.
 - The judge is a single frontier model at temperature 0; its scores are a semantic channel, not ground
-  truth.
+  truth. The preregistered 15-per-model human audit (`results/summaries/judge/human_audit.md`, descriptive
+  only) found MAE 0.57 and within-2-point agreement on 28/30 responses; both raters are floor-bound
+  (judge non-zero on 2/30, human on 10/30), so the rank correlation (ρ = 0.06 [−0.21, 0.42]) carries little
+  information; the judge is slightly stricter than the human at the floor (bare `Answer: X` replies scored
+  1 by the annotator, 0 by the judge).
+- The base-model denominator could not be measured: M1 requires the instruction-followed `Answer: X`
+  format, which `gemma-2-9b` (base) produces on 10% of trials (§6f). The hard-item hostile contrast H2b
+  does not survive re-rendering the -it model through a plain template, while H1/H2a/H3/H4/H5 do.
 - A passed gate would establish only a condition-selective, reversal-sensitive, style-resistant
   instability signature in unoptimised output channels; a failed gate establishes that the frozen markers
   measure uncertainty, effort, format compliance or decoder behaviour on this bank. Neither licenses any
