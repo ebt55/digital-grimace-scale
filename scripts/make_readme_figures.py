@@ -86,18 +86,19 @@ def _extension(summaries: Path):
     return None
 
 
+SCREEN_DPI = 300  # ~4,500 px wide for the 15-inch channel map: crisp on hi-DPI screens and GitHub
+PRINT_DPI = 300
+
+
 def _save(figure, out_dir: Path, name: str) -> list[Path]:
     out_dir.mkdir(parents=True, exist_ok=True)
     written = []
     for suffix in ("png", "svg"):
         path = out_dir / ("%s.%s" % (name, suffix))
-        figure.savefig(path, dpi=110, bbox_inches="tight", facecolor="white")
+        figure.savefig(path, dpi=SCREEN_DPI, bbox_inches="tight", facecolor="white")
         written.append(path)
     plt.close(figure)
     return written
-
-
-PRINT_DPI = 300
 
 
 def _save_print(figure, out_dir: Path, name: str) -> list[Path]:
