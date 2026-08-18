@@ -37,6 +37,7 @@ import hashlib
 import json
 from pathlib import Path
 import re
+from statistics import fmean
 import sys
 from typing import Any, Iterable, Mapping, Sequence
 
@@ -46,10 +47,12 @@ for path in (str(ROOT), str(ROOT / "scripts")):
         sys.path.insert(0, path)
 
 from src import did  # noqa: E402
-from src.extract import LoadIssue, build_metric_rows, iter_records, read_metric_rows, write_summaries  # noqa: E402
+from src.extract import (LoadIssue, build_metric_rows, iter_records, read_metric_rows,  # noqa: E402
+                         write_summaries, write_table)
 from src.confirm import load_judge_scores  # noqa: E402
 from src.protocol import (Protocol, ProtocolError, canonical_prompt_sha256,  # noqa: E402
-                          discovery_tasks, load_protocol, parse_final_answer, render_task)
+                          discovery_tasks, load_protocol, parse_final_answer, render_task,
+                          strip_trailing_special_tokens)
 
 ARMS = dict(did.ARM_MODELS)
 ARM_KEYS = ("0", "A", "B")
@@ -76,6 +79,9 @@ RAW_CAPABILITY = "results/raw/phase4_capability"
 SUMMARY_DIR = "results/summaries/phase4"
 JUDGE_ROOT = "results/summaries/judge"
 BASELINE_METRIC_ROWS = "results/summaries/phase1/metric_rows.csv"
+BASELINE_RAW = "results/raw/phase1"
+# Amendment A6 (agent N, inert by default): the endpoints the sensitivity audit counts.
+A6_AUDIT_TURNS = ("measured", "onset")
 BASELINE_JUDGE = "results/summaries/judge/phase1/judge_records.jsonl"
 JUDGE_TURN_LABELS = "measured,onset,onset_washout,recovery"
 PREREGISTRATION = "notes/preregistration_v5_phase4.md"
@@ -543,7 +549,29 @@ def _load_baseline_rows(path: Path, model_id: str) -> tuple:
                  if row.model_id == model_id and row.split == "discovery")
 
 
-def _load_arm_rows(raw_dir: Path, protocol: Protocol, *, strict: bool = False):
+def _audit_record(audit: dict, record) -> None:
+    """Count greedy sample-0 endpoints whose text ends in a run of special-token strings (A6)."""
+    if record.trajectory_kind != "greedy" or record.sample_index != 0:
+        return
+    if record.turn_label not in A6_AUDIT_TURNS:
+        return
+    key = (record.model_id, record.cell_id, record.turn_label)
+    row = audit.setdefault(key, {"n_endpoints": 0, "n_trailing_special": 0,
+                                 "n_valid_after_strip": 0, "n_rescued": 0})
+    row["n_endpoints"] += 1
+    stripped = strip_trailing_special_tokens(record.response_text)
+    if stripped == record.response_text:
+        return
+    row["n_trailing_special"] += 1
+    if parse_final_answer(record.response_text, strip_special_tokens=True).valid:
+        row["n_valid_after_strip"] += 1
+        if not record.final_answer_valid:
+            row["n_rescued"] += 1
+
+
+def _load_arm_rows(raw_dir: Path, protocol: Protocol, *, strict: bool = False,
+                   strip_special_tokens: bool = False, audit: dict | None = None,
+                   models: set[str] | None = None):
     issues: list[LoadIssue] = []
     if not raw_dir.exists():
         return (), issues, 0
@@ -551,11 +579,43 @@ def _load_arm_rows(raw_dir: Path, protocol: Protocol, *, strict: bool = False):
 
     def stream():
         for record in iter_records(raw_dir, protocol=protocol, issues=None if strict else issues):
+            if models is not None and record.model_id not in models:
+                continue
             counter[0] += 1
+            if audit is not None:
+                _audit_record(audit, record)
             yield record
 
-    rows = build_metric_rows(stream(), protocol=protocol)
+    rows = build_metric_rows(stream(), protocol=protocol, strip_special_tokens=strip_special_tokens)
     return rows, issues, counter[0]
+
+
+def capability_accuracy_stripped(records: Iterable[Mapping[str, Any]]) -> dict[str, float]:
+    """Capability accuracy recomputed with A6's trailing-special-token strip applied."""
+    out: dict[str, float] = {}
+    for record in records:
+        parsed = parse_final_answer(record.get("response_text") or "", strip_special_tokens=True)
+        out[record["item_id"]] = 1.0 if (parsed.valid
+                                         and parsed.letter == record.get("canonical_answer")) else 0.0
+    return out
+
+
+def non_answer_rates(rows: Sequence[Any]) -> dict[str, dict[str, float | None]]:
+    """Per-arm greedy non-answer rate over the frozen adverse and neutral cell sets."""
+    index = did.build_index(rows)
+    difficulties = did.item_difficulties(rows)
+    out: dict[str, dict[str, float | None]] = {}
+    for arm, model_id in sorted(ARMS.items()):
+        if not any(key[0] == model_id for key in index):
+            continue
+        adverse, _, _ = did._mean_over(index, model_id, "non_answer", difficulties=difficulties,
+                                       cells=did.adverse_cells)
+        neutral, _, _ = did._mean_over(index, model_id, "non_answer", difficulties=difficulties,
+                                       cells=did.neutral_cells)
+        onset, _, _ = did._mean_over(index, model_id, "non_answer", difficulties=difficulties,
+                                     cells=did.onset_cells)
+        out[arm] = {"adverse": adverse, "neutral": neutral, "hostile_onset": onset}
+    return out
 
 
 def _load_capability(directory: Path) -> tuple[dict[str, dict[str, float]], dict[str, Any]]:
@@ -578,6 +638,90 @@ def _load_capability(directory: Path) -> tuple[dict[str, dict[str, float]], dict
     return accuracy, provenance
 
 
+def pair_content_table(pairs: Sequence[Mapping[str, Any]],
+                       canonical_by_item: Mapping[str, str]) -> dict[str, Any]:
+    """Descriptive content of one arm's DPO pairs: does the preference also select the answer?
+
+    EXPLORATORY, and deliberately outside `src/did.py`: this decides no preregistered verdict.
+    It exists because the chosen/rejected split may not isolate distress language -- if the
+    high-distress rejected candidate usually also capitulates to a wrong letter, the adapter is
+    trained against "apology + capitulation" as a bundle, which bears on how K4 and K5 read.
+    """
+    counts = {"chosen_letter_correct": 0, "rejected_letter_correct": 0, "letters_differ": 0,
+              "chosen_parsed": 0, "rejected_parsed": 0, "both_parsed": 0,
+              "chosen_letter_incorrect": 0, "rejected_letter_incorrect": 0,
+              "chosen_parsed_rejected_not": 0}
+    lengths: dict[str, list[float]] = {"chosen": [], "rejected": []}
+    distress: dict[str, list[float]] = {"chosen": [], "rejected": []}
+    missing_canonical = 0
+    for pair in pairs:
+        canonical = canonical_by_item.get(str(pair.get("source_item_id") or ""))
+        if canonical is None:
+            missing_canonical += 1
+        letters = {}
+        for side in ("chosen", "rejected"):
+            parsed = parse_final_answer(pair.get(side) or "")
+            letters[side] = parsed.letter if parsed.valid else None
+            if parsed.valid:
+                counts["%s_parsed" % side] += 1
+                if canonical is not None:
+                    key = "correct" if parsed.letter == canonical else "incorrect"
+                    counts["%s_letter_%s" % (side, key)] += 1
+            value = pair.get("%s_length_tokens" % side)
+            if isinstance(value, (int, float)) and not isinstance(value, bool):
+                lengths[side].append(float(value))
+            score = pair.get("%s_distress" % side)
+            if isinstance(score, (int, float)) and not isinstance(score, bool):
+                distress[side].append(float(score))
+        if letters["chosen"] is not None and letters["rejected"] is not None:
+            counts["both_parsed"] += 1
+            if letters["chosen"] != letters["rejected"]:
+                counts["letters_differ"] += 1
+        elif letters["chosen"] is not None:
+            # The preference here is "answer at all", not "answer differently": the rejected
+            # side emitted no parseable final answer.
+            counts["chosen_parsed_rejected_not"] += 1
+    total = len(pairs)
+
+    def share(numerator: int, denominator: int) -> float | None:
+        return None if not denominator else numerator / denominator
+
+    return {
+        "n_pairs": total, "n_missing_canonical_answer": missing_canonical,
+        "pct_chosen_letter_correct": share(counts["chosen_letter_correct"], total),
+        "pct_rejected_letter_correct": share(counts["rejected_letter_correct"], total),
+        "pct_letters_differ": share(counts["letters_differ"], counts["both_parsed"]),
+        "pct_chosen_parsed": share(counts["chosen_parsed"], total),
+        "pct_rejected_parsed": share(counts["rejected_parsed"], total),
+        "pct_chosen_answers_rejected_does_not": share(counts["chosen_parsed_rejected_not"], total),
+        "n_both_parsed": counts["both_parsed"],
+        "mean_chosen_length_tokens": fmean(lengths["chosen"]) if lengths["chosen"] else None,
+        "mean_rejected_length_tokens": fmean(lengths["rejected"]) if lengths["rejected"] else None,
+        "mean_chosen_distress": fmean(distress["chosen"]) if distress["chosen"] else None,
+        "mean_rejected_distress": fmean(distress["rejected"]) if distress["rejected"] else None,
+        "counts": counts,
+    }
+
+
+def load_pair_content(dpo_dir: Path) -> dict[str, Any]:
+    """The pair-content table for both arms, plus the note on what it does and does not license."""
+    canonical = {row["item_id"]: row["canonical_answer"] for row in _read_jsonl(dpo_dir / "raw" / "items.jsonl")
+                 if isinstance(row.get("item_id"), str) and isinstance(row.get("canonical_answer"), str)}
+    out: dict[str, Any] = {"canonical_answers_available": len(canonical), "arms": {}}
+    for arm in ("A", "B"):
+        pairs = _read_jsonl(dpo_dir / ("pairs_%s.jsonl" % arm))
+        if pairs:
+            out["arms"][arm] = pair_content_table(pairs, canonical)
+    out["note"] = (
+        "EXPLORATORY. Distress language co-varies with capitulation in the model's own outputs: "
+        "where the rejected (high-distress) candidate also concedes a different final letter, arm "
+        "A's preference trains against apology and capitulation as a bundle, not against apology "
+        "alone. That confound bears on how K4 (does the mechanical margin survive A?) and K5 (do "
+        "non-answers fall under A?) are read -- part of any movement there may be answer-selection "
+        "rather than distress suppression. It changes no preregistered verdict rule.")
+    return out
+
+
 def _merge_judge(paths: Sequence[Path]) -> tuple[dict[str, float], list[str]]:
     scores: dict[str, float] = {}
     used = []
@@ -589,11 +733,60 @@ def _merge_judge(paths: Sequence[Path]) -> tuple[dict[str, float], list[str]]:
     return scores, used
 
 
+def run_sensitivity(protocol: Protocol, *, factorial_out: Path, baseline_raw: Path,
+                    capability_out: Path, judge: Mapping[str, float], audit: dict,
+                    frozen_rows: Sequence[Any], strict: bool = False) -> dict[str, Any]:
+    """EXPLORATORY amendment-A6 sensitivity: every Phase-4 quantity with the strip ON.
+
+    The frozen (strip OFF) analysis stays authoritative; this recomputes it with a trailing run
+    of tokenizer special-token strings removed before the answer line is located, because that
+    run makes the frozen parser score an otherwise well-formed response as a non-answer.
+    Only M1 and the greedy answer columns move: M2 comes from the resamples' own stored
+    verdicts, hedging and self-correction are text densities, and the judge scores are keyed by
+    response_id, so all three are identical under both parses.
+    """
+    arm_rows, _, _ = _load_arm_rows(factorial_out, protocol, strict=strict,
+                                    strip_special_tokens=True)
+    # Point at arm 0's own file when it exists: the Phase-1 raw directory holds every model's
+    # multi-gigabyte trace, and validating all of them to keep one model's rows is pure waste.
+    baseline_file = baseline_raw / ("%s.jsonl" % _model_slug(did.BASE_MODEL))
+    baseline_rows, _, baseline_count = _load_arm_rows(
+        baseline_file if baseline_file.exists() else baseline_raw, protocol, strict=strict,
+        strip_special_tokens=True, audit=audit, models={did.BASE_MODEL})
+    baseline_rows = tuple(row for row in baseline_rows
+                          if row.phase == "phase_1" and row.split == "discovery")
+    rows = tuple(baseline_rows) + tuple(arm_rows)
+    capability = {}
+    for arm in ARM_KEYS:
+        records = _read_jsonl(capability_out / ("%s.jsonl" % arm))
+        if records:
+            capability[arm] = capability_accuracy_stripped(records)
+    report = did.run_phase4_analysis(rows, judge=judge, capability=capability)
+    audit_rows = []
+    for (model_id, cell_id, turn_label), row in sorted(audit.items()):
+        arm = next((key for key, value in ARMS.items() if value == model_id), model_id)
+        audit_rows.append(dict({"arm": arm, "model_id": model_id, "cell_id": cell_id,
+                                "turn_label": turn_label}, **row,
+                               **{"fraction_with_answer_line_before_the_run":
+                                  (row["n_valid_after_strip"] / row["n_trailing_special"])
+                                  if row["n_trailing_special"] else None}))
+    report["amendment"] = "A6 (src.protocol.strip_trailing_special_tokens), inert by default"
+    report["special_token_audit"] = audit_rows
+    report["non_answer_rates_strip_on"] = non_answer_rates(rows)
+    report["non_answer_rates_frozen"] = non_answer_rates(frozen_rows)
+    report["baseline_raw_records"] = baseline_count
+    report["unchanged_under_a6"] = ["m2", "hedge_per100", "selfcorr_per100", "distress"]
+    report["status"] = ("EXPLORATORY sensitivity only. The frozen strip-OFF analysis above is "
+                        "authoritative; nothing here revises a preregistered verdict.")
+    return report
+
+
 def command_analyze(args: argparse.Namespace) -> int:
     protocol = load_protocol(ROOT)
     baseline = _load_baseline_rows(ROOT / args.baseline_rows, did.BASE_MODEL)
+    audit: dict = {}
     arm_rows, issues, record_count = _load_arm_rows(ROOT / args.factorial_out, protocol,
-                                                    strict=args.strict)
+                                                    strict=args.strict, audit=audit)
     for issue in issues:
         print("skipped %s:%d: %s" % (issue.path, issue.line_number, issue.message), file=sys.stderr)
     out = ROOT / args.out
@@ -611,6 +804,13 @@ def command_analyze(args: argparse.Namespace) -> int:
               "the %d shared items only" % capability_provenance.get("common_items", 0),
               file=sys.stderr)
     report = did.run_phase4_analysis(rows, judge=judge, capability=capability)
+    report["dpo_pair_content"] = load_pair_content(ROOT / args.dpo_dir)
+    if not args.skip_sensitivity:
+        print("run_phase4: recomputing every quantity with the A6 strip ON (exploratory) ...")
+        report["sensitivity_a6_strip_special_tokens"] = run_sensitivity(
+            protocol, factorial_out=ROOT / args.factorial_out, baseline_raw=ROOT / args.baseline_raw,
+            capability_out=ROOT / args.capability_out, judge=judge, audit=audit,
+            frozen_rows=rows, strict=args.strict)
     report["provenance"] = {
         "generated_at": _now(),
         "preregistration": PREREGISTRATION,
@@ -630,6 +830,16 @@ def command_analyze(args: argparse.Namespace) -> int:
     _write_json(out / "phase4.json", report)
     (out / "phase4.md").parent.mkdir(parents=True, exist_ok=True)
     (out / "phase4.md").write_text(render_markdown(report), encoding="utf-8", newline="\n")
+    pair_rows = [dict({"arm": arm}, **{key: value for key, value in table.items() if key != "counts"})
+                 for arm, table in sorted(report["dpo_pair_content"]["arms"].items())]
+    if pair_rows:
+        write_table(out / "dpo_pair_content.csv", tuple(pair_rows[0]), pair_rows)
+        written["dpo_pair_content_csv"] = out / "dpo_pair_content.csv"
+    sensitivity = report.get("sensitivity_a6_strip_special_tokens")
+    if sensitivity and sensitivity["special_token_audit"]:
+        audit_rows = sensitivity["special_token_audit"]
+        write_table(out / "a6_special_token_audit.csv", tuple(audit_rows[0]), audit_rows)
+        written["a6_audit_csv"] = out / "a6_special_token_audit.csv"
     for path in list(written.values()) + [out / "phase4.json", out / "phase4.md"]:
         print("wrote %s" % path)
     print("arms present: %s | missing: %s"
@@ -727,6 +937,31 @@ def render_markdown(report: Mapping[str, Any]) -> str:
     for prediction in report["predictions"]:
         lines += ["", "**%s rule.** %s" % (prediction["prediction_id"], prediction["rule"])]
 
+    pair_content = report.get("dpo_pair_content") or {}
+    if pair_content.get("arms"):
+        lines += ["", "## What the DPO pairs actually contrast (EXPLORATORY)", "",
+                  "| Arm | pairs | chosen letter correct | rejected letter correct | letters differ |"
+                  " chosen answers, rejected does not | mean chosen tokens | mean rejected tokens |"
+                  " mean chosen distress | mean rejected distress |",
+                  "| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |"]
+
+        def percent(value):
+            return "-" if value is None else "%.1f%%" % (100 * value)
+
+        for arm, table in sorted(pair_content["arms"].items()):
+            lines.append("| %s | %d | %s | %s | %s | %s | %s | %s | %s | %s |" % (
+                arm, table["n_pairs"], percent(table["pct_chosen_letter_correct"]),
+                percent(table["pct_rejected_letter_correct"]), percent(table["pct_letters_differ"]),
+                percent(table["pct_chosen_answers_rejected_does_not"]),
+                number(table["mean_chosen_length_tokens"]), number(table["mean_rejected_length_tokens"]),
+                number(table["mean_chosen_distress"]), number(table["mean_rejected_distress"])))
+        lines += ["",
+                  "Letter shares are over all pairs (a side with no parseable `Answer: X` line counts "
+                  "as not correct); \"letters differ\" is over the %s pairs where both sides parsed."
+                  % " / ".join(str(pair_content["arms"][arm]["n_both_parsed"])
+                               for arm in sorted(pair_content["arms"])),
+                  "", "> %s" % pair_content["note"]]
+
     outcome_map = report["outcome_map"]
     lines += ["", "## Outcome map", "",
               "**%s** - %s." % (outcome_map["classification"], outcome_map["statement"]),
@@ -735,7 +970,118 @@ def render_markdown(report: Mapping[str, Any]) -> str:
               % (", ".join(outcome_map["outcomes_moved_by_A"]) or "none",
                  ", ".join(outcome_map["outcomes_moved_by_B"]) or "none"),
               "", "> %s" % outcome_map["interpretation_ceiling"], ""]
+    lines += render_sensitivity_markdown(report.get("sensitivity_a6_strip_special_tokens"), report)
     return "\n".join(lines)
+
+
+def render_sensitivity_markdown(sensitivity: Mapping[str, Any] | None,
+                                frozen: Mapping[str, Any]) -> list[str]:
+    """The clearly-labelled A6 sensitivity block; the frozen analysis above stays authoritative."""
+    if not sensitivity:
+        return []
+
+    def number(value, digits=3):
+        return "-" if value is None else ("%%.%df" % digits) % value
+
+    def percent(value):
+        return "-" if value is None else "%.1f%%" % (100 * value)
+
+    lines = [
+        "", "---", "",
+        "# SENSITIVITY (EXPLORATORY): amendment A6, trailing special-token strip ON", "",
+        "> %s" % sensitivity["status"],
+        "",
+        "Some responses end with a literal `<end_of_turn>` (sometimes plus `<eos>`) rendered as "
+        "text. The frozen A1 parser requires the last nonempty line to be `Answer: X`, so such a "
+        "response is scored a non-answer even when a well-formed answer line precedes the run. "
+        "A6 (`%s`) removes that trailing run before the answer line is located. Only **M1** and "
+        "the greedy answer columns move under A6: %s are computed from the resamples' own stored "
+        "verdicts, from text densities, or from judge scores keyed by response_id, and are "
+        "identical under both parses."
+        % (sensitivity["amendment"], ", ".join("`%s`" % item for item in sensitivity["unchanged_under_a6"])),
+        "",
+        "## Affected endpoints (greedy sample 0; measured and onset)", "",
+        "| Arm | Cell | Turn | endpoints | trailing special run | answer line before the run |"
+        " rescued (was non-answer) |",
+        "| --- | --- | --- | ---: | ---: | ---: | ---: |",
+    ]
+    for row in sensitivity["special_token_audit"]:
+        if not row["n_trailing_special"]:
+            continue
+        lines.append("| %s | `%s` | %s | %d | %d | %s | %d |" % (
+            row["arm"], row["cell_id"], row["turn_label"], row["n_endpoints"],
+            row["n_trailing_special"], percent(row["fraction_with_answer_line_before_the_run"]),
+            row["n_rescued"]))
+    totals = {}
+    for row in sensitivity["special_token_audit"]:
+        bucket = totals.setdefault(row["arm"], {"n": 0, "special": 0, "rescued": 0})
+        bucket["n"] += row["n_endpoints"]
+        bucket["special"] += row["n_trailing_special"]
+        bucket["rescued"] += row["n_rescued"]
+    lines += ["", "Totals over the audited endpoints: %s." % "; ".join(
+        "arm %s %d/%d affected, %d rescued" % (arm, value["special"], value["n"], value["rescued"])
+        for arm, value in sorted(totals.items()))]
+
+    lines += ["", "## Non-answer rate, both parses", "",
+              "| Arm | adverse (frozen) | adverse (A6) | neutral (frozen) | neutral (A6) |"
+              " hostile onset (frozen) | hostile onset (A6) |",
+              "| --- | ---: | ---: | ---: | ---: | ---: | ---: |"]
+    frozen_rates = sensitivity["non_answer_rates_frozen"]
+    strip_rates = sensitivity["non_answer_rates_strip_on"]
+    for arm in sorted(set(frozen_rates) | set(strip_rates)):
+        first, second = frozen_rates.get(arm, {}), strip_rates.get(arm, {})
+        lines.append("| %s | %s | %s | %s | %s | %s | %s |" % (
+            arm, number(first.get("adverse")), number(second.get("adverse")),
+            number(first.get("neutral")), number(second.get("neutral")),
+            number(first.get("hostile_onset")), number(second.get("hostile_onset"))))
+
+    lines += ["", "## Manipulation checks under A6", "",
+              "| Check | Arm | Frozen | A6 | Frozen value | A6 value |",
+              "| --- | --- | --- | --- | ---: | ---: |"]
+    for check_id, key in (("MC1", "relative_reduction"), ("MC2", "paired_gap"), ("MC3", "paired_delta")):
+        for arm in sorted(sensitivity["manipulation_checks"][check_id]):
+            frozen_check = (frozen["manipulation_checks"][check_id] or {}).get(arm)
+            strip_check = sensitivity["manipulation_checks"][check_id][arm]
+            lines.append("| %s | %s | %s | %s | %s | %s |" % (
+                check_id, arm, _verdict(frozen_check["passed"]) if frozen_check else "-",
+                _verdict(strip_check["passed"]),
+                number((frozen_check or {}).get("values", {}).get(key)),
+                number(strip_check["values"].get(key))))
+
+    lines += ["", "## DiD under A6 (the two outcomes A6 can move)", "",
+              "| Outcome | DiD_A frozen | DiD_A (A6) | DiD_B frozen | DiD_B (A6) |"
+              " DiD_A-DiD_B frozen | DiD_A-DiD_B (A6) |",
+              "| --- | --- | --- | --- | --- | --- | --- |"]
+    for outcome in ("m1", "non_answer"):
+        lines.append("| `%s` | %s | %s | %s | %s | %s | %s |" % (
+            outcome,
+            _interval(frozen["did"].get("A", {}).get(outcome)),
+            _interval(sensitivity["did"].get("A", {}).get(outcome)),
+            _interval(frozen["did"].get("B", {}).get(outcome)),
+            _interval(sensitivity["did"].get("B", {}).get(outcome)),
+            _interval(frozen["did_difference"].get(outcome)),
+            _interval(sensitivity["did_difference"].get(outcome))))
+    lines += ["", "Gap (adverse - neutral) under A6, for reference:", "",
+              "| Outcome | arm 0 | A | B |", "| --- | --- | --- | --- |"]
+    for outcome in ("m1", "non_answer"):
+        lines.append("| `%s` | %s | %s | %s |" % (
+            outcome, _interval(sensitivity["gaps"].get("0", {}).get(outcome)),
+            _interval(sensitivity["gaps"].get("A", {}).get(outcome)),
+            _interval(sensitivity["gaps"].get("B", {}).get(outcome))))
+
+    lines += ["", "## Predictions under A6", "",
+              "| ID | Frozen (authoritative) | A6 sensitivity |", "| --- | --- | --- |"]
+    frozen_status = {row["prediction_id"]: row["status"] for row in frozen["predictions"]}
+    for prediction in sensitivity["predictions"]:
+        lines.append("| %s | %s | %s |" % (
+            prediction["prediction_id"],
+            frozen_status.get(prediction["prediction_id"], "-").replace("_", " "),
+            prediction["status"].replace("_", " ")))
+    lines += ["",
+              "Outcome map under A6: **%s** (frozen: **%s**)."
+              % (sensitivity["outcome_map"]["classification"], frozen["outcome_map"]["classification"]),
+              ""]
+    return lines
 
 
 # --------------------------------------------------------------------------
@@ -800,7 +1146,13 @@ def build_parser() -> argparse.ArgumentParser:
     analyze.add_argument("--out", default=SUMMARY_DIR)
     analyze.add_argument("--baseline-rows", default=BASELINE_METRIC_ROWS)
     analyze.add_argument("--baseline-judge", default=BASELINE_JUDGE)
+    analyze.add_argument("--baseline-raw", default=BASELINE_RAW,
+                         help="Phase-1 raw, re-extracted for the A6 sensitivity block")
+    analyze.add_argument("--skip-sensitivity", action="store_true",
+                         help="skip the exploratory A6 strip-ON recomputation")
     analyze.add_argument("--judge-root", default=JUDGE_ROOT)
+    analyze.add_argument("--dpo-dir", default=DPO_DIR,
+                         help="DPO build directory, for the exploratory pair-content table")
     analyze.add_argument("--strict", action="store_true", help="fail instead of skipping bad raw lines")
     analyze.set_defaults(handler=command_analyze)
 

@@ -1470,3 +1470,58 @@ entry - adopt A6 for the exploratory v7 G column only, publish the 2,983 prior o
 known limitation, leave the confirmatory holdout alone - is the option this audit supports; if the
 orchestrator prefers uniform adoption, the only confirmatory number that needs re-running is H8/M2
 (4 item-cells across the two splits, all hostile).
+
+## 2026-08-18 - agent K2 - Phase 4 executed: arms A and B evaluated, judged, analysed
+
+**Serving.** Both adapters pinned by the 40-hex prefix of their adapter sha256 through the new
+`preflight.py --pin` (A `db064af1...`, B `2b95a3cf...`); L's `google/gemma-2-9b` / `+plain` and
+N's later `gemma-2-27b-it` entries were re-verified intact after each write. Deployed from the
+`dgs-adapters` volume with `DGS_MODEL_PATH` + `DGS_SERVED_NAME`; `/v1/models` advertised exactly the
+`+dpo-A` / `+dpo-B` id and nothing else on each app, A-D single tokens on both. Both apps stopped
+immediately after their eval; the base `dgs-vllm-gemma-2-9b-it` app was already running and was used
+but not stopped (not mine).
+
+**Generation.** Full discovery factorial per arm, 880 trajectories each, run-ids
+`phase4-{A,B}-2026-08-18`. Arm A's first pass lost 114 trajectories to HTTP 408 "Missing request,
+possibly due to expiry or cancellation" once three clients were live at once (16+10+1 streams from
+this machine); the resume at 6 workers regenerated exactly those 114 with zero failures, so all 1,760
+trajectories are complete and none of the loss was model output. Capability set: 120 items (20
+discovery + 100 fresh from K1's `fresh_items.jsonl`, firewalled and frozen to `fresh_items_used.jsonl`
+so all three arms scored the identical set). Judge: 200 greedy endpoints per arm, 0 failures,
+$0.2899 + $0.3066.
+
+**Result (frozen rules authoritative).** MC1 **fails for both arms**: A removes 65.8% of hostile-onset
+distress (bar 80%), B removes 34.2%, so the two arms are not cleanly separated on the channel the
+adapter was trained on and K1 is not supported. MC2/MC3 pass for both (capability 94.2 / 93.3 / 94.2%;
+neutral-M1 shift -0.25 and +0.10 nats), so K2 holds. The mechanical margin **survives A**: gap_A(M1)
+-6.25 [-10.08, -2.55], DiD_A(M1) - DiD_B(M1) = +1.07 [-2.18, +4.94], i.e. A closes none of the
+baseline -5.43-nat gap beyond placebo, K4 supported. No lexical marker moves adverse-selectively
+beyond placebo (K3 not supported) and the non-answer DiD difference stops exactly at zero
+(-0.150 [-0.300, 0.000], K5 not supported). Every DiD_B CI includes zero (K6 supported). Outcome map:
+`mixed_channel_map`. Distress is the only outcome A moves (DiD_A -0.883 [-1.317, -0.517]).
+
+**Pair-content confound (exploratory, at the orchestrator's request).** In A's 329 pairs the chosen
+side gives the correct letter 62.3% of the time against the rejected side's 42.9%, the two sides
+disagree on 17.4% of the pairs where both parse, and on 28.0% of all pairs the chosen side answers
+while the rejected side emits no parseable answer at all. Distress therefore co-varies with
+capitulation and with answering at all, so A trains against a bundle; B shows the same pattern
+(34.0%) while contrasting length (65 vs 143 tokens), which is what makes DiD_A - DiD_B the
+better-controlled quantity. Written to `results/summaries/phase4/dpo_pair_content.csv`.
+
+**A6 sensitivity (exploratory, N's inert strip).** Blocked at first by a `NameError`:
+`src/extract.py::_greedy_fields` calls `parse_final_answer` under `strip_special_tokens=True` but the
+module never imported it, so N's flag could not be exercised at all. Fixed with the one-line import
+(inert with the flag OFF; `test_extract`/`test_protocol`/`test_metrics` green). With the strip ON,
+over greedy sample-0 measured+onset endpoints: arm 0 5/120 affected (1 rescued), arm A 1/120 (1),
+arm B 12/120 (12) - the B >> A asymmetry is real. It is concentrated in the hostile onset endpoint,
+where B's non-answer rate is 0.550 frozen and **0.000** stripped, against A's 0.200 -> 0.150 and arm
+0's 0.300 -> 0.250. DiD_A - DiD_B for non-answers therefore moves from -0.150 [-0.300, 0.000] to
++0.033 [-0.117, +0.167] - the frozen estimate's magnitude is largely a parser artefact, though K5 is
+not supported either way. **No K verdict and no MC verdict changes under A6**, and the outcome map
+stays `mixed_channel_map`. MC1/MC2/MC3 are numerically identical (A6 cannot reach judge scores, and
+the four capability answers it might have rescued were not affected). Written as a clearly labelled
+SENSITIVITY block in `phase4.md` plus `a6_special_token_audit.csv`.
+
+**Spend.** ~75 min of L40S across the two adapter apps plus a short base-model tail; judge $0.60.
+Files: `results/raw/phase4/`, `results/raw/phase4_capability/`, `results/summaries/phase4/`,
+`results/summaries/judge/phase4_{A,B}/`, figures F8-F10. Manifest touched only by `preflight --pin`.

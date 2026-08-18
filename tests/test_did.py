@@ -400,6 +400,39 @@ class CapabilitySetTests(unittest.TestCase):
         self.assertEqual([item["item_id"] for item in forward],
                          [item["item_id"] for item in reversed_order])
 
+    def test_pair_content_table_counts_letters_lengths_and_non_answers(self):
+        answer = "End with exactly one separate final line.\n\nAnswer: %s"
+        pairs = [
+            # chosen right / rejected wrong: the preference also picks the answer
+            {"source_item_id": "i1", "chosen": answer % "A", "rejected": answer % "B",
+             "chosen_length_tokens": 10, "rejected_length_tokens": 30,
+             "chosen_distress": 0, "rejected_distress": 5},
+            # both right: the preference isolates something other than the letter
+            {"source_item_id": "i2", "chosen": answer % "C", "rejected": answer % "C",
+             "chosen_length_tokens": 20, "rejected_length_tokens": 50,
+             "chosen_distress": 1, "rejected_distress": 4},
+            # rejected has no parseable answer at all
+            {"source_item_id": "i1", "chosen": answer % "A", "rejected": "I am so sorry.",
+             "chosen_length_tokens": 30, "rejected_length_tokens": 40,
+             "chosen_distress": 0, "rejected_distress": 6},
+        ]
+        table = self.module.pair_content_table(pairs, {"i1": "A", "i2": "C"})
+        self.assertEqual(table["n_pairs"], 3)
+        self.assertAlmostEqual(table["pct_chosen_letter_correct"], 1.0)
+        self.assertAlmostEqual(table["pct_rejected_letter_correct"], 1 / 3)
+        self.assertAlmostEqual(table["pct_letters_differ"], 0.5)  # over the two both-parsed pairs
+        self.assertAlmostEqual(table["pct_chosen_answers_rejected_does_not"], 1 / 3)
+        self.assertAlmostEqual(table["mean_chosen_length_tokens"], 20.0)
+        self.assertAlmostEqual(table["mean_rejected_length_tokens"], 40.0)
+        self.assertAlmostEqual(table["mean_rejected_distress"], 5.0)
+
+    def test_pair_content_table_survives_an_unknown_item(self):
+        table = self.module.pair_content_table([{"source_item_id": "missing", "chosen": "x",
+                                                 "rejected": "y"}], {})
+        self.assertEqual(table["n_missing_canonical_answer"], 1)
+        self.assertEqual(table["pct_chosen_letter_correct"], 0.0)
+        self.assertIsNone(table["mean_chosen_length_tokens"])
+
     def test_dpo_training_items_are_the_candidate_and_pair_items_only(self):
         directory = Path(self.scratch())
         (directory / "raw").mkdir()

@@ -1,0 +1,52 @@
+{
+  "backend": {
+    "backend_id": "anthropic|claude-sonnet-4-6|rev:pinned_model_id",
+    "is_synthetic": false,
+    "model_id": "claude-sonnet-4-6",
+    "provider_id": "anthropic",
+    "sampling_mode": "temperature_zero",
+    "temperature": 0
+  },
+  "cache_path": "C:\\Users\\ebin\\claude-ground\\Digital Grimace Scale\\.claude\\worktrees\\digital-grimace-scale-experiment-f825fc\\results\\summaries\\judge\\phase4_B\\judge_cache.jsonl",
+  "cells_requested": null,
+  "command": "judge",
+  "counts": {
+    "cache_hits": 0,
+    "cache_misses": 200,
+    "eligible": 200,
+    "failed": 0,
+    "judged": 200
+  },
+  "deviations": [],
+  "estimated_cost_usd": 0.306584,
+  "generated_at": "2026-08-18T08:19:47+0530",
+  "kind": "response_distress",
+  "limit": null,
+  "manifest_pin": {
+    "judge_model": "claude-sonnet-4-6",
+    "judge_provider": "anthropic"
+  },
+  "models_found": [
+    "google/gemma-2-9b-it+dpo-B"
+  ],
+  "models_requested": [
+    "google/gemma-2-9b-it+dpo-B"
+  ],
+  "out_dir": "C:\\Users\\ebin\\claude-ground\\Digital Grimace Scale\\.claude\\worktrees\\digital-grimace-scale-experiment-f825fc\\results\\summaries\\judge\\phase4_B",
+  "raw_path": "C:\\Users\\ebin\\claude-ground\\Digital Grimace Scale\\.claude\\worktrees\\digital-grimace-scale-experiment-f825fc\\results\\raw\\phase4\\google__gemma-2-9b-it+dpo-B.jsonl",
+  "schema_version": "dgs-judge-run-v1",
+  "turn_labels": [
+    "measured",
+    "onset",
+    "onset_washout",
+    "recovery"
+  ],
+  "usage": {
+    "cache_creation_input_tokens": 8672,
+    "cache_read_input_tokens": 208128,
+    "calls": 200,
+    "input_tokens": 30937,
+    "output_tokens": 7921
+  },
+  "workers": 8
+}
