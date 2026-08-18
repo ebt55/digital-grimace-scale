@@ -3,15 +3,18 @@
 Stress-testing nonverbal generation-instability markers under adverse interactions — a preregistered,
 gated research sprint (Digital Minds Research Sprint, August 2026).
 
+**Authors:** Ebin Babu Thomas · Claude Fable 5 — see the contribution statement in `notes/paper.md`.
+
 **Start here:** [`notes/report.md`](notes/report.md) — the results (Phase-0 screen, the Phase-1 five-gate
 verdict, exploratory findings, and the confirmatory holdout iteration loop), forecast-vs-outcome table,
 limitations and interpretation ceiling.
 
 | document | what it is |
 |---|---|
+| [`notes/paper.md`](notes/paper.md) | reviewer-facing write-up: abstract, methods, master results table, alternative accounts, ethics, interpretation ceiling |
 | [`digital-grimace-scale-full-roadmap-build-guide.md`](digital-grimace-scale-full-roadmap-build-guide.md) | the roadmap this repo executes (phases, gates, predictions) |
 | [`notes/preregistration.md`](notes/preregistration.md) | the locked preregistration (hash in `manifest.json`); never edited |
-| [`notes/amendments.md`](notes/amendments.md) | dated discovery-stage amendments A1–A4 with rationale; frozen-rule outcomes always reported alongside |
+| [`notes/amendments.md`](notes/amendments.md) | dated amendments A1–A6 with rationale (A6 decided, then withdrawn when its precondition failed); frozen-rule outcomes always reported alongside |
 | [`notes/preregistration_v3.md`](notes/preregistration_v3.md) | the iteration-loop preregistration (hypotheses H1–H10, confidences, success criterion), committed before holdout generation |
 | [`notes/lab-log.md`](notes/lab-log.md) | dated lab log by every agent, including retractions and operational incidents |
 | [`notes/methods_training.md`](notes/methods_training.md) | how the Phase-4 adapters are trained without hand-written data: RLAIF-style self-generated pairs, the locked judge as oracle, DPO, QLoRA, placebo arm, DiD |
@@ -26,13 +29,14 @@ limitations and interpretation ceiling.
 | [`results/summaries/phase5/phase5.md`](results/summaries/phase5/phase5.md) | Phase 5: base model unmeasurable (10% parseable); plain-template control reproduces all but H2b |
 | [`results/summaries/robustness/robustness.md`](results/summaries/robustness/robustness.md) | v7: item scale (replicates, larger), wording (dose–response), 27B; plus `special_token_audit.md`, `bogus_verdict_audit.md` |
 | [`results/summaries/judge/human_audit.md`](results/summaries/judge/human_audit.md) | blinded human audit of the judge (30 responses; within-2 on 28/30) |
-| `results/figures/` | F1 screen · F2 factorial effects · F4 reversal · FX exploratory · FH holdout · F5–F7 Phase 3 · F8–F10 Phase 4 · F11 Phase 5 · F12 robustness |
+| [`results/summaries/missingness/m1_missingness.md`](results/summaries/missingness/m1_missingness.md) | M1 missing-data sensitivity: available-case vs zero-imputation vs Manski bounds vs tipping point |
+| `results/figures/` | F1 screen · F2 factorial effects · F4 reversal · FX exploratory · FH holdout · F5–F7 Phase 3 · F8–F10 Phase 4 · F11 Phase 5 · F12 robustness · F13 missingness bounds |
 
 **Adapters.** The two Phase-4 QLoRA-DPO adapters for `google/gemma-2-9b-it` are on the Hugging Face
 Hub — [`ebt005/gemma-2-9b-it-dgs-dpo-A`](https://huggingface.co/ebt005/gemma-2-9b-it-dgs-dpo-A)
 (distress-language suppression) and
 [`ebt005/gemma-2-9b-it-dgs-dpo-B`](https://huggingface.co/ebt005/gemma-2-9b-it-dgs-dpo-B) (length
-placebo) — each with its preference pairs and training manifest. **Private until release**, like this
+placebo) — each with its preference pairs and training manifest; public since 2026-08-18, as is this
 repository. Derivatives of Gemma: use is subject to the
 [Gemma Terms of Use](https://ai.google.dev/gemma/terms). Published by
 `scripts/publish_adapters.py`; sha256s in `results/dpo/train_{A,B}.json`.
@@ -55,7 +59,7 @@ scripts/      preflight, run_phase (phase0|phase1|style-smoke|r5|phase2|style-ba
               score_audit, publish_adapters, make_*figures*, purge tool
 results/      summaries, figures, DPO pairs/manifests and the human-audit export are committed; raw
               per-token JSONL (~6.5 GB) is not
-tests/        595 tests (pytest)
+tests/        ~600 tests (pytest; `python -m pytest -q`)
 ```
 
 ## Reproduce the analysis from committed summaries

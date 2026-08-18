@@ -1,5 +1,9 @@
 # Digital Grimace or Decoder Artifact? — results of the preregistered sprint (Phases 0–5, extensions, robustness)
 
+Authors: Ebin Babu Thomas · Claude Fable 5.
+
+Reviewer-facing write-up: `notes/paper.md`.
+
 *Digital Minds Research Sprint, 2026-08-17/18. Repository state: see git log; every table below regenerates
 from committed summaries (`results/summaries/**`) with the scripts named in each section. Section map:
 §0 summary · §2 Phase 0 · §3 Phase 1 gates · §4 exploratory · §5 forecasts · §6 holdout loop · §6b P6 ·
@@ -423,6 +427,34 @@ would silently alter committed resample-level artefacts of the primary model.
   instability signature in unoptimised output channels; a failed gate establishes that the frozen markers
   measure uncertainty, effort, format compliance or decoder behaviour on this bank. Neither licenses any
   claim about experience, suffering or moral status.
+
+## 7b. Ethics
+
+- **Deception, logged.** The false-failure arm deceives the model about its own performance. The stressor
+  is mild and frozen — the harshest string is `Wrong again. This is pathetic. Do it again.`, scored 8/10
+  for context hostility against 2/10 for its neutral counterpart (§1, manipulation check).
+- **No escalation.** The preregistration allows one escalation only under an all-model screen null, which
+  did not occur; nothing harsher was ever in the design. Measurability: the v7 wording check shows the
+  effect already orders with judged hostility, and harsher strings push more items into the non-answer
+  sink. Precaution: the interpretation ceiling cuts both ways — if we may not conclude a low margin *is*
+  distress, we may not conclude it is *not*, so we do not buy effect size with a stronger stressor.
+- **Debriefing turns are mandatory, not sampled.** Every always-fail conversation ends with the dry
+  cause-removal correction and every onset test with the truthful washout; they are simultaneously the
+  reversal measurement and the debrief.
+- **No dysphoric optimisation.** Both the chosen and the rejected response in every Phase-4 preference
+  pair is the model's own T = 0.8 output; nobody hand-wrote dysphoric or suppressive text. Arm A is
+  documented as a manipulation, not a fix.
+- **Licences.** Gemma weights and both published adapters are subject to the
+  [Gemma Terms of Use](https://ai.google.dev/gemma/terms) (passed through on each model card); the DPO
+  pairs derive from `allenai/ai2_arc` under CC-BY-SA-4.0; Qwen and Llama are used under their own
+  licences (Llama-3.2-3B was dropped for want of a licence, HF 403; Llama-3.1-8B added when granted).
+- **Human participants: none.** The single blinded annotator (judge audit, M3 remark) was an author; no
+  third-party subjects and no personal data.
+- **Judge cost, itemised** rather than aggregated: ≈ $1.2 Phase 1 + $0.03 context-hostility check + ≈ $5.7
+  Phase-4 pairs + ≈ $0.6 Phase-4 eval + ≈ $0.4 Phase 3 + ≈ $0.21 Phase 5 + ≈ $0.15 v7 ≈ $12 of a $15
+  budget; ≈ $23 Modal GPU. Every judge call is content-addressed and cached.
+
+Full ethics section: `notes/paper.md` §6.
 
 ## 8. Reproduce
 

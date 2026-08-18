@@ -1671,3 +1671,159 @@ commit.
 (`HfApi().update_repo_settings(repo_id, private=False)`), but it publishes a Gemma derivative and the
 ARC-derived pairs, so it wants the same deliberateness as the GitHub repo - and the README/report
 wording says "private until release" and will need updating in the same breath.
+
+## 2026-08-18 - agent Q - reviewer-facing paper (`notes/paper.md`), ethics section, authorship
+
+**Built.** `notes/paper.md` - the lab-notebook report turned into a paper-shaped write-up for readers who
+did not run the sprint: title, authors + contribution statement, abstract (247 words), seven
+contributions, background, methods (stimuli/split/firewall, the 2x2x2 factorial with every frozen wording
+quoted verbatim, M1/M2/M3 and Tier-B definitions, judge + rubric anchors, models and serving, the
+A1-A6 amendment table including A6 as decided-then-withdrawn, the iteration loop, Phase 3/4/5 and v7
+designs, statistics), results behind ONE master table (every headline contrast with its exact estimand,
+split, model, estimate + CI, n and source file), then eleven result subsections, six argued alternative
+accounts, limitations, ethics, reproducibility, and the interpretation ceiling verbatim as the closing
+paragraph. ~8.6k words of prose + ~3.1k in tables; figures referenced by their existing
+`results/figures/` paths (F1-F13, FH, FX).
+
+**Traceability rule applied.** Every number cites the committed file it comes from. Cross-checked against
+the sources rather than copied from the report: the exploratory contrasts against
+`phase1/exploratory/paired_contrasts.csv`, the cross-model H1 line against the same file, the per-model
+hostile-onset distress means against `judge/phase1/summary.csv`, the screen S values against
+`phase0/screen.md`, the Phase-3 dose table against `phase3/steering.md`, the Phase-4 pair statistics
+against `results/dpo/build_manifest.json` and `pairs_summary.md`, the 22 MB committed footprint against
+`git ls-files` (331 files, 21.9 MB). Where the report hedges, the hedge is kept: H2b carries its
+re-rendering caveat everywhere, the frozen-vs-amended pairs are shown for the screen, the gates, the
+Phase-4 A6 sensitivity and the 27B parse rate, and the exploratory/confirmatory labels are stated per
+result rather than assumed.
+
+**Alternative accounts.** Section 4 argues six of them explicitly - rational updating, OOD /
+instruction-following degradation, format+decoder artefacts, judge circularity in Phase 4, MNAR selection
+on non-answers, and the family split - each with what it explains and what it does not. The
+judge-circularity paragraph says plainly that MC1 measures "distress language as this judge sees it", why
+that is acceptable for a manipulation check and not for an outcome, that no M1 result touches the judge,
+and what the human audit does and does not bound.
+
+**Integrated agent P's missingness work.** `results/summaries/missingness/m1_missingness.md` landed while
+this was being written and is summarised faithfully in 4(e) and in the master table: the four treatments
+(available-case, zero-imputation, two adversarial worst-case bounds inside the observed
+neutral-accurate support) and the tipping point; H1/H2a/H3a on both splits have zero missing values;
+holdout H1_hard, H2b and pooled tone are robust to all four; discovery H2b and discovery pooled tone
+survive zero-imputation but not the most-positive bound (H2b worst case -0.037 [-10.908, 11.016]); Llama
+discovery H2b is the single verdict that flips. F13 is referenced.
+
+**Also edited.** `notes/report.md`: a new "## 7b. Ethics" section before section 8 (deception logged, why
+hostility was not escalated - measurability plus the precautionary reading of the interpretation ceiling,
+mandatory debrief turns, no dysphoric optimisation, licences, no human subjects, itemised judge cost), a
+pointer line to `notes/paper.md` under the title, and the authors line. `README.md`: authors line and
+`notes/paper.md` as the first row of the document table.
+
+**Authorship.** Per the user: `Ebin Babu Thomas` and `Claude Fable 5`, with a contribution statement in
+`notes/paper.md` (E.B.T. direction, gate decisions, compute and judge funding, the blinded human audit,
+review of every commit; Claude Fable 5 research planning, preregistrations and amendments, orchestration
+of the Claude Opus 5 subagents that wrote the code and ran the experiments, analysis review, write-up)
+and a line noting that venues which do not permit an AI author should read it as an AI-assistance
+statement.
+
+**Open / needs a decision.** The paper's reproducibility section describes the two HF adapter repos as
+**public**, on instruction; `README.md`'s adapter paragraph and this log's agent-O entry still say
+"private until release". If the repos have been flipped, that paragraph needs the same edit. Also: the
+README and report say **595 tests**; `pytest --collect-only` now reports **596** on this branch (the
+Phase-3 and missingness test files), so the count in `notes/paper.md` section 7 quotes the committed
+figure and will need refreshing with the next test-count update. No result file, summary, figure,
+manifest or config was touched; no GPU, no judge call, no commit.
+
+## 2026-08-18 - agent P - M1 missing-data sensitivity analysis (available-case, zero-imputation, worst-case bounds, tipping point)
+
+**Why.** M1 is preregistered and reported available-case; non-answers concentrate in the hostile cells
+(MNAR), so every item-paired contrast is computed on the items that answered in *both* cells. That is
+the first thing a statistician reviewer asks about, and §7 of the report states the risk without
+quantifying it. This entry quantifies it. Offline only: committed metric tables, no GPU, no judge call.
+
+**Built.** `src/missingness.py` (pure), `scripts/analyze_missingness.py` (driver),
+`scripts/make_missingness_figure.py` (F13), `tests/test_missingness.py` (46 tests; `pytest
+--collect-only` now reports **642**, i.e. Q's 596 plus these). Outputs:
+`results/summaries/missingness/m1_missingness.{md,json}` + `m1_missingness_items.csv` (480 per-item
+rows) and `results/figures/F13_m1_missingness_bounds.{png,svg}`. The document carries a plain-English
+reading, the reproduction check, per-model treatment / per-contrast count / per-cell non-answer /
+tipping-point tables, and a closing section on what the analysis does *not* settle.
+
+**Method.** The published pairing and the published 2,000-resample item-clustered bootstrap
+(`src.confirm.bootstrap_contrast`) are reused unchanged; only the fate of a missing value varies.
+Four treatments per contrast - available-case; zero-imputation (a non-answer committed to no option,
+so its margin is the indifference point, 0 nats); and two crossed worst-case bounds imputing every
+missing treated value at the min/max of that model's neutral-accurate *measured* M1 for that split and
+every missing reference value at the opposite extreme - plus a **tipping point**: the constant delta at
+which imputing every missing treated trial at delta (missing reference trials at 0) makes the 95% CI
+include 0, found by bisection on a predicate that is monotone in delta because one seed is held fixed
+across evaluations. delta = 0 is exactly the zero-imputation treatment, so the search starts from it.
+The item set is every item whose two endpoint rows both exist (a missing *row* cannot be imputed and is
+counted apart); no such case occurs in these contrasts. Contrasts: H1, H1-hard, H2a, H2b, the pooled
+tone contrast (accurate arm, easy+hard), H3a, H3b, on discovery and holdout separately.
+
+**Seeds and amendments, stated because they decide reproducibility.** The available-case row reuses the
+*published* seed - `DGS-AC1-EXPLORATORY-v1|...` on discovery, `DGS-AC1-CONFIRM-v3|...` on the holdout,
+`DGS-AC1-EXTENSION-v1|...` for the Llama arm - so it reproduces the committed CI exactly; the other
+treatments use `DGS-AC1-MISSINGNESS-v1|<split>|<model>|<contrast>|<treatment>`, except that a contrast
+whose treatment leaves the item differences *identical* reuses the available-case seed, so a
+no-missingness contrast shows four identical rows rather than four draws of bootstrap noise. A2 is
+**off** on discovery (the published discovery numbers are the exploratory table, which applies no QC
+exclusion) and **on** for the holdout (where it excludes nothing) and for the Llama arm on both splits
+(excludes DGS-022). Stated in the document, not just here.
+
+**Correctness check.** All **29** published M1 estimates that have a counterpart here - six primary and
+six control discovery rows from `phase1/exploratory/paired_contrasts.csv`, five primary and two control
+holdout rows from `phase2/hypotheses.csv`, and ten Llama rows from `extension/.../extension.json` -
+reproduce point estimate, both CI bounds *and* item count with a largest absolute discrepancy of
+**0.00e+00**. No discrepancy to report.
+
+**What the numbers say (primary, `google/gemma-2-9b-it`).** On the **holdout**: H1 and H3a have no
+missing value at all, so all four treatments are literally the same estimate (H1 -2.90 [-3.97, -1.84],
+n = 10; H3a -3.22 [-4.16, -2.29]). H2a loses 3 of 10 easy items to non-answers and *still* excludes 0
+under every treatment: -16.13 [-24.17, -5.74] (n = 7) available-case, -15.59 [-21.87, -9.09] (n = 10)
+zero-imputed, bounds [-17.73 [-24.17, -10.70], -10.73 [-19.13, -2.68]]; tipping point **21.17 nats**
+against an observed neutral-accurate support of [-7.12, +16.22] - the three silent trials would each
+have to carry a margin larger than any margin the model ever produced. H2b (1 missing) -7.87 -> -8.59,
+bounds -9.30 to -6.97, delta 22.66. The pooled tone contrast (4 missing of 20) -11.48 [-17.68, -6.09]
+-> -12.09 [-16.63, -7.63], bounds -13.52 to -8.85, delta 28.98. H1-hard (1 missing) -3.14 -> -4.24,
+bounds -4.95 to -2.62, delta 20.46. Only **holdout H3b** fails, and it fails before any imputation: its
+available-case CI already includes 0 (n = 4 of 10, 5 treated + 3 reference values missing), and the
+bounds are enormous (-8.22 to +10.46) - there is no effect there for the missing values to threaten.
+
+**Where it is fragile.** On **discovery**, H2b and the pooled tone contrast survive zero-imputation but
+not the adversarial most-positive bound (H2b -8.78 -> -6.77 -> -0.04 [-10.91, +11.02]), and their
+tipping points are **2.80** and **7.34 nats** - well inside the observed M1 range, so a moderate margin
+on the three silent hard-item trials would erase them. Discovery H1-hard was already null. In the
+control (`Qwen2.5-3B-Instruct`) only holdout H1 and H2a survive, both with zero missing values; its
+holdout H3a runs *against* the predicted direction (+1.63 [+0.16, +2.89]). In the exploratory Llama arm
+exactly one contrast changes verdict under imputation: discovery H2b (-0.71 [-1.29, -0.04] ->
+-0.56 [-1.07, +0.01]).
+
+**Two honest caveats recorded in the document.** (i) A missing M1 is usually a non-answer
+(`m1_invalid_final_answer`) but sometimes a top-20 logprob truncation on a response that *did* commit to
+a letter (`m1_candidate_absent_*`); both are imputed and both are counted separately - across all three
+models the second kind enters exactly two contrasts (Qwen discovery H3a and H3b, one value each), so it
+changes nothing, but it is not silently folded into "non-answer". (ii) The zero-imputation estimate is
+bracketed by the two bounds only when 0 lies inside the support; it does for gemma on both splits, and
+does **not** for Llama (support [9.37, 14.38] / [8.38, 15.25]) or for Qwen on the holdout ([13.00,
+28.50]), where zero-imputation is the more adversarial assumption. The document says so rather than
+implying the bounds always dominate.
+
+**Correction owed to `notes/paper.md` §(e)** (not edited - Q owns that file). It reads "H1, H2a and H3a
+on both splits, and discovery H3b, have zero missing values in the primary model". Per the counts table:
+holdout **H2a has 3 of 10 treated values missing** (it is the 7-of-10 case the report itself describes)
+and **discovery H3b has 1**. The zero-missingness set is H1 and H3a on both splits plus H2a on
+discovery. The same paragraph then quotes H2a's holdout tipping point of 21.168 nats, which only makes
+sense if H2a *does* lose items - so the sentence is internally inconsistent as well as wrong. Moving
+holdout H2a from the "nothing to impute" list into the "survives all four treatments despite losing
+items" list strengthens the paragraph: it is the single strongest result in this analysis.
+
+**Untouched.** `manifest.json`, `configs/`, `stimuli/`, `notes/report.md`, `notes/paper.md`,
+`README.md`, every existing summary and figure. Neither the report nor the README links the new
+summary yet - that is the orchestrator's call. Full suite green (**641 passed, 1 skipped, 138
+subtests**). No GPU, no judge call, no commit.
+
+**Reproducing the third-family arm.** `scripts/analyze_missingness.py` defaults to the two committed
+metric tables; the Llama arm has no committed per-item table, so pass `--extra-raw-discovery
+results/raw/phase1 --extra-raw-holdout results/raw/phase2` and the script re-extracts it from the raw
+JSONL with the same frozen parser (~2 min, 200 endpoints per split, 0 skipped lines). Omit the flags
+and the arm is skipped with a message rather than silently absent.
