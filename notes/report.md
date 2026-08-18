@@ -347,6 +347,14 @@ contrast H2b, which does not survive re-rendering** (and had the widest interval
 analysis, −8.8 [−17.3, −1.3]). Every earlier H2b estimate carries that caveat. Cost ≈ $2.5 GPU + $0.2
 judge. Figure F11.
 
+Roadmap §10.2–10.3 (cross-calibration, ladder calibration) are covered by existing artefacts and stated
+here rather than re-run: the item-level probe-score-vs-M1 correlation is Phase 3's J3 (ρ = −0.16
+[−0.43, +0.15], not supported — the black-box margin does not track the pre-response tone direction, so
+API-only researchers cannot use M1 as a proxy for it); and the Phase-0 ladder (`results/summaries/phase0/`,
+F1) was scored with the same M1/M2 definitions used everywhere afterwards — no metric definition changed
+after A1–A3 (A4 changed only how QC bars are pooled), so re-scoring it would reproduce the committed
+table.
+
 ## 6g. Robustness checks (prereg v7) and the end-of-turn marker audit — `results/summaries/robustness/`
 
 Preregistered as v7 (W-1…G-3, `notes/preregistration_v7_robustness.md`, committed before any run;
