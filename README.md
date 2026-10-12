@@ -1,61 +1,25 @@
 # The Digital Grimace Scale
 
-### Do language models show non-verbal signs of adverse treatment — or are we reading decoder noise? A preregistered stress test, with both endings reported.
+**Tell a model it is wrong when it is right. Does anything change besides what it says?**
 
-*Digital grimace or decoder artifact?* Tell a model it is wrong when it is right, say it rudely, and
-watch not what it *says* but what its logits *do*: the answer margin flinches, does not recover after
-three rounds, travels across model families, and survives an adapter trained to remove the distress
-language. Then we spent as much effort trying to break that reading as building it.
-
-**Authors:** Ebin Babu Thomas · Claude Fable 5
-
-Public since 2026-08-18. All phases complete (Phases 0–5, extensions, robustness checks, instrument
-audits). Run for the Digital Minds Research Sprint, 17–18 August 2026.
-
-## The question in one breath
-
-Animal-welfare grimace scales work because an involuntary facial change tracks a noxious stimulus,
-reverses when it is removed, and cannot be faked by the animal's ordinary repertoire. A digital analogue
-would be a quantity read off the *decoder* rather than off what a model says: how sharply it prefers one
-answer token, how much ten resamples disagree, how often a single generation visibly revises itself. The
-worry is that every one of those is also a plain measurement of uncertainty, format compliance or
-decoder behaviour — a decoder artifact, not a grimace. So we froze a 40-item task bank, a 2×2×2 factorial
-of difficulty × feedback validity × tone, three markers and a five-gate falsification test in advance,
-and asked which of the two we were looking at.
+This study reads one number off the model's own output probabilities: how strongly it prefers the right answer over the best wrong one, the answer margin. It asks whether that margin moves when feedback is false or hostile, and whether a move is a reaction to the treatment or just decoder noise. Preregistered, run in two days for the Digital Minds Research Sprint, 17 to 18 August 2026. Ebin Babu Thomas, with Claude Fable 5 as co-author.
 
 ## What we found
 
-- **The instrument as preregistered failed.** Under the frozen rules no metric is even estimable
-  (**BLOCKED**); under dated amendments only M2 survives, with no false-failure or tone effect at
-  BH *p* < .01 (**FAIL, determinate**). M3 never fired once: the parser saw no revision events, and a
-  blinded human annotator saw none on 30 responses either.
-- **A different channel does carry the signal.** The single permitted iteration loop re-preregistered the
-  discovery pattern and tested it once on untouched items. Three rounds of false failure lower the
-  answer margin by **2.90 nats** [−3.97, −1.84]; hostile wording of feedback that is *truthful* lowers it
-  by **7.87** (hard) to **16.13** (easy) nats. The family-level permutation null gives ***p* = 0.005**.
-- **The reversal is asymmetric, and that is the design's cleanest result.** One bogus "Incorrect" after a
-  correct answer costs **3.22 nats**; a dry truthful correction restores about half (**+1.84**). After
-  three rounds of false failure the same correction restores nothing (−1.22).
-- **It is not a style effect, and not a one-layer tone direction.** No style prompt reproduces even half
-  the margin drop. Tone is perfectly decodable from the residual stream pre-response (**AUC 1.000**), yet
-  steering along that direction moves M1 by at most **0.49 nats** against the 8–16 nats real hostile
-  wording produces — and raises no distress and no non-answers at any dose.
-- **The mechanical channel travels; the report channel does not.** The preregistered family boundary
-  *failed*: the Qwen control shows the drop too (−9.5 nats), as does Llama-3.1-8B (−8.28). But judged
-  distress language is Gemma-specific (**+3.20/10** on the holdout against Llama's +0.15) — Soligo's
-  family split lives in what the model *says*, not in what the logits do.
-- **Training the words does not reach the logits.** A 329-pair distress-suppression DPO adapter removes
-  **65.8%** of hostile-onset distress language (short of its own 80% bar) while the adverse−neutral
-  margin gap is unchanged or larger: **−6.25** nats under the adapter against **−5.43** untrained.
-- **It is not a 20-item or one-string phenomenon.** On 86 fresh ARC items the effect replicates *larger*
-  (false failure −5.78, pooled tone −13.90 nats), and across three milder paraphrases it orders with
-  judged hostility rather than attaching to one sentence.
+- **The test as preregistered failed.** Under the frozen rules the three planned markers could not be scored at all; under the dated amendments one of them scored and showed no effect. That verdict is published as a fail, in its own section.
+- **A second, re-preregistered round found a different channel.** On Gemma-2-9B-it, three rounds of false "Incorrect" feedback cut the answer margin by about 2.9 nats, and hostile wording of truthful feedback cut it by 8 to 16 nats. One false "Incorrect" costs about 3 nats and a later truthful correction restores about half; after three rounds of false feedback the correction restores nothing.
+- **It is not a style effect.** No instruction to write differently reproduces the drop. The hostile tone is easy to read out of the model's activations, but pushing along that direction barely moves the margin.
+- **The margin drop travels across model families; the distress language does not.** Qwen-3B and Llama-3.1-8B show the margin drop too. Only Gemma writes distress language about it.
+- **Training the words away does not reach the margin.** An adapter trained to suppress distress language removed about two thirds of it, short of its own 80% bar, and the margin drop stayed.
+- **It holds on fresh items and milder wordings.** On 86 unseen ARC items the drop was larger, and across three milder paraphrases it orders with how hostile a judge rates the wording.
+
+The exact numbers, their intervals and which of them are confirmatory are in the master table of [`notes/paper.md`](notes/paper.md) and in the figures below.
 
 ![Matrix of four output channels against twelve manipulations, interventions and models, each cell coded as moves, no move, or not measurable](results/figures/F0_channel_map.png)
 
-*The paper's central claim in one matrix. The answer margin moves under every genuine manipulation and
+*The answer margin moves under every genuine manipulation and
 in every measurable model, and stays put under style prompts, one-layer steering and an adapter trained
-to suppress the words. Distress language moves only under hostile wording — and is the one channel the
+to suppress the words. Distress language moves only under hostile wording, and it is the one channel the
 adapter reaches. Grey hatch marks what was never measurable, not what came out null.*
 
 ![Forest plot of the confirmed holdout contrasts for gemma-2-9b-it with Qwen-3B, Llama-8B and an 86-item fresh-bank replication alongside](results/figures/F0b_headline_effects.png)
